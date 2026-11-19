@@ -1,1 +1,30 @@
 == H03: bad_deploy on payment
+  H03 B1_dashboard_rule  -> payment/None [DIAGNOSIS] top1=True (0.0s)
+  H03 B0_single_prompt   -> payment/code_error [DIAGNOSIS] top1=True (4.6s)
+  H03 EvidenceTrail      -> payment/bad_deploy [DIAGNOSIS] top1=True (38.9s)
+== H05: bad_config on currency
+  H05 B1_dashboard_rule  -> catalog/None [DIAGNOSIS] top1=False (0.0s)
+  H05 B0_single_prompt   -> currency/bad_config [DIAGNOSIS] top1=True (2.9s)
+  H05 EvidenceTrail      -> currency/bad_config [DIAGNOSIS] top1=True (57.5s)
+== H06: crash on cart
+  H06 B1_dashboard_rule  -> None/None [FAILED] top1=False (Nones)
+  H06 B0_single_prompt   -> cart/crash_or_unreachable [DIAGNOSIS] top1=True (2.6s)
+  H06 EvidenceTrail      -> None/None [FAILED] top1=False (Nones)
+Traceback (most recent call last):
+  File "<frozen runpy>", line 203, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/user/evidencetrail/eval/run_eval.py", line 159, in <module>
+    main()
+    ~~~~^^
+  File "/home/user/evidencetrail/eval/run_eval.py", line 150, in main
+    res = run_one(sc)
+  File "/home/user/evidencetrail/eval/run_eval.py", line 72, in run_one
+    faults.clear_all()
+    ~~~~~~~~~~~~~~~~^^
+  File "/home/user/evidencetrail/evidencetrail/faults.py", line 35, in clear_all
+    subprocess.run(["docker", "compose", "start"] + list(PORTS), check=True, capture_output=True)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['docker', 'compose', 'start', 'frontend', 'checkout', 'catalog', 'recommendation', 'cart', 'payment', 'shipping', 'currency', 'inventory']' returned non-zero exit status 1.

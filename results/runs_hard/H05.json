@@ -15,15 +15,15 @@
   "service": "currency",
   "fault_type": "bad_config"
  },
- "injected_at": 1795100618.0491157,
+ "injected_at": 1795101394.7775457,
  "methods": {
   "B1_dashboard_rule": {
    "method": "B1_dashboard_rule",
-   "root_cause_service": "currency",
+   "root_cause_service": "catalog",
    "fault_type": null,
    "ranked_candidates": [
-    "currency",
     "catalog",
+    "currency",
     "frontend"
    ],
    "verdict": "DIAGNOSIS",
@@ -33,7 +33,7 @@
     "calls": 0
    },
    "score": {
-    "top1": true,
+    "top1": false,
     "top3": true,
     "type_ok": null,
     "inconclusive": false,
@@ -49,20 +49,20 @@
     "catalog",
     "frontend"
    ],
-   "summary": "The currency service is failing due to a missing configuration (FX_RATE_SOURCE), which causes a cascade of 500 errors in the catalog service and subsequent 502 errors in the frontend, leading to the checkout error rate spike.",
+   "summary": "The currency service is reporting a configuration error ('FX_RATE_SOURCE is empty'), which causes the catalog service to fail with 500 errors, subsequently triggering 502 errors in the frontend and checkout services.",
    "verdict": "DIAGNOSIS",
-   "elapsed_s": 5.9,
+   "elapsed_s": 2.9,
    "usage": {
     "calls": 1,
-    "prompt_tokens": 14775,
-    "completion_tokens": 89,
+    "prompt_tokens": 14787,
+    "completion_tokens": 84,
     "retries": 0,
     "failures": 0,
     "wait_s": 0.0,
-    "total_tokens": 14864
+    "total_tokens": 14871
    },
    "model": "gemini-3.1-flash-lite",
-   "prompt_chars": 30494,
+   "prompt_chars": 30327,
    "error": null,
    "score": {
     "top1": true,
@@ -75,30 +75,30 @@
   "EvidenceTrail": {
    "alert": "checkout error rate above 5% for 1m (SLO burn)",
    "model": "gemini-3.1-flash-lite",
-   "elapsed_s": 2.8,
+   "elapsed_s": 57.5,
    "usage": {
-    "calls": 0,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
-    "retries": 0,
+    "calls": 1,
+    "prompt_tokens": 4215,
+    "completion_tokens": 293,
+    "retries": 1,
     "failures": 5,
-    "wait_s": 2.0,
-    "total_tokens": 0
+    "wait_s": 54.8,
+    "total_tokens": 4508
    },
    "trail": [
     {
      "step": "scan",
      "t": 0,
-     "dur": 0.6,
-     "health_evidence_id": "M-df9913",
-     "graph_evidence_id": "T-8b28d3",
+     "dur": 0.64,
+     "health_evidence_id": "M-14689d",
+     "graph_evidence_id": "T-90be19",
      "suspects": [
       {
        "service": "currency",
        "anomalous_dependencies": [],
        "deepest": true,
        "health": {
-        "rps": 8.04,
+        "rps": 8.64,
         "error_ratio": 1.0,
         "baseline_error_ratio": 0.0,
         "p95_ms": 4.8,
@@ -114,7 +114,7 @@
         "error_ratio": 0.0,
         "baseline_error_ratio": 0.0,
         "p95_ms": null,
-        "baseline_p95_ms": 23.9
+        "baseline_p95_ms": 24.0
        }
       },
       {
@@ -124,9 +124,9 @@
        "health": {
         "rps": 0.0,
         "error_ratio": 0.0,
-        "baseline_error_ratio": 0.0,
+        "baseline_error_ratio": 0.098,
         "p95_ms": null,
-        "baseline_p95_ms": 23.9
+        "baseline_p95_ms": 23.8
        }
       },
       {
@@ -136,46 +136,46 @@
        ],
        "deepest": false,
        "health": {
-        "rps": 8.05,
+        "rps": 8.67,
         "error_ratio": 1.0,
-        "baseline_error_ratio": 0.035,
-        "p95_ms": 95.7,
-        "baseline_p95_ms": 236.1
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 97.2,
+        "baseline_p95_ms": 219.6
        }
       },
       {
        "service": "frontend",
        "anomalous_dependencies": [
-        "cart",
-        "catalog",
         "checkout",
-        "recommendation"
+        "catalog",
+        "recommendation",
+        "cart"
        ],
        "deepest": false,
        "health": {
-        "rps": 8.09,
+        "rps": 8.84,
         "error_ratio": 1.0,
-        "baseline_error_ratio": 0.086,
-        "p95_ms": 200.2,
-        "baseline_p95_ms": 3260.8
+        "baseline_error_ratio": 0.013,
+        "p95_ms": 205.0,
+        "baseline_p95_ms": 885.9
        }
       },
       {
        "service": "checkout",
        "anomalous_dependencies": [
-        "catalog",
         "shipping",
         "currency",
-        "cart",
-        "payment"
+        "payment",
+        "catalog",
+        "cart"
        ],
        "deepest": false,
        "health": {
         "rps": 0.0,
         "error_ratio": 0.0,
-        "baseline_error_ratio": 0.0,
+        "baseline_error_ratio": 0.097,
         "p95_ms": null,
-        "baseline_p95_ms": 464.5
+        "baseline_p95_ms": 467.2
        }
       },
       {
@@ -189,7 +189,7 @@
         "error_ratio": 0.0,
         "baseline_error_ratio": 0.0,
         "p95_ms": null,
-        "baseline_p95_ms": 238.0
+        "baseline_p95_ms": 242.7
        }
       },
       {
@@ -203,7 +203,7 @@
         "error_ratio": 0.0,
         "baseline_error_ratio": 0.0,
         "p95_ms": null,
-        "baseline_p95_ms": 78.0
+        "baseline_p95_ms": 71.4
        }
       }
      ]
@@ -215,10 +215,10 @@
       "service": "currency",
       "level": "ERROR+WARN"
      },
-     "t": 0.6,
+     "t": 0.64,
      "dur": 0.04,
      "evidence_ids": [
-      "L-daaa8d"
+      "L-aad9ec"
      ]
     },
     {
@@ -228,14 +228,14 @@
       "service": "cart",
       "level": "ERROR+WARN"
      },
-     "t": 0.64,
-     "dur": 0.02,
+     "t": 0.68,
+     "dur": 0.03,
      "evidence_ids": [
-      "L-0f6bbc",
-      "L-0efcb7",
-      "L-ecac05",
-      "L-180a1b",
-      "L-d96e8b"
+      "L-a630dd",
+      "L-65d1b9",
+      "L-6612d0",
+      "L-c60024",
+      "L-74e273"
      ]
     },
     {
@@ -245,7 +245,7 @@
       "service": "payment",
       "level": "ERROR+WARN"
      },
-     "t": 0.67,
+     "t": 0.71,
      "dur": 0.04,
      "evidence_ids": []
     },
@@ -256,19 +256,30 @@
       "service": "cart"
      },
      "evidence_ids": [],
-     "t": 0.7,
-     "dur": 0.08
+     "t": 0.75,
+     "dur": 0.1
     },
     {
      "step": "tool",
      "tool": "get_recent_changes",
      "args": {},
      "evidence_ids": [
-      "C-4d2f59",
-      "C-d8b2c4"
+      "C-d8b2c4",
+      "C-e012f7",
+      "C-fe4f1e"
      ],
-     "t": 0.78,
+     "t": 0.84,
      "dur": 0.0
+    },
+    {
+     "step": "llm",
+     "t": 0.84,
+     "dur": 56.7,
+     "tokens": 4508,
+     "model": "gemini-3.1-flash-lite",
+     "requested": [
+      "submit_diagnosis"
+     ]
     }
    ],
    "topology_suspects": [
@@ -281,85 +292,167 @@
     "recommendation",
     "shipping"
    ],
-   "verdict": "FAILED",
-   "error": "Gemini unavailable after 3 retries (last: 503 [{\n  \"error\": {\n    \"code\": 503,\n    \"message\": \"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\",\n    \"status\": \"UNAVAILABLE\"\n  }\n}\n])",
-   "root_cause_service": null,
-   "fault_type": null,
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "currency",
+   "fault_type": "bad_config",
    "ranked_candidates": [
     "currency",
-    "cart",
-    "payment"
+    "catalog",
+    "frontend"
    ],
+   "confidence": 1.0,
+   "summary": "The currency service is failing due to a bad configuration change where the FX_RATE_SOURCE was set to an empty string. This failure is propagating upstream, causing errors in the catalog and frontend services.",
+   "claims": [
+    {
+     "is_root_cause_claim": true,
+     "quote": "config error: FX_RATE_SOURCE is empty; cannot load exchange rates",
+     "text": "The currency service is failing because the FX_RATE_SOURCE configuration was set to an empty string.",
+     "evidence_ids": [
+      "L-aad9ec"
+     ],
+     "evidence": [
+      {
+       "id": "L-aad9ec",
+       "kind": "log",
+       "ref": "currency.log:9041",
+       "text": "config error: FX_RATE_SOURCE is empty; cannot load exchange rates",
+       "meta": {
+        "service": "currency",
+        "line": 9041,
+        "ts": "2026-11-19T15:17:37.699+00:00",
+        "level": "ERROR",
+        "trace_id": "107ad3952b8580e50b1a7407ac80e0bb",
+        "count_in_window": 549
+       }
+      }
+     ]
+    },
+    {
+     "text": "A configuration update set FX_RATE_SOURCE to an empty string, which directly caused the currency service to fail.",
+     "quote": "{\"FX_RATE_SOURCE\": \"\"}",
+     "evidence_ids": [
+      "C-d8b2c4",
+      "C-fe4f1e"
+     ],
+     "is_root_cause_claim": false,
+     "evidence": [
+      {
+       "id": "C-d8b2c4",
+       "kind": "change",
+       "ref": "events.log:6",
+       "text": "{\"ts\": \"2026-11-19T15:03:38.048+00:00\", \"service\": \"currency\", \"kind\": \"ConfigUpdated\", \"version\": 42, \"changed\": {\"FX_RATE_SOURCE\": \"\"}, \"author\": \"deploy-bot\"}",
+       "meta": {
+        "ts": "2026-11-19T15:03:38.048+00:00",
+        "service": "currency",
+        "kind": "ConfigUpdated",
+        "version": 42,
+        "changed": {
+         "FX_RATE_SOURCE": ""
+        },
+        "author": "deploy-bot"
+       }
+      },
+      {
+       "id": "C-fe4f1e",
+       "kind": "change",
+       "ref": "events.log:8",
+       "text": "{\"ts\": \"2026-11-19T15:16:34.776+00:00\", \"service\": \"currency\", \"kind\": \"ConfigUpdated\", \"version\": 42, \"changed\": {\"FX_RATE_SOURCE\": \"\"}, \"author\": \"deploy-bot\"}",
+       "meta": {
+        "ts": "2026-11-19T15:16:34.776+00:00",
+        "service": "currency",
+        "kind": "ConfigUpdated",
+        "version": 42,
+        "changed": {
+         "FX_RATE_SOURCE": ""
+        },
+        "author": "deploy-bot"
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [],
+   "evidence_precision": 1.0,
+   "rejected_hypotheses": [],
+   "suggested_action": {
+    "action": "rollback_config",
+    "why": "The service is failing due to an invalid configuration change (empty FX_RATE_SOURCE). Rolling back to the previous configuration should restore functionality.",
+    "service": "currency",
+    "risk": "risky",
+    "description": "Restores the previous configuration version",
+    "dry_run": "DELETE http://localhost:8107/admin/fault  (test env: restore config v41)"
+   },
+   "evidence_items": 11,
    "health": {
     "frontend": {
-     "rps": 8.09,
+     "rps": 8.84,
      "error_ratio": 1.0,
-     "baseline_error_ratio": 0.086,
-     "p95_ms": 200.2,
-     "baseline_p95_ms": 3260.8
+     "baseline_error_ratio": 0.013,
+     "p95_ms": 205.0,
+     "baseline_p95_ms": 885.9
     },
     "currency": {
-     "rps": 8.04,
+     "rps": 8.64,
      "error_ratio": 1.0,
      "baseline_error_ratio": 0.0,
      "p95_ms": 4.8,
      "baseline_p95_ms": 23.9
     },
     "catalog": {
-     "rps": 8.05,
+     "rps": 8.67,
      "error_ratio": 1.0,
-     "baseline_error_ratio": 0.035,
-     "p95_ms": 95.7,
-     "baseline_p95_ms": 236.1
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 97.2,
+     "baseline_p95_ms": 219.6
     },
     "payment": {
      "rps": 0.0,
      "error_ratio": 0.0,
-     "baseline_error_ratio": 0.0,
+     "baseline_error_ratio": 0.098,
      "p95_ms": null,
-     "baseline_p95_ms": 23.9
+     "baseline_p95_ms": 23.8
     },
     "checkout": {
      "rps": 0.0,
      "error_ratio": 0.0,
-     "baseline_error_ratio": 0.0,
+     "baseline_error_ratio": 0.097,
      "p95_ms": null,
-     "baseline_p95_ms": 464.5
+     "baseline_p95_ms": 467.2
     },
     "recommendation": {
      "rps": 0.0,
      "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
      "p95_ms": null,
-     "baseline_p95_ms": 238.0
+     "baseline_p95_ms": 242.7
     },
     "shipping": {
      "rps": 0.0,
      "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
      "p95_ms": null,
-     "baseline_p95_ms": 78.0
+     "baseline_p95_ms": 71.4
     },
     "inventory": {
-     "rps": 7.96,
+     "rps": 8.76,
      "error_ratio": 0.0,
-     "baseline_error_ratio": 0.054,
+     "baseline_error_ratio": 0.0,
      "p95_ms": 23.9,
-     "baseline_p95_ms": 2244.9
+     "baseline_p95_ms": 23.9
     },
     "cart": {
      "rps": 0.0,
      "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
      "p95_ms": null,
-     "baseline_p95_ms": 23.9
+     "baseline_p95_ms": 24.0
     }
    },
    "edges": [
     {
      "caller": "catalog",
      "callee": "currency",
-     "calls": 180
+     "calls": 178
     },
     {
      "caller": "catalog",
@@ -379,7 +472,7 @@
     {
      "caller": "checkout",
      "callee": "currency",
-     "calls": 38
+     "calls": 39
     },
     {
      "caller": "checkout",
@@ -428,7 +521,7 @@
      "anomalous_dependencies": [],
      "deepest": true,
      "health": {
-      "rps": 8.04,
+      "rps": 8.64,
       "error_ratio": 1.0,
       "baseline_error_ratio": 0.0,
       "p95_ms": 4.8,
@@ -444,7 +537,7 @@
       "error_ratio": 0.0,
       "baseline_error_ratio": 0.0,
       "p95_ms": null,
-      "baseline_p95_ms": 23.9
+      "baseline_p95_ms": 24.0
      }
     },
     {
@@ -454,9 +547,9 @@
      "health": {
       "rps": 0.0,
       "error_ratio": 0.0,
-      "baseline_error_ratio": 0.0,
+      "baseline_error_ratio": 0.098,
       "p95_ms": null,
-      "baseline_p95_ms": 23.9
+      "baseline_p95_ms": 23.8
      }
     },
     {
@@ -466,46 +559,46 @@
      ],
      "deepest": false,
      "health": {
-      "rps": 8.05,
+      "rps": 8.67,
       "error_ratio": 1.0,
-      "baseline_error_ratio": 0.035,
-      "p95_ms": 95.7,
-      "baseline_p95_ms": 236.1
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 97.2,
+      "baseline_p95_ms": 219.6
      }
     },
     {
      "service": "frontend",
      "anomalous_dependencies": [
-      "cart",
-      "catalog",
       "checkout",
-      "recommendation"
+      "catalog",
+      "recommendation",
+      "cart"
      ],
      "deepest": false,
      "health": {
-      "rps": 8.09,
+      "rps": 8.84,
       "error_ratio": 1.0,
-      "baseline_error_ratio": 0.086,
-      "p95_ms": 200.2,
-      "baseline_p95_ms": 3260.8
+      "baseline_error_ratio": 0.013,
+      "p95_ms": 205.0,
+      "baseline_p95_ms": 885.9
      }
     },
     {
      "service": "checkout",
      "anomalous_dependencies": [
-      "catalog",
       "shipping",
       "currency",
-      "cart",
-      "payment"
+      "payment",
+      "catalog",
+      "cart"
      ],
      "deepest": false,
      "health": {
       "rps": 0.0,
       "error_ratio": 0.0,
-      "baseline_error_ratio": 0.0,
+      "baseline_error_ratio": 0.097,
       "p95_ms": null,
-      "baseline_p95_ms": 464.5
+      "baseline_p95_ms": 467.2
      }
     },
     {
@@ -519,7 +612,7 @@
       "error_ratio": 0.0,
       "baseline_error_ratio": 0.0,
       "p95_ms": null,
-      "baseline_p95_ms": 238.0
+      "baseline_p95_ms": 242.7
      }
     },
     {
@@ -533,17 +626,18 @@
       "error_ratio": 0.0,
       "baseline_error_ratio": 0.0,
       "p95_ms": null,
-      "baseline_p95_ms": 78.0
+      "baseline_p95_ms": 71.4
      }
     }
    ],
    "score": {
-    "top1": false,
+    "top1": true,
     "top3": true,
-    "type_ok": null,
+    "type_ok": true,
     "inconclusive": false,
-    "failed": true
+    "failed": false
    }
   }
- }
+ },
+ "rerun_note": "Re-run: the first attempt hit Google Gemini HTTP 503 'high demand' on every model (see results/runs_hard_attempt1/)."
 }

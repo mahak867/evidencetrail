@@ -17,25 +17,25 @@
   "service": "payment",
   "fault_type": "bad_deploy"
  },
- "injected_at": 1795100221.6202648,
+ "injected_at": 1795101185.6633582,
  "methods": {
   "B1_dashboard_rule": {
    "method": "B1_dashboard_rule",
-   "root_cause_service": "checkout",
+   "root_cause_service": "payment",
    "fault_type": null,
    "ranked_candidates": [
-    "checkout",
     "payment",
+    "checkout",
     "frontend"
    ],
    "verdict": "DIAGNOSIS",
-   "elapsed_s": 0.1,
+   "elapsed_s": 0.0,
    "usage": {
     "total_tokens": 0,
     "calls": 0
    },
    "score": {
-    "top1": false,
+    "top1": true,
     "top3": true,
     "type_ok": null,
     "inconclusive": false,
@@ -51,20 +51,20 @@
     "checkout",
     "frontend"
    ],
-   "summary": "The payment service is throwing a 'TypeError: cannot read property 'amount' of undefined' in version v2.7.0-rc1, causing HTTP 500 errors in the checkout service and subsequent 502 errors in the frontend.",
+   "summary": "The payment service is throwing a 'TypeError: cannot read property 'amount' of undefined' consistently, which causes the checkout service to return HTTP 500 errors. This error propagates to the frontend, resulting in 502 errors and cascading latency/timeout issues across other services.",
    "verdict": "DIAGNOSIS",
-   "elapsed_s": 8.6,
+   "elapsed_s": 4.6,
    "usage": {
     "calls": 1,
-    "prompt_tokens": 15542,
-    "completion_tokens": 91,
+    "prompt_tokens": 15509,
+    "completion_tokens": 97,
     "retries": 0,
     "failures": 0,
     "wait_s": 0.0,
-    "total_tokens": 15633
+    "total_tokens": 15606
    },
    "model": "gemini-3.1-flash-lite",
-   "prompt_chars": 30459,
+   "prompt_chars": 30331,
    "error": null,
    "score": {
     "top1": true,
@@ -76,35 +76,35 @@
   },
   "EvidenceTrail": {
    "alert": "checkout error rate above 5% for 1m (SLO burn)",
-   "model": "gemini-flash-lite-latest",
-   "elapsed_s": 35.4,
+   "model": "gemini-3.1-flash-lite",
+   "elapsed_s": 38.9,
    "usage": {
     "calls": 1,
-    "prompt_tokens": 4496,
-    "completion_tokens": 12,
-    "retries": 0,
-    "failures": 9,
-    "wait_s": 26.9,
-    "total_tokens": 4508
+    "prompt_tokens": 4567,
+    "completion_tokens": 364,
+    "retries": 1,
+    "failures": 5,
+    "wait_s": 34.8,
+    "total_tokens": 4931
    },
    "trail": [
     {
      "step": "scan",
      "t": 0,
-     "dur": 0.7,
-     "health_evidence_id": "M-178a08",
-     "graph_evidence_id": "T-fb5af1",
+     "dur": 0.78,
+     "health_evidence_id": "M-0a1436",
+     "graph_evidence_id": "T-e6099b",
      "suspects": [
       {
        "service": "payment",
        "anomalous_dependencies": [],
        "deepest": true,
        "health": {
-        "rps": 1.96,
-        "error_ratio": 0.657,
+        "rps": 1.76,
+        "error_ratio": 0.495,
         "baseline_error_ratio": 0.0,
-        "p95_ms": 21.9,
-        "baseline_p95_ms": 23.9
+        "p95_ms": 23.1,
+        "baseline_p95_ms": 23.8
        }
       },
       {
@@ -114,11 +114,11 @@
        ],
        "deepest": false,
        "health": {
-        "rps": 1.96,
-        "error_ratio": 0.657,
+        "rps": 1.76,
+        "error_ratio": 0.495,
         "baseline_error_ratio": 0.0,
-        "p95_ms": 331.2,
-        "baseline_p95_ms": 1383.3
+        "p95_ms": 419.2,
+        "baseline_p95_ms": 440.9
        }
       },
       {
@@ -128,11 +128,11 @@
        ],
        "deepest": false,
        "health": {
-        "rps": 8.0,
-        "error_ratio": 0.166,
+        "rps": 7.98,
+        "error_ratio": 0.112,
         "baseline_error_ratio": 0.0,
-        "p95_ms": 645.2,
-        "baseline_p95_ms": 892.5
+        "p95_ms": 677.2,
+        "baseline_p95_ms": 793.4
        }
       }
      ]
@@ -144,10 +144,10 @@
       "service": "payment",
       "level": "ERROR+WARN"
      },
-     "t": 0.7,
-     "dur": 0.03,
+     "t": 0.78,
+     "dur": 0.04,
      "evidence_ids": [
-      "L-b8f3cf"
+      "L-58799a"
      ]
     },
     {
@@ -157,10 +157,10 @@
       "service": "checkout",
       "level": "ERROR+WARN"
      },
-     "t": 0.73,
+     "t": 0.82,
      "dur": 0.01,
      "evidence_ids": [
-      "L-caf81d"
+      "L-d148d1"
      ]
     },
     {
@@ -170,15 +170,15 @@
       "service": "frontend",
       "level": "ERROR+WARN"
      },
-     "t": 0.74,
-     "dur": 0.11,
+     "t": 0.83,
+     "dur": 0.15,
      "evidence_ids": [
-      "L-2eb28c",
-      "L-207e6e",
-      "L-1af8e4",
-      "L-89f3e2",
-      "L-4c705a",
-      "L-e843f5"
+      "L-fe3113",
+      "L-1ba0ad",
+      "L-5457fe",
+      "L-c909b5",
+      "L-7cab70",
+      "L-8c9da7"
      ]
     },
     {
@@ -188,44 +188,35 @@
       "service": "checkout"
      },
      "evidence_ids": [
-      "T-90b713",
-      "T-83621a",
-      "T-97b600",
-      "T-83a445",
-      "T-081534"
+      "T-e4fbca",
+      "T-ef2744",
+      "T-d9f73a",
+      "T-58e0a9",
+      "T-750ddc"
      ],
-     "t": 0.86,
-     "dur": 0.14
+     "t": 0.98,
+     "dur": 0.19
     },
     {
      "step": "tool",
      "tool": "get_recent_changes",
      "args": {},
      "evidence_ids": [
-      "C-4d2f59"
+      "C-d8b2c4",
+      "C-e012f7"
      ],
-     "t": 1.0,
+     "t": 1.16,
      "dur": 0.0
     },
     {
      "step": "llm",
-     "t": 1.0,
-     "dur": 8.94,
-     "tokens": 4508,
-     "model": "gemini-flash-lite-latest",
+     "t": 1.17,
+     "dur": 37.75,
+     "tokens": 4931,
+     "model": "gemini-3.1-flash-lite",
      "requested": [
-      "get_recent_changes"
+      "submit_diagnosis"
      ]
-    },
-    {
-     "step": "tool",
-     "tool": "get_recent_changes",
-     "args": {},
-     "evidence_ids": [
-      "C-4d2f59"
-     ],
-     "t": 9.94,
-     "dur": 0.0
     }
    ],
    "topology_suspects": [
@@ -233,120 +224,191 @@
     "checkout",
     "frontend"
    ],
-   "verdict": "FAILED",
-   "error": "Gemini unavailable after 3 retries (last: 503 [{\n  \"error\": {\n    \"code\": 503,\n    \"message\": \"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\",\n    \"status\": \"UNAVAILABLE\"\n  }\n}\n])",
-   "root_cause_service": null,
-   "fault_type": null,
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "payment",
+   "fault_type": "bad_deploy",
    "ranked_candidates": [
     "payment",
     "checkout",
     "frontend"
    ],
+   "confidence": 1.0,
+   "summary": "The payment service is failing due to a bad deployment (v2.7.0-rc1) which introduced a TypeError. This is causing checkout failures and subsequent frontend errors.",
+   "claims": [
+    {
+     "evidence_ids": [
+      "L-58799a"
+     ],
+     "quote": "TypeError: cannot read property 'amount' of undefined (v2.7.0-rc1)",
+     "is_root_cause_claim": true,
+     "text": "The payment service is throwing a TypeError immediately after the deployment.",
+     "evidence": [
+      {
+       "id": "L-58799a",
+       "kind": "log",
+       "ref": "payment.log:7796",
+       "text": "TypeError: cannot read property 'amount' of undefined (v2.7.0-rc1)",
+       "meta": {
+        "service": "payment",
+        "line": 7796,
+        "ts": "2026-11-19T15:14:10.212+00:00",
+        "level": "ERROR",
+        "trace_id": "b0a9c87a13eec43415cf4bd2382613dd",
+        "count_in_window": 59
+       }
+      }
+     ]
+    },
+    {
+     "evidence_ids": [
+      "T-e4fbca"
+     ],
+     "quote": "deepest failing service: payment",
+     "is_root_cause_claim": false,
+     "text": "Traces show the error originates in the payment service.",
+     "evidence": [
+      {
+       "id": "T-e4fbca",
+       "kind": "trace",
+       "ref": "trace:015923ce8f1383c1",
+       "text": "trace 015923ce8f1383c19a55bc159edc6205: failing server spans in call order: frontend(502, 424.6ms) -> checkout(502, 122.8ms) -> payment(500, 1.0ms); deepest failing service: payment",
+       "meta": {
+        "trace_id": "015923ce8f1383c19a55bc159edc6205",
+        "deepest": "payment"
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [
+    {
+     "text": "A new version of the payment service was deployed just before the errors started.",
+     "evidence_ids": [
+      "C-e012f7"
+     ],
+     "quote": "2026-11-19T15:13:05.662+00:00, service: payment, kind: DeploymentRolledOut, image: shopsim/payment:v2.7.0-rc1",
+     "is_root_cause_claim": true,
+     "rejected_because": [
+      "quoted text not found in cited evidence"
+     ]
+    }
+   ],
+   "evidence_precision": 0.667,
+   "rejected_hypotheses": [],
+   "suggested_action": {
+    "why": "The payment service deployment v2.7.0-rc1 introduced a code error causing TypeErrors.",
+    "service": "payment",
+    "action": "rollback_deploy",
+    "risk": "risky",
+    "description": "Rolls the service back to its previous image",
+    "dry_run": "DELETE http://localhost:8105/admin/fault  (test env: roll back to v2.6.3)"
+   },
+   "evidence_items": 17,
    "health": {
     "frontend": {
-     "rps": 8.0,
-     "error_ratio": 0.166,
+     "rps": 7.98,
+     "error_ratio": 0.112,
      "baseline_error_ratio": 0.0,
-     "p95_ms": 645.2,
-     "baseline_p95_ms": 892.5
+     "p95_ms": 677.2,
+     "baseline_p95_ms": 793.4
     },
     "currency": {
-     "rps": 19.25,
+     "rps": 19.31,
      "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
      "p95_ms": 23.9,
-     "baseline_p95_ms": 24.0
-    },
-    "catalog": {
-     "rps": 17.91,
-     "error_ratio": 0.0,
-     "baseline_error_ratio": 0.0,
-     "p95_ms": 178.3,
-     "baseline_p95_ms": 218.1
-    },
-    "payment": {
-     "rps": 1.96,
-     "error_ratio": 0.657,
-     "baseline_error_ratio": 0.0,
-     "p95_ms": 21.9,
      "baseline_p95_ms": 23.9
     },
-    "checkout": {
-     "rps": 1.96,
-     "error_ratio": 0.657,
+    "catalog": {
+     "rps": 17.55,
+     "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
-     "p95_ms": 331.2,
-     "baseline_p95_ms": 1383.3
+     "p95_ms": 187.1,
+     "baseline_p95_ms": 195.7
+    },
+    "payment": {
+     "rps": 1.76,
+     "error_ratio": 0.495,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.1,
+     "baseline_p95_ms": 23.8
+    },
+    "checkout": {
+     "rps": 1.76,
+     "error_ratio": 0.495,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 419.2,
+     "baseline_p95_ms": 440.9
     },
     "recommendation": {
-     "rps": 7.91,
+     "rps": 7.95,
      "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
-     "p95_ms": 236.3,
-     "baseline_p95_ms": 237.9
+     "p95_ms": 236.8,
+     "baseline_p95_ms": 238.1
     },
     "shipping": {
-     "rps": 0.67,
+     "rps": 0.87,
      "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
-     "p95_ms": 76.9,
-     "baseline_p95_ms": 1191.7
+     "p95_ms": 49.2,
+     "baseline_p95_ms": 78.3
     },
     "inventory": {
-     "rps": 17.67,
+     "rps": 18.07,
      "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
-     "p95_ms": 23.9,
-     "baseline_p95_ms": 24.0
+     "p95_ms": 24.0,
+     "baseline_p95_ms": 23.9
     },
     "cart": {
-     "rps": 9.69,
+     "rps": 9.91,
      "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
      "p95_ms": 23.9,
-     "baseline_p95_ms": 24.0
+     "baseline_p95_ms": 23.9
     }
    },
    "edges": [
     {
      "caller": "catalog",
      "callee": "currency",
-     "calls": 246
+     "calls": 236
     },
     {
      "caller": "catalog",
      "callee": "inventory",
-     "calls": 248
+     "calls": 249
     },
     {
      "caller": "checkout",
      "callee": "cart",
-     "calls": 49
+     "calls": 45
     },
     {
      "caller": "checkout",
      "callee": "catalog",
-     "calls": 49
+     "calls": 46
     },
     {
      "caller": "checkout",
      "callee": "currency",
-     "calls": 17
+     "calls": 19
     },
     {
      "caller": "checkout",
      "callee": "payment",
-     "calls": 49
+     "calls": 46
     },
     {
      "caller": "checkout",
      "callee": "shipping",
-     "calls": 17
+     "calls": 20
     },
     {
      "caller": "frontend",
      "callee": "cart",
-     "calls": 100
+     "calls": 95
     },
     {
      "caller": "frontend",
@@ -356,22 +418,22 @@
     {
      "caller": "frontend",
      "callee": "checkout",
-     "calls": 49
+     "calls": 46
     },
     {
      "caller": "frontend",
      "callee": "recommendation",
-     "calls": 99
+     "calls": 97
     },
     {
      "caller": "recommendation",
      "callee": "catalog",
-     "calls": 99
+     "calls": 97
     },
     {
      "caller": "shipping",
      "callee": "currency",
-     "calls": 17
+     "calls": 19
     }
    ],
    "suspects": [
@@ -380,11 +442,11 @@
      "anomalous_dependencies": [],
      "deepest": true,
      "health": {
-      "rps": 1.96,
-      "error_ratio": 0.657,
+      "rps": 1.76,
+      "error_ratio": 0.495,
       "baseline_error_ratio": 0.0,
-      "p95_ms": 21.9,
-      "baseline_p95_ms": 23.9
+      "p95_ms": 23.1,
+      "baseline_p95_ms": 23.8
      }
     },
     {
@@ -394,11 +456,11 @@
      ],
      "deepest": false,
      "health": {
-      "rps": 1.96,
-      "error_ratio": 0.657,
+      "rps": 1.76,
+      "error_ratio": 0.495,
       "baseline_error_ratio": 0.0,
-      "p95_ms": 331.2,
-      "baseline_p95_ms": 1383.3
+      "p95_ms": 419.2,
+      "baseline_p95_ms": 440.9
      }
     },
     {
@@ -408,21 +470,22 @@
      ],
      "deepest": false,
      "health": {
-      "rps": 8.0,
-      "error_ratio": 0.166,
+      "rps": 7.98,
+      "error_ratio": 0.112,
       "baseline_error_ratio": 0.0,
-      "p95_ms": 645.2,
-      "baseline_p95_ms": 892.5
+      "p95_ms": 677.2,
+      "baseline_p95_ms": 793.4
      }
     }
    ],
    "score": {
-    "top1": false,
+    "top1": true,
     "top3": true,
-    "type_ok": null,
+    "type_ok": true,
     "inconclusive": false,
-    "failed": true
+    "failed": false
    }
   }
- }
+ },
+ "rerun_note": "Re-run: the first attempt hit Google Gemini HTTP 503 'high demand' on every model (see results/runs_hard_attempt1/)."
 }
