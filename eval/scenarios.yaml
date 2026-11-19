@@ -1,6 +1,6 @@
 # Fault scenarios with known root causes. Each is injected into the running
 # Compose shop, then every method investigates the same window.
-# 12 scenarios, 6 fault types, 9 services.
+# 12 scenarios, 6 fault types, 6 services.
 - id: S01
   service: payment
   kind: error

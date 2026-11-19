@@ -2,7 +2,7 @@
 import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-VIDEO = "https://drive.google.com/file/d/1uj3LoitDER3ILarIAnZZxmJnlDbtoqD7/view"
+VIDEO = "/demo.mp4"
 REPO = "https://github.com/mahak867/evidencetrail"
 s = (ROOT / "ui/index.html").read_text()
 banner = f'''<div id="staticbar" style="position:sticky;top:0;z-index:15;display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:9px 16px;background:var(--surface);border-bottom:1px solid var(--hair);font-size:13px">
