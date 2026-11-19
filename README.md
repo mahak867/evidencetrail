@@ -92,12 +92,44 @@ python -m pytest -q tests          # offline tests: evidence gate, redaction, sa
 
 ## Evaluation
 
+### Results so far
+
+**Standard set** (12 faults, 6 fault types; [`results/SCORECARD.md`](results/SCORECARD.md)):
+
+| Method | Right service | Right service + fault type |
+|---|---|---|
+| **EvidenceTrail** | **12/12** | **12/12** |
+| B0 single-prompt Gemini | 12/12 | 10/12 (called both bad deploys "code error") |
+| B1 dashboard rule | 8/12 | n/a |
+
+The evidence gate blocked 7 of 30 claims Gemini proposed (fabricated or misquoted citations).
+
+**Hard set** (6 faults with red-herring log noise and silent faults; [`results/SCORECARD_HARD.md`](results/SCORECARD_HARD.md)):
+
+| Method | Right service | Confident wrong answers |
+|---|---|---|
+| **EvidenceTrail** | **5/6** (plus 1 correct answer withheld as INCONCLUSIVE) | **0** |
+| B0 single-prompt Gemini | 3/6 | 2 (including a service that does not exist) |
+| B1 dashboard rule | 3/6 | 3 |
+
+H03 and H05 were re-run after Google returned HTTP 503 "high demand" on every model. The first attempts are kept in `results/runs_hard_attempt1/`.
+
+
 The scorecard compares three methods on the same faults, telemetry window and conditions:
 - **B1, dashboard rule:** blame the service with the largest error-ratio (or p95) jump. This is how dashboard triage works.
 - **B0, single-prompt Gemini:** the alert plus raw logs in one call, with no tools. This is "paste logs into a chat model".
 - **EvidenceTrail.**
 
 It reports top-1 and top-3 accuracy with 95% Wilson intervals, fault-type accuracy, inconclusive and failed counts, time, tokens, evidence precision and every individual scenario, misses included. See [`results/SCORECARD.md`](results/SCORECARD.md).
+
+## Recording the demo video
+
+`tools/record_demo.js` drives the real UI with Playwright against the live test environment: it injects a bad deploy, investigates, opens evidence and approves the rollback, with captions. `tools/cut_video.py` then speeds up the waiting parts with ffmpeg.
+
+```bash
+docker compose up -d --build && uvicorn evidencetrail.server:app --port 8080 &
+cd tools && node record_demo.js && python cut_video.py   # writes EvidenceTrail_demo.mp4
+```
 
 ## Limitations and known failure cases
 
