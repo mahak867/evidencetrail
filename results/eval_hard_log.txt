@@ -15,3 +15,52 @@
   H04 B0_single_prompt   -> inventory/resource_exhaustion [DIAGNOSIS] top1=True (2.7s)
   H04 EvidenceTrail      -> inventory/resource_exhaustion [DIAGNOSIS] top1=True (18.7s)
 == H05: bad_config on currency
+  H05 B1_dashboard_rule  -> currency/None [DIAGNOSIS] top1=True (0.0s)
+  H05 B0_single_prompt   -> currency/bad_config [DIAGNOSIS] top1=True (5.9s)
+  H05 EvidenceTrail      -> None/None [FAILED] top1=False (2.8s)
+== H06: crash on cart
+  H06 B1_dashboard_rule  -> frontend/None [DIAGNOSIS] top1=False (0.0s)
+  H06 B0_single_prompt   -> None/None [FAILED] top1=False (6.0s)
+  H06 EvidenceTrail      -> cart/crash_or_unreachable [DIAGNOSIS] top1=True (188.2s)
+# EvidenceTrail evaluation scorecard (hard set)
+
+- Scenarios: **6** injected faults across **5** fault types and **5** services (see `eval/scenarios.yaml`).
+- Each method investigates the same 120s telemetry window, 60s after injection.
+- 95% Wilson confidence intervals in brackets. Small n: treat as indicative, not definitive.
+
+| Method | Top-1 service | Top-3 service | Fault type correct | Inconclusive | Failed | Median time (s) | Median tokens |
+|---|---|---|---|---|---|---|---|
+| B1_dashboard_rule | 3/6 = 50% [19%–81%] | 5/6 = 83% [44%–97%] | n/a (no type) | 0 | 0 | 0 | 0 |
+| B0_single_prompt | 3/6 = 50% [19%–81%] | 3/6 = 50% [19%–81%] | 3/5 = 60% [23%–88%] | 0 | 1 | 6.7 | 14864 |
+| EvidenceTrail | 3/6 = 50% [19%–81%] | 6/6 = 100% [61%–100%] | 4/4 = 100% [51%–100%] | 1 | 2 | 38.2 | 12441 |
+
+## EvidenceTrail evidence gate
+
+- Claims kept: **6**, dropped by the gate: **2** (cited evidence never fetched, or quote not found).
+- Mean evidence precision per investigation: **75%**
+- Every suggested action labelled by policy; none executed during evaluation.
+
+## Every scenario (misses included)
+
+| ID | Truth | B1 | B0 | EvidenceTrail | ET verdict | ET conf | ET time (s) |
+|---|---|---|---|---|---|---|---|
+| H01 | currency/latency | ❌ frontend/- | ❌ analytics-collector/crash_or_unreachable | ❌ currency/latency | INCONCLUSIVE | 0.9 | 43.5 |
+| H02 | shipping/latency | ✅ shipping/- | ❌ checkout/latency | ✅ shipping/latency | DIAGNOSIS | 0.9 | 38.2 |
+| H03 | payment/bad_deploy | ❌ checkout/- | ✅ payment/code_error | ❌ None/- | FAILED | - | 35.4 |
+| H04 | inventory/resource_exhaustion | ✅ inventory/- | ✅ inventory/resource_exhaustion | ✅ inventory/resource_exhaustion | DIAGNOSIS | 1.0 | 18.7 |
+| H05 | currency/bad_config | ✅ currency/- | ✅ currency/bad_config | ❌ None/- | FAILED | - | 2.8 |
+| H06 | cart/crash_or_unreachable | ❌ frontend/- | ❌ None/- | ✅ cart/crash_or_unreachable | DIAGNOSIS | 1.0 | 188.2 |
+
+## Cost and reliability
+
+- EvidenceTrail total tokens: 64,224 over 6 investigations (~10,704 per incident).
+- Gemini retries (429/5xx with backoff): 1; hard failures: 30. Models used: ['gemini-3.1-flash-lite', 'gemini-flash-lite-latest'].
+- Free-tier Gemini latency varies a lot with demand; elapsed time includes retry back-off.
+- Median EvidenceTrail time excluding provider back-off/overload waits: 34.0s
+
+## Known limitations
+
+- Injected faults are single-cause and cleaner than real incidents.
+- Small scenario set (n per method is small); intervals are wide.
+- The shop is a simplified 9-service app; telemetry volume is far below production.
+

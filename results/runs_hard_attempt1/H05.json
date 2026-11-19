@@ -1,0 +1,549 @@
+{
+ "scenario": {
+  "id": "H05",
+  "service": "currency",
+  "kind": "bad_config",
+  "params": {},
+  "noise": [
+   "frontend",
+   "shipping",
+   "cart"
+  ],
+  "alert": "checkout error rate above 5% for 1m (SLO burn)"
+ },
+ "truth": {
+  "service": "currency",
+  "fault_type": "bad_config"
+ },
+ "injected_at": 1795100618.0491157,
+ "methods": {
+  "B1_dashboard_rule": {
+   "method": "B1_dashboard_rule",
+   "root_cause_service": "currency",
+   "fault_type": null,
+   "ranked_candidates": [
+    "currency",
+    "catalog",
+    "frontend"
+   ],
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 0.0,
+   "usage": {
+    "total_tokens": 0,
+    "calls": 0
+   },
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": null,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "B0_single_prompt": {
+   "method": "B0_single_prompt",
+   "root_cause_service": "currency",
+   "fault_type": "bad_config",
+   "ranked_candidates": [
+    "currency",
+    "catalog",
+    "frontend"
+   ],
+   "summary": "The currency service is failing due to a missing configuration (FX_RATE_SOURCE), which causes a cascade of 500 errors in the catalog service and subsequent 502 errors in the frontend, leading to the checkout error rate spike.",
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 5.9,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 14775,
+    "completion_tokens": 89,
+    "retries": 0,
+    "failures": 0,
+    "wait_s": 0.0,
+    "total_tokens": 14864
+   },
+   "model": "gemini-3.1-flash-lite",
+   "prompt_chars": 30494,
+   "error": null,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail": {
+   "alert": "checkout error rate above 5% for 1m (SLO burn)",
+   "model": "gemini-3.1-flash-lite",
+   "elapsed_s": 2.8,
+   "usage": {
+    "calls": 0,
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "retries": 0,
+    "failures": 5,
+    "wait_s": 2.0,
+    "total_tokens": 0
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "t": 0,
+     "dur": 0.6,
+     "health_evidence_id": "M-df9913",
+     "graph_evidence_id": "T-8b28d3",
+     "suspects": [
+      {
+       "service": "currency",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 8.04,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 4.8,
+        "baseline_p95_ms": 23.9
+       }
+      },
+      {
+       "service": "cart",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": null,
+        "baseline_p95_ms": 23.9
+       }
+      },
+      {
+       "service": "payment",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": null,
+        "baseline_p95_ms": 23.9
+       }
+      },
+      {
+       "service": "catalog",
+       "anomalous_dependencies": [
+        "currency"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 8.05,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.035,
+        "p95_ms": 95.7,
+        "baseline_p95_ms": 236.1
+       }
+      },
+      {
+       "service": "frontend",
+       "anomalous_dependencies": [
+        "cart",
+        "catalog",
+        "checkout",
+        "recommendation"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 8.09,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.086,
+        "p95_ms": 200.2,
+        "baseline_p95_ms": 3260.8
+       }
+      },
+      {
+       "service": "checkout",
+       "anomalous_dependencies": [
+        "catalog",
+        "shipping",
+        "currency",
+        "cart",
+        "payment"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": null,
+        "baseline_p95_ms": 464.5
+       }
+      },
+      {
+       "service": "recommendation",
+       "anomalous_dependencies": [
+        "catalog"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": null,
+        "baseline_p95_ms": 238.0
+       }
+      },
+      {
+       "service": "shipping",
+       "anomalous_dependencies": [
+        "currency"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": null,
+        "baseline_p95_ms": 78.0
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "currency",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.6,
+     "dur": 0.04,
+     "evidence_ids": [
+      "L-daaa8d"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "cart",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.64,
+     "dur": 0.02,
+     "evidence_ids": [
+      "L-0f6bbc",
+      "L-0efcb7",
+      "L-ecac05",
+      "L-180a1b",
+      "L-d96e8b"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "payment",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.67,
+     "dur": 0.04,
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "cart"
+     },
+     "evidence_ids": [],
+     "t": 0.7,
+     "dur": 0.08
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "evidence_ids": [
+      "C-4d2f59",
+      "C-d8b2c4"
+     ],
+     "t": 0.78,
+     "dur": 0.0
+    }
+   ],
+   "topology_suspects": [
+    "currency",
+    "cart",
+    "payment",
+    "catalog",
+    "frontend",
+    "checkout",
+    "recommendation",
+    "shipping"
+   ],
+   "verdict": "FAILED",
+   "error": "Gemini unavailable after 3 retries (last: 503 [{\n  \"error\": {\n    \"code\": 503,\n    \"message\": \"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\",\n    \"status\": \"UNAVAILABLE\"\n  }\n}\n])",
+   "root_cause_service": null,
+   "fault_type": null,
+   "ranked_candidates": [
+    "currency",
+    "cart",
+    "payment"
+   ],
+   "health": {
+    "frontend": {
+     "rps": 8.09,
+     "error_ratio": 1.0,
+     "baseline_error_ratio": 0.086,
+     "p95_ms": 200.2,
+     "baseline_p95_ms": 3260.8
+    },
+    "currency": {
+     "rps": 8.04,
+     "error_ratio": 1.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 4.8,
+     "baseline_p95_ms": 23.9
+    },
+    "catalog": {
+     "rps": 8.05,
+     "error_ratio": 1.0,
+     "baseline_error_ratio": 0.035,
+     "p95_ms": 95.7,
+     "baseline_p95_ms": 236.1
+    },
+    "payment": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 23.9
+    },
+    "checkout": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 464.5
+    },
+    "recommendation": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 238.0
+    },
+    "shipping": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 78.0
+    },
+    "inventory": {
+     "rps": 7.96,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.054,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 2244.9
+    },
+    "cart": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 23.9
+    }
+   },
+   "edges": [
+    {
+     "caller": "catalog",
+     "callee": "currency",
+     "calls": 180
+    },
+    {
+     "caller": "catalog",
+     "callee": "inventory",
+     "calls": 179
+    },
+    {
+     "caller": "checkout",
+     "callee": "cart",
+     "calls": 40
+    },
+    {
+     "caller": "checkout",
+     "callee": "catalog",
+     "calls": 40
+    },
+    {
+     "caller": "checkout",
+     "callee": "currency",
+     "calls": 38
+    },
+    {
+     "caller": "checkout",
+     "callee": "payment",
+     "calls": 39
+    },
+    {
+     "caller": "checkout",
+     "callee": "shipping",
+     "calls": 39
+    },
+    {
+     "caller": "frontend",
+     "callee": "cart",
+     "calls": 40
+    },
+    {
+     "caller": "frontend",
+     "callee": "catalog",
+     "calls": 100
+    },
+    {
+     "caller": "frontend",
+     "callee": "checkout",
+     "calls": 40
+    },
+    {
+     "caller": "frontend",
+     "callee": "recommendation",
+     "calls": 40
+    },
+    {
+     "caller": "recommendation",
+     "callee": "catalog",
+     "calls": 40
+    },
+    {
+     "caller": "shipping",
+     "callee": "currency",
+     "calls": 39
+    }
+   ],
+   "suspects": [
+    {
+     "service": "currency",
+     "anomalous_dependencies": [],
+     "deepest": true,
+     "health": {
+      "rps": 8.04,
+      "error_ratio": 1.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 4.8,
+      "baseline_p95_ms": 23.9
+     }
+    },
+    {
+     "service": "cart",
+     "anomalous_dependencies": [],
+     "deepest": true,
+     "health": {
+      "rps": 0.0,
+      "error_ratio": 0.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": null,
+      "baseline_p95_ms": 23.9
+     }
+    },
+    {
+     "service": "payment",
+     "anomalous_dependencies": [],
+     "deepest": true,
+     "health": {
+      "rps": 0.0,
+      "error_ratio": 0.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": null,
+      "baseline_p95_ms": 23.9
+     }
+    },
+    {
+     "service": "catalog",
+     "anomalous_dependencies": [
+      "currency"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 8.05,
+      "error_ratio": 1.0,
+      "baseline_error_ratio": 0.035,
+      "p95_ms": 95.7,
+      "baseline_p95_ms": 236.1
+     }
+    },
+    {
+     "service": "frontend",
+     "anomalous_dependencies": [
+      "cart",
+      "catalog",
+      "checkout",
+      "recommendation"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 8.09,
+      "error_ratio": 1.0,
+      "baseline_error_ratio": 0.086,
+      "p95_ms": 200.2,
+      "baseline_p95_ms": 3260.8
+     }
+    },
+    {
+     "service": "checkout",
+     "anomalous_dependencies": [
+      "catalog",
+      "shipping",
+      "currency",
+      "cart",
+      "payment"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 0.0,
+      "error_ratio": 0.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": null,
+      "baseline_p95_ms": 464.5
+     }
+    },
+    {
+     "service": "recommendation",
+     "anomalous_dependencies": [
+      "catalog"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 0.0,
+      "error_ratio": 0.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": null,
+      "baseline_p95_ms": 238.0
+     }
+    },
+    {
+     "service": "shipping",
+     "anomalous_dependencies": [
+      "currency"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 0.0,
+      "error_ratio": 0.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": null,
+      "baseline_p95_ms": 78.0
+     }
+    }
+   ],
+   "score": {
+    "top1": false,
+    "top3": true,
+    "type_ok": null,
+    "inconclusive": false,
+    "failed": true
+   }
+  }
+ }
+}
