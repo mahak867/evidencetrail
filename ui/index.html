@@ -158,7 +158,10 @@ pre.code{background:var(--code);border:1px solid var(--hair);border-radius:10px;
 .legend .sw{width:9px;height:9px;border-radius:50%;display:inline-block}
 
 /* ---------- tiles ---------- */
-.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+.kpi3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 6px}
+.kpi3 .l{font-size:11px;color:var(--muted)}.kpi3 .v{font-size:19px;font-weight:700;letter-spacing:-.02em}.kpi3 .d{font-size:11.5px}
+.pcwrap{margin-top:8px}.pct{font-size:11.5px;color:var(--ink-2);font-weight:600;margin-bottom:2px}.pc-empty{font-size:12px;color:var(--muted);padding:14px 0}
 .tile{border:1px solid var(--hair);border-radius:12px;padding:12px;background:var(--surface)}
 .tile .name{font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:8px}
 .bar{height:6px;border-radius:99px;background:var(--surface-3);overflow:hidden;margin:4px 0 8px}
@@ -318,7 +321,11 @@ tr:hover td{background:var(--surface-2)}
           <div id="topoMap"><div class="empty"><span class="spin"></span> Loading telemetry…</div></div>
         </div>
         <div class="card c12">
-          <h2><svg class="i"><use href="#i-pulse"/></svg>Services <span class="right muted" style="font-size:12px">error ratio · p95 vs baseline window</span></h2>
+          <h2><svg class="i"><use href="#i-chart"/></svg>Error ratio heatmap <span class="right muted" style="font-size:12px">every service · last 10 min · Prometheus</span></h2>
+          <div id="heat"><div class="empty">—</div></div>
+        </div>
+        <div class="card c12">
+          <h2><svg class="i"><use href="#i-pulse"/></svg>Services <span class="right muted" style="font-size:12px">sorted by severity · dashed = SLO / baseline · ● peak · hover syncs all three charts</span></h2>
           <div class="tiles" id="tiles"></div>
         </div>
       </div>
@@ -619,34 +626,86 @@ async function loadMap(){
   if(VIEW==="map" && $("#auto").checked) MAPT=setTimeout(loadMap,5000);
 }
 let SERIES=null;
-function spark(pts, colorVar, fmt, maxHint){
-  pts=(pts||[]).filter(p=>p[1]!=null); if(pts.length<2) return `<div class="muted" style="font-size:11px;height:34px">no data</div>`;
-  const W=200,H=34,ys=pts.map(p=>p[1]),mx=Math.max(maxHint||0,...ys)||1,x0=pts[0][0],x1=pts.at(-1)[0];
-  const X=t=>(t-x0)/(x1-x0||1)*(W-2)+1, Y=v=>H-2-(v/mx)*(H-6);
-  const d=pts.map((p,i)=>(i?"L":"M")+X(p[0]).toFixed(1)+" "+Y(p[1]).toFixed(1)).join(" ");
-  return `<svg class="chart sp" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:34px" data-pts='${JSON.stringify(pts)}' data-fmt="${fmt}">
-    <line x1="0" x2="${W}" y1="${H-2}" y2="${H-2}" class="base"/><path d="${d}" fill="none" stroke="${css(colorVar)}" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>
-    <line class="xh" x1="0" x2="0" y1="0" y2="${H}" stroke="${css("--ink-2")}" stroke-width="1" vector-effect="non-scaling-stroke" opacity="0"/></svg>`;
+/* ---- service charts: real axes, gridlines, threshold/baseline lines, peak marker, synced hover ---- */
+const fmtV=(v,u)=>v==null?"–":u==="pct"?(v*100).toFixed(v<0.1?1:0)+"%":u==="ms"?(v>=1000?(v/1000).toFixed(1)+"s":Math.round(v)+"ms"):v.toFixed(v<10?1:0);
+function niceMax(v){ if(v<=0) return 1; const e=Math.pow(10,Math.floor(Math.log10(v))), f=v/e; return (f<=1?1:f<=2?2:f<=5?5:10)*e; }
+function panelChart(pts, o){
+  // o: {unit, color, ref:{v,label,dash}, area, bars, minMax, title}
+  pts=(pts||[]).filter(p=>p[1]!=null);
+  const W=320,H=100,P={l:42,r:10,t:8,b:22};
+  if(pts.length<2) return `<div class="pc-empty">no samples in window</div>`;
+  const ys=pts.map(p=>p[1]), x0=pts[0][0], x1=pts.at(-1)[0];
+  let top=niceMax(Math.max(o.minMax||0, ...ys, o.ref?.v||0)*1.05); if(o.unit==="pct") top=Math.min(1, top);
+  const X=t=>P.l+(t-x0)/(x1-x0||1)*(W-P.l-P.r), Y=v=>P.t+(1-v/top)*(H-P.t-P.b);
+  let s=`<svg class="chart pc" viewBox="0 0 ${W} ${H}" data-pts='${JSON.stringify(pts)}' data-unit="${o.unit}" data-x0="${x0}" data-x1="${x1}" data-pl="${P.l}" data-pr="${P.r}" data-w="${W}">`;
+  [0,.5,1].forEach(f=>{ const v=top*f, y=Y(v); s+=`<line x1="${P.l}" x2="${W-P.r}" y1="${y}" y2="${y}" stroke="${css(f?"--hair":"--axis")}" stroke-width="1"/>
+    <text x="${P.l-5}" y="${y+3.5}" text-anchor="end" style="font-size:10px">${fmtV(v,o.unit)}</text>`; });
+  if(o.bars){ const bw=Math.max(1.5,(W-P.l-P.r)/pts.length-2);
+    pts.forEach(p=>{ const y=Y(p[1]); s+=`<rect x="${X(p[0])-bw/2}" y="${y}" width="${bw}" height="${Math.max(0,Y(0)-y)}" rx="1.5" fill="${css(o.color)}" opacity=".85"/>`; });
+  } else {
+    const d=pts.map((p,i)=>(i?"L":"M")+X(p[0]).toFixed(1)+" "+Y(p[1]).toFixed(1)).join(" ");
+    if(o.area) s+=`<path d="${d} L${X(x1)} ${Y(0)} L${X(x0)} ${Y(0)}Z" fill="${css(o.color)}" opacity=".16"/>`;
+    s+=`<path d="${d}" fill="none" stroke="${css(o.color)}" stroke-width="2" stroke-linejoin="round"/>`;
+  }
+  if(o.ref&&o.ref.v!=null){ const y=Y(o.ref.v); s+=`<line x1="${P.l}" x2="${W-P.r}" y1="${y}" y2="${y}" stroke="${css(o.ref.color||"--ink-2")}" stroke-width="1.3" stroke-dasharray="4 3"/>
+    <text x="${W-P.r}" y="${y-3}" text-anchor="end" style="font-size:9.5px;fill:${css(o.ref.color||"--ink-2")}">${o.ref.label}</text>`; }
+  const pk=pts.reduce((a,b)=>b[1]>a[1]?b:a); if(pk[1]>0){ s+=`<circle cx="${X(pk[0])}" cy="${Y(pk[1])}" r="3.5" fill="${css(o.color)}" stroke="${css("--surface")}" stroke-width="1.5"/>`; }
+  const last=pts.at(-1); s+=`<circle cx="${X(last[0])}" cy="${Y(last[1])}" r="3" fill="${css("--ink")}"/>`;
+  s+=`<text x="${P.l}" y="${H-3}" style="font-size:10px">${new Date(x0*1000).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</text>
+     <text x="${W-P.r}" y="${H-3}" text-anchor="end" style="font-size:10px">${new Date(x1*1000).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</text>
+     <line class="xh" x1="0" x2="0" y1="${P.t}" y2="${H-P.b}" stroke="${css("--ink-2")}" stroke-width="1" opacity="0"/></svg>`;
+  return s;
 }
-function bindSparks(){
-  $$("svg.sp").forEach(svg=>{ const pts=JSON.parse(svg.dataset.pts), fmt=svg.dataset.fmt, xh=svg.querySelector(".xh");
-    svg.onmousemove=e=>{ const r=svg.getBoundingClientRect(), f=(e.clientX-r.left)/r.width, i=Math.round(f*(pts.length-1)), p=pts[Math.max(0,Math.min(pts.length-1,i))];
-      const xx=(i/(pts.length-1))*200; xh.setAttribute("x1",xx); xh.setAttribute("x2",xx); xh.setAttribute("opacity",1);
-      showTip(e,`<b>${fmt==="pct"?(p[1]*100).toFixed(1)+"%":Math.round(p[1])+" ms"}</b><div class="muted">${new Date(p[0]*1000).toLocaleTimeString()}</div>`); };
-    svg.onmouseleave=()=>{ xh.setAttribute("opacity",0); hideTip(); }; });
+function bindPanels(){
+  $$(".svcpanel").forEach(panel=>{ const svgs=[...panel.querySelectorAll("svg.pc")]; if(!svgs.length) return;
+    const move=(e,src)=>{ const r=src.getBoundingClientRect(), W=+src.dataset.w, pl=+src.dataset.pl, pr=+src.dataset.pr;
+      const fx=((e.clientX-r.left)/r.width*W-pl)/(W-pl-pr); const x0=+src.dataset.x0, x1=+src.dataset.x1, t=x0+Math.max(0,Math.min(1,fx))*(x1-x0);
+      let rows=[];
+      svgs.forEach(svg=>{ const pts=JSON.parse(svg.dataset.pts); const i=pts.reduce((bi,p,j)=>Math.abs(p[0]-t)<Math.abs(pts[bi][0]-t)?j:bi,0), p=pts[i];
+        const a=+svg.dataset.x0, b=+svg.dataset.x1, xx=pl+(p[0]-a)/(b-a||1)*(W-pl-pr), xh=svg.querySelector(".xh"); xh.setAttribute("x1",xx); xh.setAttribute("x2",xx); xh.setAttribute("opacity",1);
+        rows.push(`<div class="mrow"><span>${svg.closest(".pcwrap").dataset.label}</span><b>${fmtV(p[1],svg.dataset.unit)}</b></div>`); });
+      showTip(e,`<b>${esc(panel.dataset.svc)}</b> <span class="muted">${new Date(t*1000).toLocaleTimeString()}</span>${rows.join("")}`); };
+    svgs.forEach(svg=>{ svg.onmousemove=e=>move(e,svg); svg.onmouseleave=()=>{ svgs.forEach(x=>x.querySelector(".xh").setAttribute("opacity",0)); hideTip(); }; }); });
 }
+function errSeries(n){ const sv=SERIES?.services?.[n]||{}, rps=sv.rps||[], er=new Map((sv.error_ratio||[]).map(p=>[p[0],p[1]]));
+  return rps.filter(p=>p[1]!=null).map(p=>[p[0], er.has(p[0]) && er.get(p[0])!=null ? er.get(p[0]) : 0]); }
+function heatmap(){
+  const el=$("#heat"); if(!el) return; const svcs=LASTH?.expected||ALL; const any=svcs.some(n=>(SERIES?.services?.[n]?.rps||[]).length);
+  if(!any){ el.innerHTML=`<div class="empty">No time-series yet.</div>`; return; }
+  const times=[...new Set(svcs.flatMap(n=>(SERIES.services[n]?.rps||[]).map(p=>p[0])))].sort((a,b)=>a-b);
+  const W=900,rowH=24,P={l:120,r:12,t:6,b:26},H=P.t+svcs.length*rowH+P.b,cw=(W-P.l-P.r)/times.length;
+  // sequential single hue (orange ramp), light = no errors, dark = all requests failing
+  const ramp=["#fde4d6","#f9c3a6","#f39d76","#eb6834","#c94f1f","#9c3a14","#6e2709"];
+  const col=v=>v==null?css("--surface-2"):v<=0.001?css("--surface-3"):ramp[Math.min(ramp.length-1,Math.floor(Math.sqrt(v)*ramp.length))];
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Error ratio heatmap">`;
+  svcs.forEach((n,i)=>{ const er=new Map(errSeries(n)); const y=P.t+i*rowH;
+    s+=`<text class="lbl" x="${P.l-10}" y="${y+rowH/2+4}" text-anchor="end">${esc(n)}</text>`;
+    times.forEach((t,j)=>{ const v=er.has(t)?er.get(t):null; s+=`<rect x="${P.l+j*cw+1}" y="${y+2}" width="${Math.max(1,cw-2)}" height="${rowH-4}" rx="3" fill="${col(v)}" data-n="${esc(n)}" data-t="${t}" data-v="${v??""}"/>`; }); });
+  [0, Math.floor(times.length/2), times.length-1].forEach(j=>{ s+=`<text x="${P.l+j*cw+cw/2}" y="${H-8}" text-anchor="middle">${new Date(times[j]*1000).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</text>`; });
+  s+="</svg>";
+  el.innerHTML=s+`<div class="legend" style="align-items:center"><span>Error ratio</span><span style="display:inline-flex;gap:2px">${[css("--surface-3"),...ramp].map(c=>`<i style="width:22px;height:10px;border-radius:2px;background:${c};display:inline-block"></i>`).join("")}</span><span>0% → 100%</span><span class="muted">grey = no traffic sampled</span></div>`;
+  el.querySelectorAll("rect[data-n]").forEach(r=>{ r.onmousemove=e=>showTip(e,`<b>${esc(r.dataset.n)}</b> <span class="muted">${new Date(r.dataset.t*1000).toLocaleTimeString()}</span><div class="mrow"><span>Error ratio</span><b>${r.dataset.v===""?"no traffic":(r.dataset.v*100).toFixed(1)+"%"}</b></div>`); r.onmouseleave=hideTip; });
+}
+function delta(now, base, unit){ if(now==null||base==null) return ""; const d=now-base; if(Math.abs(d)<(unit==="pct"?0.005:Math.max(5,base*0.1))) return `<span class="muted">≈ baseline</span>`;
+  return `<span class="${d>0?"no":"ok"}">${d>0?"▲":"▼"} ${unit==="pct"?(Math.abs(d)*100).toFixed(1)+" pts":fmtV(Math.abs(d),unit)}</span>`; }
 function drawMap(){
   const h=LASTH; if(!h) return;
   $("#mapts").textContent="updated "+new Date(h.ts*1000).toLocaleTimeString();
   topology($("#topoMap"), h.services, h.edges, null);
-  $("#tiles").innerHTML = h.expected.map(n=>{ const s=h.services[n]||{}, k=statusOf(s), er=(s.error_ratio||0)*100;
-    return `<div class="tile"><div class="name">${esc(n)}${statusChip(k)}</div>
-      <div class="mrow" style="margin-top:8px"><span>Error ratio</span><b>${er.toFixed(1)}%</b></div><div class="bar"><i style="width:${Math.min(100,er)}%;background:${css(er>5?"--critical":"--good")}"></i></div>
-      <div class="mrow"><span>p95</span><b>${s.p95_ms??"–"} ms <span class="muted" style="font-weight:500">/ ${s.baseline_p95_ms??"–"}</span></b></div>
-      <div class="mrow"><span>Requests/s</span><b>${s.rps??0}</b></div>
-      <div class="mrow" style="margin-top:8px"><span>Error ratio · 10 min</span></div>${spark(SERIES?.services?.[n]?.error_ratio, er>5?"--critical":"--s1","pct",0.05)}
-      <div class="mrow" style="margin-top:4px"><span>p95 latency · 10 min</span></div>${spark(SERIES?.services?.[n]?.p95_ms,"--s2","ms",100)}</div>`; }).join("");
-  bindSparks();
+  heatmap();
+  const order=[...h.expected].sort((a,b)=>({critical:0,warning:1,good:2,neutral:3}[statusOf(h.services[a]).k]-({critical:0,warning:1,good:2,neutral:3}[statusOf(h.services[b]).k])||a.localeCompare(b)));
+  $("#tiles").innerHTML = order.map(n=>{ const s=h.services[n]||{}, k=statusOf(s), sv=SERIES?.services?.[n]||{};
+    return `<div class="tile svcpanel" data-svc="${esc(n)}"><div class="name">${esc(n)}${statusChip(k)}</div>
+      <div class="kpi3">
+        <div><div class="l">Error ratio</div><div class="v">${fmtV(s.error_ratio??0,"pct")}</div><div class="d">${delta(s.error_ratio,s.baseline_error_ratio,"pct")}</div></div>
+        <div><div class="l">p95 latency</div><div class="v">${fmtV(s.p95_ms,"ms")}</div><div class="d">${delta(s.p95_ms,s.baseline_p95_ms,"ms")}</div></div>
+        <div><div class="l">Requests/s</div><div class="v">${s.rps??0}</div><div class="d muted">throughput</div></div>
+      </div>
+      <div class="pcwrap" data-label="Error ratio"><div class="pct">Error ratio · 10 min</div>${panelChart(errSeries(n),{unit:"pct",color:k.k==="critical"?"--critical":"--s1",area:true,minMax:0.1,ref:{v:0.05,label:"SLO 5%",color:"--critical"}})}</div>
+      <div class="pcwrap" data-label="p95 latency"><div class="pct">p95 latency · 10 min</div>${panelChart(sv.p95_ms,{unit:"ms",color:"--s2",minMax:50,ref:s.baseline_p95_ms!=null?{v:s.baseline_p95_ms,label:"baseline"}:null})}</div>
+      <div class="pcwrap" data-label="Requests/s"><div class="pct">Requests/s · 10 min</div>${panelChart(sv.rps,{unit:"rps",color:"--s3",bars:true,minMax:1})}</div>
+    </div>`; }).join("");
+  bindPanels();
 }
 $("#auto").onchange=()=>loadMap();
 
