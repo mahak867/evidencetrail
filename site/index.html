@@ -341,13 +341,21 @@ tr:hover td{background:var(--surface-2)}
       <div class="statgrid" id="stats" style="margin-bottom:16px"></div>
       <div class="grid">
         <div class="card c12">
-          <h2><svg class="i"><use href="#i-chart"/></svg>Top-1 root-cause accuracy <span class="right row"><span class="tabs" id="setTabs"></span></span></h2>
-          <p class="muted" style="margin:-4px 0 10px;font-size:12.5px">Same injected faults, same telemetry window for every method. Whiskers show 95% Wilson intervals (small n, so read them as indicative).</p>
+          <h2><svg class="i"><use href="#i-chart"/></svg>Accuracy by measure <span class="right row"><span class="tabs" id="setTabs"></span></span></h2>
+          <p class="muted" style="margin:-4px 0 10px;font-size:12.5px">Same injected faults, same telemetry window for every method. Bars show the share correct; whiskers show 95% Wilson intervals (small n, so read them as indicative).</p>
           <div id="accChart"></div>
           <div class="legend" id="accLegend"></div>
         </div>
+        <div class="card c7">
+          <h2><svg class="i"><use href="#i-check"/></svg>Outcome of every investigation <span class="right muted" style="font-size:12px">a wrong answer given confidently is the costly failure</span></h2>
+          <div id="outcomeChart"></div>
+        </div>
+        <div class="card c5">
+          <h2><svg class="i"><use href="#i-flask"/></svg>Right service, by fault type</h2>
+          <div id="typeChart"></div>
+        </div>
         <div class="card c12">
-          <h2><svg class="i"><use href="#i-pulse"/></svg>Time to diagnosis per scenario <span class="right muted" style="font-size:12px">each dot is one injected fault · ✕ = wrong root cause</span></h2>
+          <h2><svg class="i"><use href="#i-pulse"/></svg>Time to diagnosis per scenario <span class="right muted" style="font-size:12px">dot = one injected fault · band = middle 50% · | = median</span></h2>
           <div id="timeChart"></div>
         </div>
         <div class="card c12">
@@ -734,38 +742,86 @@ function drawScore(){
     [`${st.claims_kept}<span style="font-size:16px" class="muted"> / ${st.claims_dropped}</span>`,"Claims kept / blocked by evidence gate"],
     [et.median_tokens?.toLocaleString?.()??"–","Median Gemini tokens per incident"]
   ].map(([v,l])=>`<div class="stat"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
-  // horizontal bars with CI whiskers, direct labels, per-bar tooltips
-  const W=900, rowH=56, P={l:210,r:70,t:10,b:30}, H=P.t+M.length*rowH+P.b, X=v=>P.l+v*(W-P.l-P.r);
-  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Top-1 accuracy by method"><g class="grid">`;
-  [0,.25,.5,.75,1].forEach(t=>{ s+=`<line x1="${X(t)}" x2="${X(t)}" y1="${P.t}" y2="${H-P.b}"/><text x="${X(t)}" y="${H-10}" text-anchor="middle">${t*100}%</text>`; });
-  s+=`</g><line class="base" x1="${P.l}" x2="${P.l}" y1="${P.t}" y2="${H-P.b}"/>`;
-  M.forEach(([k,label,col],i)=>{ const m=st.methods[k], v=m.top1/st.n, y=P.t+i*rowH+12, h=24;
-    s+=`<text class="lbl" x="${P.l-12}" y="${y+h/2+4}" text-anchor="end">${label}</text>`;
-    if(v>0) s+=`<path d="M${P.l} ${y} H${X(v)-4} a4 4 0 0 1 4 4 V${y+h-4} a4 4 0 0 1 -4 4 H${P.l}Z" fill="${css(col)}"/>`;
-    const [lo,hi]=m.ci; s+=`<line class="whisk" x1="${X(lo)}" x2="${X(hi)}" y1="${y+h/2}" y2="${y+h/2}"/><line class="whisk" x1="${X(lo)}" x2="${X(lo)}" y1="${y+h/2-6}" y2="${y+h/2+6}"/><line class="whisk" x1="${X(hi)}" x2="${X(hi)}" y1="${y+h/2-6}" y2="${y+h/2+6}"/>`;
-    s+=`<text class="lbl" x="${Math.max(X(v),X(hi))+8}" y="${y+h/2+4}">${Math.round(v*100)}%</text>`;
-    s+=`<rect x="${P.l}" y="${y-8}" width="${W-P.l-P.r}" height="${h+16}" fill="transparent" data-i="${i}"/>`; });
-  s+="</svg>";
-  $("#accChart").innerHTML=s;
-  $$("#accChart rect[data-i]").forEach(r=>{ const [k,label]=M[+r.dataset.i], m=st.methods[k];
-    r.onmousemove=e=>showTip(e,`<b>${label}</b><div class="mrow"><span>Top-1</span><b>${m.top1}/${st.n}</b></div><div class="mrow"><span>Top-3</span><b>${m.top3}/${st.n}</b></div>
-      <div class="mrow"><span>95% CI</span><b>${Math.round(m.ci[0]*100)}–${Math.round(m.ci[1]*100)}%</b></div><div class="mrow"><span>Fault type</span><b>${m.typed?m.type_ok+"/"+m.typed:"n/a"}</b></div>
-      <div class="mrow"><span>Median time</span><b>${m.median_s}s</b></div><div class="mrow"><span>Inconclusive</span><b>${m.inconclusive}</b></div>`); r.onmouseleave=hideTip; });
-  $("#accLegend").innerHTML=M.map(([k,l,c])=>`<span><i class="sw" style="background:${css(c)}"></i>${l}</span>`).join("");
-  // strip plot: seconds per scenario per method (one shared axis, log scale because free-tier waits vary 100x)
-  { const W=900,rowH=50,P={l:210,r:30,t:10,b:30},H=P.t+M.length*rowH+P.b;
+  const wil=(k,n)=>{ if(!n) return [0,0]; const z=1.96,p=k/n,d=1+z*z/n,c=(p+z*z/(2*n))/d,h=z*Math.sqrt(p*(1-p)/n+z*z/(4*n*n))/d; return [Math.max(0,c-h),Math.min(1,c+h)]; };
+  // ---- 1. accuracy small multiples: top-1, top-3, fault type ----
+  { const measures=[["Right service (top-1)",m=>[m.top1,st.n]],["Right service in top 3",m=>[m.top3,st.n]],["Right fault type",m=>[m.type_ok,m.typed]]];
+    const PW=300,rowH=46,P={l:8,r:58,t:30,b:26},H=P.t+M.length*rowH+P.b,W=PW*3;
+    let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Accuracy by measure and method">`;
+    measures.forEach(([title,get],mi)=>{ const ox=mi*PW, x0=ox+P.l+110, x1=ox+PW-P.r+40, X=v=>x0+v*(x1-x0-36);
+      s+=`<text class="lbl" x="${ox+P.l}" y="16" style="font-size:13px">${title}</text>`;
+      [0,.5,1].forEach(t=>{ s+=`<line x1="${X(t)}" x2="${X(t)}" y1="${P.t-4}" y2="${H-P.b}" stroke="${css("--hair")}"/><text x="${X(t)}" y="${H-8}" text-anchor="middle" style="font-size:11px">${t*100}%</text>`; });
+      M.forEach(([k,label,col],i)=>{ const m=st.methods[k], [kk,nn]=get(m), y=P.t+i*rowH+8, h=20;
+        s+=`<text x="${ox+P.l}" y="${y+h/2+4}" style="font-size:11.5px;fill:${css("--ink")}">${["EvidenceTrail","Single prompt","Dashboard rule"][i]}</text>`;
+        if(!nn){ s+=`<text x="${X(0)+4}" y="${y+h/2+4}" style="font-size:11px">n/a (no fault type)</text>`; return; }
+        const v=kk/nn, [lo,hi]=wil(kk,nn);
+        s+=`<rect x="${X(0)}" y="${y}" width="${X(1)-X(0)}" height="${h}" rx="4" fill="${css("--surface-2")}"/>`;
+        if(v>0) s+=`<rect x="${X(0)}" y="${y}" width="${X(v)-X(0)}" height="${h}" rx="4" fill="${css(col)}"/>`;
+        s+=`<line class="whisk" x1="${X(lo)}" x2="${X(hi)}" y1="${y+h/2}" y2="${y+h/2}"/><line class="whisk" x1="${X(lo)}" x2="${X(lo)}" y1="${y+4}" y2="${y+h-4}"/><line class="whisk" x1="${X(hi)}" x2="${X(hi)}" y1="${y+4}" y2="${y+h-4}"/>`;
+        s+=`<text class="lbl" x="${X(1)+6}" y="${y+h/2+4}" style="font-size:12px">${kk}/${nn}</text>`;
+        s+=`<rect x="${ox}" y="${y-6}" width="${PW}" height="${h+12}" fill="transparent" data-a="${mi},${i}"/>`; });
+      if(mi<2) s+=`<line x1="${ox+PW-4}" x2="${ox+PW-4}" y1="6" y2="${H-6}" stroke="${css("--hair")}"/>`; });
+    s+="</svg>"; $("#accChart").innerHTML=s;
+    $$("#accChart rect[data-a]").forEach(r=>{ const [mi,i]=r.dataset.a.split(",").map(Number), [title,get]=measures[mi], [k,label]=M[i], m=st.methods[k], [kk,nn]=get(m), [lo,hi]=wil(kk,nn);
+      r.onmousemove=e=>showTip(e,`<b>${label}</b><div class="muted">${title}</div><div class="mrow"><span>Correct</span><b>${nn?kk+"/"+nn+" = "+Math.round(100*kk/nn)+"%":"n/a"}</b></div>${nn?`<div class="mrow"><span>95% interval</span><b>${Math.round(lo*100)}–${Math.round(hi*100)}%</b></div>`:""}`); r.onmouseleave=hideTip; });
+    $("#accLegend").innerHTML=M.map(([k,l,c])=>`<span><i class="sw" style="background:${css(c)}"></i>${l}</span>`).join("")+`<span><svg width="22" height="10"><path d="M2 5H20M2 1V9M20 1V9" stroke="${css("--ink-2")}" stroke-width="1.5"/></svg>95% interval</span>`; }
+
+  // ---- 2. outcome breakdown (stacked, status colours + labels) ----
+  { const OUT=[["correct","Correct","--good","✓"],["wrong","Wrong answer, given confidently","--critical","✕"],["abstain","Abstained (inconclusive)","--warning","?"],["failed","Failed (provider error)","--axis","!"]];
+    const cnt=k=>{ const c={correct:0,wrong:0,abstain:0,failed:0}; st.scenarios.forEach(r=>{ const m=r.methods[k];
+      if(m.top1) c.correct++; else if(m.verdict==="INCONCLUSIVE") c.abstain++; else if(m.verdict==="FAILED") c.failed++; else c.wrong++; }); return c; };
+    const W=620,rowH=54,P={l:175,r:16,t:8,b:8},H=P.t+M.length*rowH+P.b,X=v=>P.l+v/st.n*(W-P.l-P.r);
+    let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Outcome breakdown">`;
+    M.forEach(([k,label],i)=>{ const c=cnt(k), y=P.t+i*rowH+10, h=30; let acc=0;
+      s+=`<text class="lbl" x="${P.l-10}" y="${y+h/2+4}" text-anchor="end" style="font-size:12px">${label.replace(" (B0)","").replace(" (B1)","")}</text>`;
+      OUT.forEach(([key,lab,col,ic])=>{ const n=c[key]; if(!n) return; const x=X(acc), w=X(acc+n)-x; acc+=n;
+        const dark=key==="warning"||key==="abstain";
+        s+=`<rect x="${x+1}" y="${y}" width="${Math.max(2,w-2)}" height="${h}" rx="4" fill="${css(col)}" data-o="${k},${key}"/>`;
+        if(w>26) s+=`<text x="${x+w/2}" y="${y+h/2+4.5}" text-anchor="middle" style="font-size:12.5px;font-weight:700;fill:${dark?"#0b0b0b":"#fff"};pointer-events:none">${ic} ${n}</text>`; }); });
+    s+="</svg>";
+    $("#outcomeChart").innerHTML=s+`<div class="legend">${OUT.map(([k,l,c,ic])=>`<span><i class="sw" style="background:${css(c)}"></i>${ic} ${l}</span>`).join("")}</div>`;
+    $$("#outcomeChart rect[data-o]").forEach(r=>{ const [k,key]=r.dataset.o.split(","), lab=OUT.find(o=>o[0]===key)[1], ids=st.scenarios.filter(sc=>{ const m=sc.methods[k];
+        return key==="correct"?m.top1:key==="abstain"?(!m.top1&&m.verdict==="INCONCLUSIVE"):key==="failed"?(!m.top1&&m.verdict==="FAILED"):(!m.top1&&m.verdict==="DIAGNOSIS"); }).map(sc=>sc.id);
+      r.onmousemove=e=>showTip(e,`<b>${esc(M.find(x=>x[0]===k)[1])}</b><div class="muted">${lab}</div><div class="mrow"><span>Count</span><b>${ids.length}/${st.n}</b></div><div class="muted mono" style="font-size:11px;margin-top:4px">${ids.join(" · ")}</div>`); r.onmouseleave=hideTip; }); }
+
+  // ---- 3. right service by fault type (matrix, sequential blue by accuracy) ----
+  { const types=[...new Set(st.scenarios.map(r=>r.truth.fault_type))].sort();
+    const seq=["#e8f1fc","#cde2fb","#9ec5f4","#6da7ec","#3987e5","#256abf","#184f95"];
+    const cellCol=v=>seq[Math.min(seq.length-1,Math.round(v*(seq.length-1)))];
+    const W=430,rowH=34,cw=88,P={l:150,t:34},H=P.t+types.length*rowH+8;
+    let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Accuracy by fault type">`;
+    M.forEach(([k,label],j)=>{ s+=`<text class="lbl" x="${P.l+j*cw+cw/2}" y="20" text-anchor="middle" style="font-size:11.5px">${["EvidenceTrail","Single prompt","Dashboard"][j]}</text>`; });
+    types.forEach((t,i)=>{ const y=P.t+i*rowH, rs=st.scenarios.filter(r=>r.truth.fault_type===t);
+      s+=`<text x="${P.l-10}" y="${y+rowH/2+4}" text-anchor="end" style="font-size:12px;fill:${css("--ink")}">${t.replaceAll("_"," ")}</text>`;
+      M.forEach(([k],j)=>{ const ok=rs.filter(r=>r.methods[k].top1).length, v=ok/rs.length, x=P.l+j*cw;
+        s+=`<rect x="${x+3}" y="${y+3}" width="${cw-6}" height="${rowH-6}" rx="6" fill="${cellCol(v)}" data-t="${esc(t)}" data-k="${k}" data-v="${ok}/${rs.length}"/>
+          <text x="${x+cw/2}" y="${y+rowH/2+4.5}" text-anchor="middle" style="font-size:12.5px;font-weight:700;fill:${v>0.55?"#fff":"#0b0b0b"};pointer-events:none">${ok}/${rs.length}</text>`; }); });
+    s+="</svg>";
+    $("#typeChart").innerHTML=s+`<div class="legend" style="align-items:center"><span>0%</span><span style="display:inline-flex;gap:2px">${seq.map(c=>`<i style="width:18px;height:10px;border-radius:2px;background:${c};display:inline-block"></i>`).join("")}</span><span>100% right service</span></div>`;
+    $$("#typeChart rect[data-t]").forEach(r=>{ r.onmousemove=e=>showTip(e,`<b>${esc(M.find(x=>x[0]===r.dataset.k)[1])}</b><div class="muted">${esc(r.dataset.t.replaceAll("_"," "))}</div><div class="mrow"><span>Right service</span><b>${r.dataset.v}</b></div>`); r.onmouseleave=hideTip; }); }
+
+  // ---- 4. time to diagnosis: strip + IQR band + median ----
+  { const W=900,rowH=58,P={l:210,r:30,t:12,b:30},H=P.t+M.length*rowH+P.b;
     const all=st.scenarios.flatMap(r=>M.map(([k])=>r.methods[k].s||0.05)); const mx=Math.max(1,...all);
     const lg=v=>Math.log10(Math.max(0.05,v)), X=v=>P.l+(lg(v)-lg(0.05))/(lg(mx*1.2)-lg(0.05))*(W-P.l-P.r);
+    const q=(arr,f)=>{ const a=[...arr].sort((x,y)=>x-y); const i=(a.length-1)*f, lo=Math.floor(i), hi=Math.ceil(i); return a[lo]+(a[hi]-a[lo])*(i-lo); };
     let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Time to diagnosis"><g class="grid">`;
-    [0.1,1,10,60,300,600].filter(v=>v<=mx*1.2).forEach(v=>{ s+=`<line x1="${X(v)}" x2="${X(v)}" y1="${P.t}" y2="${H-P.b}"/><text x="${X(v)}" y="${H-8}" text-anchor="middle">${v<1?v+"s":v>=60?v/60+"m":v+"s"}</text>`; });
+    [0.1,1,5,10,30,60,300,600].filter(v=>v<=mx*1.2).forEach(v=>{ s+=`<line x1="${X(v)}" x2="${X(v)}" y1="${P.t}" y2="${H-P.b}"/><text x="${X(v)}" y="${H-8}" text-anchor="middle">${v<1?v+"s":v>=60?v/60+"m":v+"s"}</text>`; });
     s+="</g>";
-    M.forEach(([k,label,col],i)=>{ const y=P.t+i*rowH+rowH/2; s+=`<text class="lbl" x="${P.l-12}" y="${y+4}" text-anchor="end">${label}</text><line class="base" x1="${P.l}" x2="${W-P.r}" y1="${y}" y2="${y}" opacity=".5"/>`;
-      st.scenarios.forEach((r,j)=>{ const m=r.methods[k], x=X(m.s||0.05), jy=y+((j%3)-1)*7;
-        s+= m.top1 ? `<circle cx="${x}" cy="${jy}" r="5.5" fill="${css(col)}" stroke="${css("--surface")}" stroke-width="2" data-k="${k}" data-j="${j}"/>`
-                   : `<path d="M${x-5} ${jy-5}L${x+5} ${jy+5}M${x+5} ${jy-5}L${x-5} ${jy+5}" stroke="${css("--critical")}" stroke-width="2.5"/><circle cx="${x}" cy="${jy}" r="8" fill="transparent" data-k="${k}" data-j="${j}"/>`; }); });
-    s+="</svg>"; $("#timeChart").innerHTML=s+`<div class="legend">${M.map(([k,l,c])=>`<span><i class="sw" style="background:${css(c)}"></i>${l}</span>`).join("")}<span><svg width="12" height="12"><path d="M2 2L10 10M10 2L2 10" stroke="${css("--critical")}" stroke-width="2.5"/></svg>Wrong root cause</span></div>`;
+    M.forEach(([k,label,col],i)=>{ const y=P.t+i*rowH+rowH/2, ts=st.scenarios.map(r=>r.methods[k].s||0.05);
+      const q1=q(ts,.25), md=q(ts,.5), q3=q(ts,.75);
+      s+=`<text class="lbl" x="${P.l-12}" y="${y+4}" text-anchor="end">${label}</text>`;
+      s+=`<rect x="${X(q1)}" y="${y-17}" width="${Math.max(2,X(q3)-X(q1))}" height="34" rx="6" fill="${css(col)}" opacity=".13"/>`;
+      s+=`<line x1="${X(md)}" x2="${X(md)}" y1="${y-20}" y2="${y+20}" stroke="${css(col)}" stroke-width="2.5"/>`;
+      s+=`<text x="${X(md)}" y="${y-23}" text-anchor="middle" style="font-size:11px;font-weight:700;fill:${css("--ink")}">${md<0.1?"instant":"median "+(md<10?md.toFixed(1):Math.round(md))+"s"}</text>`;
+      st.scenarios.forEach((r,j)=>{ const m=r.methods[k], x=X(m.s||0.05), jy=y+((j%3)-1)*8;
+        const hit=`<circle cx="${x}" cy="${jy}" r="9" fill="transparent" data-k="${k}" data-j="${j}"/>`;
+        if(m.top1) s+=`<circle cx="${x}" cy="${jy}" r="5.5" fill="${css(col)}" stroke="${css("--surface")}" stroke-width="2" data-k="${k}" data-j="${j}"/>`;
+        else if(m.verdict==="INCONCLUSIVE") s+=`<circle cx="${x}" cy="${jy}" r="6" fill="${css("--surface")}" stroke="${css("--warning")}" stroke-width="2.5"/><text x="${x}" y="${jy+3.5}" text-anchor="middle" style="font-size:9px;font-weight:800;fill:${css("--ink")}">?</text>`+hit;
+        else if(m.verdict==="FAILED") s+=`<rect x="${x-5.5}" y="${jy-5.5}" width="11" height="11" rx="2" fill="${css("--axis")}"/><text x="${x}" y="${jy+3.5}" text-anchor="middle" style="font-size:9px;font-weight:800;fill:${css("--ink")}">!</text>`+hit;
+        else s+=`<path d="M${x-5} ${jy-5}L${x+5} ${jy+5}M${x+5} ${jy-5}L${x-5} ${jy+5}" stroke="${css("--critical")}" stroke-width="2.5"/>`+hit; }); });
+    s+="</svg>"; $("#timeChart").innerHTML=s+`<div class="legend">${M.map(([k,l,c])=>`<span><i class="sw" style="background:${css(c)}"></i>${l}</span>`).join("")}<span><svg width="12" height="12"><path d="M2 2L10 10M10 2L2 10" stroke="${css("--critical")}" stroke-width="2.5"/></svg>Wrong answer</span><span><svg width="14" height="14"><circle cx="7" cy="7" r="5.5" fill="none" stroke="${css("--warning")}" stroke-width="2.5"/></svg>Abstained</span><span><svg width="12" height="12"><rect x="1" y="1" width="10" height="10" rx="2" fill="${css("--axis")}"/></svg>Failed (provider)</span><span class="muted">log scale · times include Gemini free-tier retry waits</span></div>`;
     $$("#timeChart circle[data-k]").forEach(c=>{ const r=st.scenarios[+c.dataset.j], m=r.methods[c.dataset.k];
-      c.onmousemove=e=>showTip(e,`<b>${esc(r.id)} · ${esc(r.truth.service)} / ${esc(r.truth.fault_type.replaceAll("_"," "))}</b><div class="mrow"><span>Answer</span><b>${esc(m.svc||"—")}</b></div><div class="mrow"><span>Time</span><b>${m.s}s</b></div><div class="mrow"><span>Correct</span><b>${m.top1?"yes":"no"}</b></div>`); c.onmouseleave=hideTip; }); }
+      c.onmousemove=e=>showTip(e,`<b>${esc(r.id)} · ${esc(r.truth.service)} / ${esc(r.truth.fault_type.replaceAll("_"," "))}</b><div class="mrow"><span>Answer</span><b>${esc(m.svc||"—")}</b></div><div class="mrow"><span>Time</span><b>${m.s}s</b></div><div class="mrow"><span>Outcome</span><b>${m.top1?"correct":m.verdict==="INCONCLUSIVE"?"abstained":m.verdict==="FAILED"?"failed (provider)":"wrong answer"}</b></div>`); c.onmouseleave=hideTip; }); }
   const cell=(m,t)=>`${m.top1?`<span class="ok">${icon("check")}</span>`:`<span class="no">${icon("x")}</span>`} ${esc(m.svc||"—")}${m.type?(m.type===t?`<span class="muted"> / ${esc(m.type.replaceAll("_"," "))}</span>`
     :` <span class="no" title="wrong fault type (truth: ${esc(t.replaceAll("_"," "))})">/ ${esc(m.type.replaceAll("_"," "))} ✕ type</span>`):""}`;
   $("#scTable").innerHTML=`<table><thead><tr><th>ID</th><th>Injected fault (truth)</th>${M.map(([,l])=>`<th>${l}</th>`).join("")}<th>ET time</th></tr></thead><tbody>
