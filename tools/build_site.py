@@ -11,7 +11,7 @@ banner = f'''<div id="staticbar" style="position:sticky;top:0;z-index:15;display
   <span style="margin-left:auto;display:flex;gap:8px"><a class="chip" href="{VIDEO}" target="_blank" rel="noopener">▶ Demo video</a><a class="chip" href="{REPO}" target="_blank" rel="noopener">GitHub</a></span></div>'''
 reps = [
     ('<div class="shell">', banner + '\n<div class="shell">'),
-    ('<script>\nconst $ = s =>', '<script src="static-shim.js"></script>\n<script>\nconst $ = s =>'),
+    ('<script>\nconst $ = s =>', '<script src="static-shim.js"></script>\n<script src="tour.js"></script>\n<script>\nconst $ = s =>'),
     ('<title>EvidenceTrail</title>', '<title>EvidenceTrail</title>\n<meta name="description" content="EvidenceTrail: evidence-backed incident investigation powered by Google Gemini. CODERED \'26, NTT DATA Track B.">'),
     ('  await loadRecorded(); go(location.hash.slice(1)||"investigate");', '''  await loadRecorded(); go(location.hash.slice(1)||"investigate");
   window.__staticNote = m => toast(m);
