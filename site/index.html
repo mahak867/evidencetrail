@@ -1,0 +1,733 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EvidenceTrail</title>
+<meta name="description" content="EvidenceTrail: evidence-backed incident investigation powered by Google Gemini. CODERED '26, NTT DATA Track B.">
+<style>
+:root{
+  color-scheme: light;
+  --page:#f4f4f1; --surface:#fcfcfb; --surface-2:#f0efec; --surface-3:#e8e7e2;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#77756f; --hair:#e1e0d9; --axis:#c3c2b7; --ring:rgba(11,11,11,.10);
+  --brand:#2a78d6; --brand-ink:#ffffff; --brand-soft:rgba(42,120,214,.10);
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b; --good-ink:#006300;
+  --code:#f0efec; --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.06);
+  --radius:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:where(:not([data-theme="light"])){
+    color-scheme: dark;
+    --page:#0d0d0d; --surface:#1a1a19; --surface-2:#222221; --surface-3:#2c2c2a;
+    --ink:#f0efec; --ink-2:#c3c2b7; --muted:#8f8d86; --hair:#2c2c2a; --axis:#383835; --ring:rgba(255,255,255,.10);
+    --brand:#3987e5; --brand-ink:#ffffff; --brand-soft:rgba(57,135,229,.14);
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --good-ink:#0ca30c;
+    --code:#121211; --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --page:#0d0d0d; --surface:#1a1a19; --surface-2:#222221; --surface-3:#2c2c2a;
+  --ink:#f0efec; --ink-2:#c3c2b7; --muted:#8f8d86; --hair:#2c2c2a; --axis:#383835; --ring:rgba(255,255,255,.10);
+  --brand:#3987e5; --brand-ink:#ffffff; --brand-soft:rgba(57,135,229,.14);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --good-ink:#0ca30c;
+  --code:#121211; --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--page);color:var(--ink);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+button,select,input,textarea{font:inherit;color:inherit}
+code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+a{color:var(--brand)}
+svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- shell ---------- */
+.shell{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+aside{background:var(--surface);border-right:1px solid var(--hair);padding:18px 14px;display:flex;flex-direction:column;gap:6px;position:sticky;top:44px;height:calc(100vh - 44px)}
+.logo{display:flex;align-items:center;gap:10px;padding:4px 8px 18px}
+.logo .mark{width:30px;height:30px;border-radius:9px;background:var(--brand);display:grid;place-items:center;color:#fff}
+.logo b{font-size:16px;letter-spacing:-.01em}
+.logo small{display:block;color:var(--muted);font-size:11px;margin-top:-2px}
+.nav{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;color:var(--ink-2);text-decoration:none;font-weight:550;border:0;background:none;cursor:pointer;width:100%;text-align:left}
+.nav:hover{background:var(--surface-2);color:var(--ink)}
+.nav[aria-current="page"]{background:var(--brand-soft);color:var(--brand)}
+.aside-foot{margin-top:auto;display:flex;flex-direction:column;gap:8px;font-size:12px;color:var(--muted)}
+.envpill{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--hair);border-radius:10px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--good);flex:none}
+main{padding:22px 28px 60px;max-width:1440px;width:100%}
+.topbar{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.topbar h1{font-size:22px;margin:0;letter-spacing:-.02em}
+.topbar p{margin:0;color:var(--muted)}
+.topbar .spacer{flex:1}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;border:1px solid var(--hair);background:var(--surface);color:var(--ink-2);font-size:12px;font-weight:550;white-space:nowrap}
+.iconbtn{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:9px;border:1px solid var(--hair);background:var(--surface);cursor:pointer;color:var(--ink-2)}
+.iconbtn:hover{color:var(--ink)}
+
+/* ---------- cards ---------- */
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+.card{background:var(--surface);border:1px solid var(--hair);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;min-width:0}
+.card h2{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 12px;display:flex;align-items:center;gap:8px;font-weight:650}
+.card h2 .right{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:500}
+.c4{grid-column:span 4}.c5{grid-column:span 5}.c6{grid-column:span 6}.c7{grid-column:span 7}.c8{grid-column:span 8}.c12{grid-column:span 12}.c3{grid-column:span 3}
+@media(max-width:1100px){.c3,.c4,.c5,.c6,.c7,.c8{grid-column:span 12}.shell{grid-template-columns:1fr}aside{position:static;height:auto;flex-direction:row;flex-wrap:wrap}.aside-foot{display:none}.logo{padding:4px 8px}}
+@media(max-width:600px){main{padding:16px}}
+.muted{color:var(--muted)} .ink2{color:var(--ink-2)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:10px;padding:9px 14px;border:1px solid var(--hair);background:var(--surface);cursor:pointer;font-weight:600}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.good{background:var(--good);border-color:var(--good);color:#fff}
+.btn.bad{background:var(--critical);border-color:var(--critical);color:#fff}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+textarea,select,input{width:100%;background:var(--surface-2);border:1px solid var(--hair);border-radius:10px;padding:10px 12px;outline:none}
+textarea:focus,select:focus,input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+label.f{display:block;font-size:12px;color:var(--muted);font-weight:600;margin:10px 0 6px}
+.preset{border:1px dashed var(--axis);background:transparent;border-radius:999px;padding:4px 10px;font-size:12px;cursor:pointer;color:var(--ink-2)}
+.preset:hover{border-style:solid;color:var(--ink)}
+details.chaos summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;font-weight:650}
+details.chaos summary::-webkit-details-marker{display:none}
+
+/* ---------- status ---------- */
+.status{display:inline-flex;align-items:center;gap:6px;font-weight:650;font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid var(--hair);background:var(--surface-2);color:var(--ink)}
+.status .sw{width:8px;height:8px;border-radius:50%}
+.st-good .sw{background:var(--good)} .st-warning .sw{background:var(--warning)} .st-critical .sw{background:var(--critical)} .st-serious .sw{background:var(--serious)} .st-neutral .sw{background:var(--axis)}
+
+/* ---------- stepper ---------- */
+.stepper{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+@media(max-width:700px){.stepper{grid-template-columns:repeat(3,1fr)}}
+.step{border:1px solid var(--hair);border-radius:12px;padding:10px;background:var(--surface-2);position:relative;overflow:hidden}
+.step .n{font-size:11px;color:var(--muted);font-weight:650}
+.step .t{font-weight:650;font-size:13px}
+.step .s{font-size:11px;color:var(--muted)}
+.step.done{border-color:color-mix(in srgb,var(--good) 45%,var(--hair))}
+.step.done .n{color:var(--good-ink)}
+.step.active{border-color:var(--brand);background:var(--brand-soft)}
+.step.active::after{content:"";position:absolute;left:0;bottom:0;height:2px;width:40%;background:var(--brand);animation:slide 1.2s ease-in-out infinite}
+@keyframes slide{0%{left:-40%}100%{left:100%}}
+.feed{margin:12px 0 0;padding:0;list-style:none;max-height:180px;overflow:auto;font-size:12.5px}
+.feed li{display:flex;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--hair)}
+.feed li:last-child{border-bottom:0}
+.feed code{background:var(--code);padding:1px 6px;border-radius:6px}
+
+/* ---------- verdict ---------- */
+.hero{display:grid;grid-template-columns:1.3fr 1fr;gap:20px;align-items:center}
+@media(max-width:900px){.hero{grid-template-columns:1fr}}
+.rc{font-size:40px;font-weight:750;letter-spacing:-.03em;line-height:1.05;margin:6px 0}
+.ftype{font-size:14px;color:var(--ink-2)}
+.meter{height:8px;border-radius:99px;background:var(--surface-3);overflow:hidden;margin-top:6px}
+.meter>i{display:block;height:100%;border-radius:99px;background:var(--brand)}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.kpi{border:1px solid var(--hair);border-radius:12px;padding:10px 12px;background:var(--surface-2)}
+.kpi .v{font-size:20px;font-weight:700;letter-spacing:-.02em}
+.kpi .l{font-size:11.5px;color:var(--muted)}
+.summary{font-size:15px;line-height:1.6;color:var(--ink);margin:10px 0 0}
+.truth{margin-top:8px;font-size:12.5px}
+
+/* ---------- claims ---------- */
+.claim{border:1px solid var(--hair);border-radius:12px;padding:12px 14px;margin-bottom:10px;background:var(--surface)}
+.claim .head{display:flex;gap:10px;align-items:flex-start}
+.claim .txt{color:var(--ink);font-weight:550}
+.claim .ic{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;flex:none;margin-top:1px}
+.claim.c-ok .ic{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good-ink)}
+.claim.c-bad .ic{background:color-mix(in srgb,var(--critical) 16%,transparent);color:var(--critical)}
+.claim.c-bad .txt{text-decoration:line-through;color:var(--muted)}
+.quote{margin:6px 0 0 32px;padding:6px 10px;border-radius:8px;background:var(--code);font-size:12.5px;color:var(--ink-2)}
+.ev{display:inline-flex;align-items:center;gap:6px;margin:8px 6px 0 0;padding:3px 9px;border-radius:8px;border:1px solid var(--hair);background:var(--surface-2);font:12px ui-monospace,Menlo,monospace;cursor:pointer;color:var(--ink)}
+.ev:hover{border-color:var(--brand);color:var(--brand)}
+.ev .k{font-weight:700;color:var(--muted)}
+.reason{margin:6px 0 0 32px;font-size:12.5px;color:var(--critical)}
+.hyp{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--hair)}
+.hyp:last-child{border-bottom:0}
+
+/* ---------- action ---------- */
+.risk{font-weight:700}
+pre.code{background:var(--code);border:1px solid var(--hair);border-radius:10px;padding:10px 12px;font:12.5px/1.5 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-word;margin:8px 0}
+
+/* ---------- topology ---------- */
+.topo{width:100%;height:auto;display:block}
+.topo .edge{fill:none;stroke:var(--axis);stroke-width:1.5}
+.topo .edge.hot{stroke:var(--critical);stroke-width:2}
+.topo .node rect{fill:var(--surface);stroke:var(--hair);stroke-width:1.5}
+.topo .node.rc rect{stroke:var(--critical);stroke-width:2.5}
+.topo .node text{fill:var(--ink);font:650 13px system-ui,sans-serif}
+.topo .node .sub{fill:var(--muted);font:500 11px system-ui,sans-serif}
+.topo .node{cursor:default}
+.topo .node:hover rect{stroke:var(--brand)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend .sw{width:9px;height:9px;border-radius:50%;display:inline-block}
+
+/* ---------- tiles ---------- */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.tile{border:1px solid var(--hair);border-radius:12px;padding:12px;background:var(--surface)}
+.tile .name{font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.bar{height:6px;border-radius:99px;background:var(--surface-3);overflow:hidden;margin:4px 0 8px}
+.bar>i{display:block;height:100%;border-radius:99px}
+.mrow{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-2)}
+.mrow b{color:var(--ink);font-weight:650}
+
+/* ---------- charts ---------- */
+.chart{width:100%;height:auto;display:block}
+.chart text{font:12px system-ui,sans-serif;fill:var(--ink-2)}
+.chart .lbl{fill:var(--ink);font-weight:650}
+.chart .grid line{stroke:var(--hair);stroke-width:1}
+.chart .base{stroke:var(--axis);stroke-width:1}
+.chart .whisk{stroke:var(--ink-2);stroke-width:1.5}
+.statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:900px){.statgrid{grid-template-columns:repeat(2,1fr)}}
+.stat{border:1px solid var(--hair);border-radius:12px;padding:14px;background:var(--surface)}
+.stat .v{font-size:30px;font-weight:750;letter-spacing:-.03em}
+.stat .l{font-size:12px;color:var(--muted)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;font-weight:650;padding:8px 10px;border-bottom:1px solid var(--hair)}
+td{padding:8px 10px;border-bottom:1px solid var(--hair);vertical-align:top}
+tr:hover td{background:var(--surface-2)}
+.ok{color:var(--good-ink);font-weight:650} .no{color:var(--critical);font-weight:650}
+.tabs{display:inline-flex;border:1px solid var(--hair);border-radius:10px;overflow:hidden}
+.tabs button{border:0;background:var(--surface);padding:6px 12px;cursor:pointer;font-weight:600;color:var(--ink-2)}
+.tabs button[aria-pressed="true"]{background:var(--brand-soft);color:var(--brand)}
+
+/* ---------- drawer + tooltip ---------- */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:.2s}
+.scrim.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100vh;width:min(520px,100vw);background:var(--surface);border-left:1px solid var(--hair);box-shadow:var(--shadow);transform:translateX(100%);transition:transform .25s ease;padding:22px;overflow:auto;z-index:20}
+.drawer.open{transform:none}
+.drawer h3{margin:4px 0 2px;font-size:18px}
+.kv{display:grid;grid-template-columns:110px 1fr;gap:6px 12px;font-size:12.5px;margin-top:12px}
+.kv div:nth-child(odd){color:var(--muted)}
+.tip{position:fixed;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--hair);box-shadow:var(--shadow);border-radius:10px;padding:8px 10px;font-size:12px;z-index:30;opacity:0;transition:opacity .08s;max-width:260px}
+.empty{border:1px dashed var(--axis);border-radius:12px;padding:28px;text-align:center;color:var(--muted)}
+.spin{width:14px;height:14px;border:2px solid var(--hair);border-top-color:var(--brand);border-radius:50%;animation:r 1s linear infinite;display:inline-block}
+@keyframes r{to{transform:rotate(360deg)}}
+.view{display:none}.view.on{display:block}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--page);padding:10px 16px;border-radius:10px;opacity:0;transition:.2s;z-index:40;font-weight:600}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.recbanner{display:flex;gap:8px;align-items:center;padding:8px 12px;border-radius:10px;background:color-mix(in srgb,var(--warning) 16%,transparent);border:1px solid color-mix(in srgb,var(--warning) 45%,var(--hair));font-size:12.5px;margin-bottom:12px}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7 7.5 10.5 16M17 7.5 13.5 16M7.5 6h9"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16M8 16v-5M12 16V8M16 16v-3"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6"/></symbol>
+    <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3 12h4l3-7 4 14 3-7h4"/></symbol>
+    <symbol id="i-git" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="9" r="2.5"/><path d="M6 8.5v7M8.3 7.2 15.7 8.5"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></symbol>
+    <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6L4 20h16L14 9V3"/></symbol>
+    <symbol id="i-gem" viewBox="0 0 24 24"><path d="M12 2 4 9l8 13 8-13z"/><path d="M4 9h16"/></symbol>
+  </defs>
+</svg>
+
+<div id="staticbar" style="position:sticky;top:0;z-index:15;display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:9px 16px;background:var(--surface);border-bottom:1px solid var(--hair);font-size:13px">
+  <span class="status st-warning"><span class="sw"></span>Recorded demo</span>
+  <span class="ink2">The real EvidenceTrail UI, replaying data captured from our live test environment (Investigate replays at 4× speed). Live investigations run locally.</span>
+  <span style="margin-left:auto;display:flex;gap:8px"><a class="chip" href="https://drive.google.com/file/d/1uj3LoitDER3ILarIAnZZxmJnlDbtoqD7/view" target="_blank" rel="noopener">▶ Demo video</a><a class="chip" href="https://github.com/mahak867/evidencetrail" target="_blank" rel="noopener">GitHub</a></span></div>
+<div class="shell">
+  <aside>
+    <div class="logo"><div class="mark"><svg class="i"><use href="#i-shield"/></svg></div><div><b>EvidenceTrail</b><small>Find the cause. Show the evidence.</small></div></div>
+    <button class="nav" data-view="investigate"><svg class="i"><use href="#i-search"/></svg>Investigate</button>
+    <button class="nav" data-view="map"><svg class="i"><use href="#i-map"/></svg>Service map</button>
+    <button class="nav" data-view="scorecard"><svg class="i"><use href="#i-chart"/></svg>Scorecard</button>
+    <button class="nav" data-view="audit"><svg class="i"><use href="#i-list"/></svg>Audit log</button>
+    <div class="aside-foot">
+      <div class="envpill"><span class="dot" id="envdot"></span><span id="envtxt">Test environment</span></div>
+      <div class="envpill"><svg class="i"><use href="#i-gem"/></svg><span id="modeltxt">Gemini</span></div>
+      <div>Read-only by default · every action needs a named human approval</div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="topbar">
+      <div><h1 id="vtitle">Investigate</h1><p id="vsub">From alert to an evidence-backed diagnosis</p></div>
+      <div class="spacer"></div>
+      <span class="chip"><svg class="i"><use href="#i-shield"/></svg>No evidence, no claim</span>
+      <button class="iconbtn" id="theme" title="Toggle theme" aria-label="Toggle theme"><svg class="i"><use href="#i-moon"/></svg></button>
+    </div>
+
+    <!-- ================= INVESTIGATE ================= -->
+    <section class="view" id="v-investigate">
+      <div class="grid">
+        <div class="card c5">
+          <h2><svg class="i"><use href="#i-alert"/></svg>Alert</h2>
+          <textarea id="alert" rows="3">checkout error rate above 5% for 1m (SLO burn)</textarea>
+          <div class="row" style="margin-top:8px" id="presets"></div>
+          <div class="row" style="margin-top:12px">
+            <select id="win" style="width:auto"><option value="120">Last 2 min</option><option value="300">Last 5 min</option><option value="600">Last 10 min</option></select>
+            <button class="btn primary" id="go"><svg class="i"><use href="#i-play"/></svg>Investigate</button>
+            <select id="recorded" style="flex:1;min-width:180px"><option value="">Replay a recorded run…</option></select>
+          </div>
+          <details class="chaos" style="margin-top:14px">
+            <summary><svg class="i"><use href="#i-flask"/></svg>Chaos panel <span class="muted" style="font-weight:500">· own test environment only</span></summary>
+            <div class="grid" style="gap:8px;margin-top:8px">
+              <div class="c6"><label class="f">Service</label><select id="fsvc"></select></div>
+              <div class="c6"><label class="f">Fault</label><select id="fkind">
+                <option value="error">Code error</option><option value="latency">Latency</option><option value="crash">Crash</option>
+                <option value="memory_leak">Memory leak</option><option value="pool_exhaustion">DB pool exhaustion</option>
+                <option value="bad_config">Bad config</option><option value="bad_deploy">Bad deploy</option><option value="noise">Red-herring log noise</option></select></div>
+            </div>
+            <div class="row" style="margin-top:10px"><button class="btn" id="inject"><svg class="i"><use href="#i-bolt"/></svg>Inject</button><button class="btn" id="clear">Clear all faults</button>
+              <span class="muted" style="font-size:12px">Wait ~60s for telemetry to show the incident.</span></div>
+          </details>
+        </div>
+
+        <div class="card c7">
+          <h2><svg class="i"><use href="#i-pulse"/></svg>Investigation <span class="right muted" id="timer"></span></h2>
+          <div class="stepper" id="stepper"></div>
+          <ul class="feed" id="feed"><li class="muted">Tool calls appear here as the investigation runs.</li></ul>
+        </div>
+
+        <div class="card c12" id="verdictCard"><div class="empty">Run an investigation or replay a recorded run to see the diagnosis.</div></div>
+
+        <div class="card c7">
+          <h2><svg class="i"><use href="#i-map"/></svg>Blast radius <span class="right muted" style="font-size:12px">call graph at incident time</span></h2>
+          <div id="topoInv"><div class="empty">—</div></div>
+        </div>
+        <div class="card c5">
+          <h2><svg class="i"><use href="#i-pulse"/></svg>Timeline &amp; evidence mix <span class="right muted" style="font-size:12px">where the seconds went</span></h2>
+          <div id="timeline"><div class="empty">—</div></div>
+          <div id="evmix" style="margin-top:14px"></div>
+        </div>
+        <div class="card c7">
+          <h2><svg class="i"><use href="#i-check"/></svg>Evidence-backed claims <span class="right muted" id="precision"></span></h2>
+          <div id="claims"><div class="empty">—</div></div>
+        </div>
+
+        <div class="card c5">
+          <h2><svg class="i"><use href="#i-shield"/></svg>Suggested action <span class="right muted" style="font-size:12px">human approval required</span></h2>
+          <div id="action"><div class="empty">—</div></div>
+        </div>
+        <div class="card c12">
+          <h2><svg class="i"><use href="#i-x"/></svg>Ruled out &amp; blocked</h2>
+          <div id="ruled"><div class="empty">—</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= MAP ================= -->
+    <section class="view" id="v-map">
+      <div class="grid">
+        <div class="card c12">
+          <h2><svg class="i"><use href="#i-map"/></svg>Live service map <span class="right row"><span class="muted" id="mapts" style="font-size:12px"></span>
+            <label class="row" style="font-size:12px;gap:6px;color:var(--ink-2)"><input type="checkbox" id="auto" checked style="width:auto">Auto-refresh 5s</label></span></h2>
+          <div id="topoMap"><div class="empty"><span class="spin"></span> Loading telemetry…</div></div>
+        </div>
+        <div class="card c12">
+          <h2><svg class="i"><use href="#i-pulse"/></svg>Services <span class="right muted" style="font-size:12px">error ratio · p95 vs baseline window</span></h2>
+          <div class="tiles" id="tiles"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SCORECARD ================= -->
+    <section class="view" id="v-scorecard">
+      <div class="statgrid" id="stats" style="margin-bottom:16px"></div>
+      <div class="grid">
+        <div class="card c12">
+          <h2><svg class="i"><use href="#i-chart"/></svg>Top-1 root-cause accuracy <span class="right row"><span class="tabs" id="setTabs"></span></span></h2>
+          <p class="muted" style="margin:-4px 0 10px;font-size:12.5px">Same injected faults, same telemetry window for every method. Whiskers show 95% Wilson intervals (small n, so read them as indicative).</p>
+          <div id="accChart"></div>
+          <div class="legend" id="accLegend"></div>
+        </div>
+        <div class="card c12">
+          <h2><svg class="i"><use href="#i-pulse"/></svg>Time to diagnosis per scenario <span class="right muted" style="font-size:12px">each dot is one injected fault · ✕ = wrong root cause</span></h2>
+          <div id="timeChart"></div>
+        </div>
+        <div class="card c12">
+          <h2><svg class="i"><use href="#i-list"/></svg>Every scenario (misses included)</h2>
+          <div style="overflow:auto" id="scTable"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= AUDIT ================= -->
+    <section class="view" id="v-audit">
+      <div class="card"><h2><svg class="i"><use href="#i-list"/></svg>Audit log <span class="right muted" style="font-size:12px">investigations, feedback, approvals, blocks, fault injections</span></h2>
+        <div style="overflow:auto" id="auditTable"></div></div>
+    </section>
+  </main>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="drawer" id="drawer" role="dialog" aria-label="Evidence detail"></div>
+<div class="tip" id="tip"></div>
+<div class="toast" id="toast"></div>
+
+<script src="static-shim.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const icon = (id, cls="i") => `<svg class="${cls}"><use href="#i-${id}"/></svg>`;
+const api = async (p, o={}) => { const r = await fetch(p, {headers:{"content-type":"application/json"}, ...o}); if (!r.ok) throw new Error(await r.text()); return r.json(); };
+const toast = m => { const t=$("#toast"); t.textContent=m; t.classList.add("on"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("on"),2600); };
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+/* ---------- theme ---------- */
+function setTheme(t){ document.documentElement.dataset.theme=t; $("#theme").innerHTML=icon(t==="dark"?"sun":"moon"); try{localStorage.setItem("et-theme",t)}catch(e){} rerender(); }
+let saved=null; try{saved=localStorage.getItem("et-theme")}catch(e){}
+document.documentElement.dataset.theme = saved || (matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
+$("#theme").innerHTML=icon(document.documentElement.dataset.theme==="dark"?"sun":"moon");
+$("#theme").onclick=()=>setTheme(document.documentElement.dataset.theme==="dark"?"light":"dark");
+
+/* ---------- routing ---------- */
+const TITLES={investigate:["Investigate","From alert to an evidence-backed diagnosis"],map:["Service map","Live health of the test environment"],
+  scorecard:["Scorecard","EvidenceTrail vs baselines on injected faults"],audit:["Audit log","Every decision a human or the system made"]};
+let VIEW="investigate";
+function go(v){ VIEW=TITLES[v]?v:"investigate"; $$(".view").forEach(e=>e.classList.toggle("on",e.id==="v-"+VIEW));
+  $$(".nav").forEach(n=>n.toggleAttribute("aria-current",n.dataset.view===VIEW)); $$(".nav").forEach(n=>{ if(n.dataset.view===VIEW) n.setAttribute("aria-current","page"); });
+  $("#vtitle").textContent=TITLES[VIEW][0]; $("#vsub").textContent=TITLES[VIEW][1];
+  if(location.hash.slice(1)!==VIEW) history.replaceState(null,"","#"+VIEW);
+  if(VIEW==="map") loadMap(); if(VIEW==="scorecard") loadScore(); if(VIEW==="audit") loadAudit(); }
+$$(".nav").forEach(n=>n.onclick=()=>go(n.dataset.view));
+window.onhashchange=()=>go(location.hash.slice(1));
+
+/* ---------- tooltip ---------- */
+const tip=$("#tip");
+function showTip(e,html){ tip.innerHTML=html; tip.style.opacity=1; const x=Math.min(e.clientX+14, innerWidth-tip.offsetWidth-8), y=Math.min(e.clientY+14, innerHeight-tip.offsetHeight-8); tip.style.left=x+"px"; tip.style.top=y+"px"; }
+function hideTip(){ tip.style.opacity=0; }
+
+/* ---------- health model ---------- */
+function statusOf(h){
+  if(!h || !h.rps) return {k:"critical",l:"Down",ic:"x"};
+  const ej=(h.error_ratio||0)-(h.baseline_error_ratio||0), p=h.p95_ms||0, b=h.baseline_p95_ms||0;
+  if(ej>0.05) return {k:"critical",l:"Errors",ic:"alert"};
+  if(p>Math.max(250,3*(b||50))) return {k:"warning",l:"Slow",ic:"alert"};
+  return {k:"good",l:"Healthy",ic:"check"};
+}
+const statusChip = s => `<span class="status st-${s.k}"><span class="sw"></span>${esc(s.l)}</span>`;
+
+/* ---------- topology ---------- */
+const ALL=["frontend","checkout","catalog","recommendation","cart","payment","shipping","currency","inventory"];
+const FALLBACK_EDGES=[["frontend","catalog"],["frontend","cart"],["frontend","checkout"],["frontend","recommendation"],["checkout","cart"],["checkout","catalog"],
+  ["checkout","payment"],["checkout","shipping"],["checkout","currency"],["catalog","inventory"],["catalog","currency"],["recommendation","catalog"],["shipping","currency"]].map(([a,b])=>({caller:a,callee:b}));
+function topology(el, health, edges, rc, suspects){
+  edges = (edges&&edges.length?edges:FALLBACK_EDGES);
+  const nodes=[...new Set([...ALL,...edges.flatMap(e=>[e.caller,e.callee])])];
+  const kids={}; edges.forEach(e=>(kids[e.caller]=kids[e.caller]||new Set()).add(e.callee));
+  const depth={}; const visit=(n,d)=>{ if((depth[n]??-1)>=d) return; depth[n]=d; (kids[n]||[]).forEach(c=>visit(c,d+1)); }; visit("frontend",0);
+  nodes.forEach(n=>{ if(depth[n]==null) depth[n]=1; });
+  const levels={}; nodes.forEach(n=>(levels[depth[n]]=levels[depth[n]]||[]).push(n));
+  const L=Object.keys(levels).map(Number).sort((a,b)=>a-b);
+  const W=820, colW=W/L.length, nodeW=150, nodeH=48, rowH=64, maxRows=Math.max(...L.map(l=>levels[l].length));
+  const H=Math.max(200, maxRows*rowH+30); const pos={};
+  L.forEach((l,i)=>{ const arr=levels[l].sort(); const off=(H-arr.length*rowH)/2; arr.forEach((n,j)=>pos[n]={x:i*colW+(colW-nodeW)/2, y:off+j*rowH+(rowH-nodeH)/2}); });
+  const st={}; nodes.forEach(n=>st[n]= health ? statusOf(health[n]) : ((suspects||[]).includes(n) ? {k:"critical",l:"Anomalous",ic:"alert"} : {k:"neutral",l:"Not captured",ic:"x"}));
+  const color=k=>css(k==="neutral"?"--axis":"--"+k);
+  let s=`<svg class="topo" viewBox="0 0 ${W} ${H}" role="img" aria-label="Service call graph">
+    <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="${color("axis")}"/></marker>
+    <marker id="ahot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="${color("critical")}"/></marker></defs>`;
+  edges.forEach(e=>{ const a=pos[e.caller], b=pos[e.callee]; if(!a||!b) return;
+    const x1=a.x+nodeW, y1=a.y+nodeH/2, x2=b.x-2, y2=b.y+nodeH/2, mx=(x1+x2)/2;
+    const hot = st[e.callee].k!=="good" && st[e.caller].k!=="good";
+    const back = x2<x1; const d = back ? `M${a.x+nodeW/2} ${a.y+nodeH} C ${a.x+nodeW/2} ${a.y+nodeH+40}, ${b.x+nodeW/2} ${b.y+nodeH+40}, ${b.x+nodeW/2} ${b.y+nodeH+2}` : `M${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
+    s+=`<path class="edge ${hot?"hot":""}" d="${d}" marker-end="url(#${hot?"ahot":"ah"})"/>`; });
+  nodes.forEach(n=>{ const p=pos[n], h=health?.[n]||{}, k=st[n];
+    const sub = !health ? (st[n].k==="critical"?"flagged by scan":"—") : !h.rps ? "no traffic" : `${(h.error_ratio*100).toFixed(0)}% err · p95 ${Math.round(h.p95_ms??0)}ms`;
+    s+=`<g class="node ${n===rc?"rc":""}" data-n="${esc(n)}" transform="translate(${p.x},${p.y})">
+      <rect width="${nodeW}" height="${nodeH}" rx="11" ${health&&k.k==="critical"&&!h.rps?'stroke-dasharray="5 4"':''}/>
+      <circle cx="16" cy="${nodeH/2}" r="5" fill="${color(k.k)}"/>
+      <text x="28" y="19">${esc(n)}${n===rc?" · root cause":""}</text><text class="sub" x="28" y="35">${esc(sub)}</text></g>`; });
+  s+="</svg>";
+  el.innerHTML = s + `<div class="legend"><span><i class="sw" style="background:${color("good")}"></i>Healthy</span><span><i class="sw" style="background:${color("warning")}"></i>Slow</span>
+    <span><i class="sw" style="background:${color("critical")}"></i>Errors / down</span>${rc?`<span><svg width="22" height="12"><rect x="1" y="1" width="20" height="10" rx="4" fill="none" stroke="${color("critical")}" stroke-width="2"/></svg>Root cause</span>`:""}
+    <span><svg width="26" height="10"><path d="M1 5h20" stroke="${color("critical")}" stroke-width="2"/><path d="M19 1l5 4-5 4z" fill="${color("critical")}"/></svg>Failure path</span></div>`;
+  el.querySelectorAll(".node").forEach(g=>{ const n=g.dataset.n, h=health?.[n]||{};
+    g.onmousemove=e=>showTip(e,`<b>${esc(n)}</b> ${statusChip(st[n])}<div class="mrow" style="margin-top:6px"><span>Requests/s</span><b>${h.rps??0}</b></div>
+      <div class="mrow"><span>Error ratio</span><b>${((h.error_ratio||0)*100).toFixed(1)}% <span class="muted">(was ${((h.baseline_error_ratio||0)*100).toFixed(1)}%)</span></b></div>
+      <div class="mrow"><span>p95 latency</span><b>${h.p95_ms??"–"} ms <span class="muted">(was ${h.baseline_p95_ms??"–"})</span></b></div>`);
+    g.onmouseleave=hideTip; });
+}
+
+/* ---------- investigate ---------- */
+const STAGES=[["scan","Health scan","Prometheus vs baseline"],["graph","Call graph","Jaeger traces"],["prefetch","Prefetch","logs · traces · changes"],
+  ["gemini","Gemini","hypotheses + tools"],["gate","Evidence gate","cite or abstain"],["done","Decision","human in charge"]];
+function stepper(stage){
+  const idx = stage==="queued"? -1 : STAGES.findIndex(s=>s[0]===stage);
+  $("#stepper").innerHTML = STAGES.map(([k,t,s],i)=>`<div class="step ${i<idx||stage==="done"?"done":i===idx?"active":""}">
+    <div class="n">${i<idx||stage==="done"?"✓ ":""}STEP ${i+1}</div><div class="t">${t}</div><div class="s">${s}</div></div>`).join("");
+}
+stepper("queued");
+const PRESETS=["checkout error rate above 5% for 1m (SLO burn)","frontend 5xx ratio above 5% for 1m","frontend p95 latency above 2s for 2m"];
+$("#presets").innerHTML = PRESETS.map(p=>`<button class="preset">${esc(p)}</button>`).join("");
+$$(".preset").forEach(b=>b.onclick=()=>$("#alert").value=b.textContent);
+
+let JOB=null, CURRENT=null, T0=0, TICK=null;
+$("#go").onclick = async () => {
+  $("#go").disabled=true; $("#go").innerHTML=`<span class="spin"></span>Investigating…`;
+  $("#feed").innerHTML=""; stepper("scan"); T0=Date.now();
+  clearInterval(TICK); TICK=setInterval(()=>$("#timer").textContent=((Date.now()-T0)/1000).toFixed(1)+"s",100);
+  try{ const {id}=await api("/api/investigate",{method:"POST",body:JSON.stringify({alert:$("#alert").value,window_s:+$("#win").value})}); JOB=id; poll(); }
+  catch(e){ toast("Could not start: "+e.message); reset(); }
+};
+function reset(){ $("#go").disabled=false; $("#go").innerHTML=icon("play")+"Investigate"; clearInterval(TICK); }
+function feed(trail){
+  $("#feed").innerHTML = (trail||[]).map(t=>`<li>${icon("check")}<code>${esc(t.tool)}</code><span class="ink2">${esc(Object.values(t.args||{}).join(", "))}</span>
+    <span class="muted" style="margin-left:auto">${(t.evidence_ids||[]).length} evidence</span></li>`).join("") || `<li class="muted">Scanning health and call graph…</li>`;
+}
+async function poll(){
+  const j=await api(`/api/investigations/${JOB}`);
+  stepper(j.stage||"scan"); if(j.live_trail) feed(j.live_trail);
+  if(j.status==="running"){ setTimeout(poll,700); return; }
+  reset(); $("#timer").textContent=(j.result?.elapsed_s??j.elapsed_s)+"s";
+  if(j.status==="error"){ toast(j.error); return; }
+  render(j.result,false); stepper("done");
+}
+$("#inject").onclick=async()=>{ try{ await api("/api/faults",{method:"POST",body:JSON.stringify({service:$("#fsvc").value,kind:$("#fkind").value})}); toast(`Injected ${$("#fkind").selectedOptions[0].text.toLowerCase()} into ${$("#fsvc").value}`);}catch(e){toast(e.message)} };
+$("#clear").onclick=async()=>{ await api("/api/faults",{method:"DELETE"}); toast("All faults cleared"); };
+
+const KIND={log:"LOG",metric:"MET",trace:"TRC",change:"CHG"};
+let EVID={};
+function evChip(e){ EVID[e.id]=e; return `<button class="ev" data-ev="${esc(e.id)}"><span class="k">${KIND[e.kind]||"EV"}</span>${esc(e.ref)}</button>`; }
+
+function render(r, recorded, truth){
+  CURRENT={r,recorded,truth}; EVID={};
+  const v=r.verdict||"FAILED";
+  const vs = v==="DIAGNOSIS"?{k:"good",l:"Diagnosis",ic:"check"} : v==="INCONCLUSIVE"?{k:"warning",l:"Inconclusive",ic:"alert"} : {k:"critical",l:"Failed",ic:"x"};
+  const conf = r.confidence!=null ? Math.round(r.confidence*100) : null;
+  const u=r.usage||{};
+  const truthOk = truth ? (truth.service===r.root_cause_service) : null;
+  $("#verdictCard").innerHTML = `${recorded?`<div class="recbanner">${icon("file")}Recorded evaluation run (${esc(recorded)}) — replayed from saved results, not live.</div>`:""}
+  <div class="hero"><div>
+    <div class="row">${statusChip(vs)}<span class="chip">${icon("gem")}${esc(r.model||"gemini")}</span>${(r.ranked_candidates||[]).length>1?`<span class="chip">Next: ${esc(r.ranked_candidates.slice(1).join(" → "))}</span>`:""}</div>
+    <div class="rc">${esc(r.root_cause_service||"No confident root cause")}</div>
+    <div class="ftype">${esc((r.fault_type||"").replaceAll("_"," "))}</div>
+    ${r.summary?`<p class="summary">${esc(r.summary)}</p>`:""}${r.error?`<p class="summary" style="color:var(--critical)">${esc(r.error)}</p>`:""}
+    ${truth?`<div class="truth">${truthOk?`<span class="ok">${icon("check")} Matches ground truth</span>`:`<span class="no">${icon("x")} Ground truth was</span>`} <b>${esc(truth.service)}</b> / ${esc(truth.fault_type)}</div>`:""}
+  </div>
+  <div><div class="kpis">
+    <div class="kpi"><div class="l">Confidence</div><div class="v">${conf??"–"}${conf!=null?"%":""}</div><div class="meter"><i style="width:${conf||0}%"></i></div></div>
+    <div class="kpi"><div class="l">Time to diagnosis</div><div class="v">${r.elapsed_s??"–"}s</div><div class="l">${u.wait_s?`incl. ${u.wait_s}s provider back-off`:"end to end"}</div></div>
+    <div class="kpi"><div class="l">Evidence precision</div><div class="v">${r.evidence_precision!=null?Math.round(r.evidence_precision*100)+"%":"–"}</div><div class="l">${(r.claims||[]).length} kept · ${(r.dropped_claims||[]).length} blocked</div></div>
+    <div class="kpi"><div class="l">Gemini usage</div><div class="v">${u.calls??0} <span style="font-size:13px;font-weight:600" class="muted">calls</span></div><div class="l">${(u.total_tokens||0).toLocaleString()} tokens · ${r.evidence_items??"–"} evidence items</div></div>
+  </div></div></div>`;
+  topology($("#topoInv"), r.health, r.edges, r.root_cause_service, r.topology_suspects);
+  if(!r.health) $("#topoInv").insertAdjacentHTML("afterbegin",`<p class="muted" style="font-size:12px;margin:0 0 6px">This run predates health snapshots: services flagged by the scan are shown, and the call graph is the reference topology.</p>`);
+  timeline(r); evmix(r);
+  $("#precision").textContent = r.evidence_precision!=null ? `precision ${Math.round(r.evidence_precision*100)}%` : "";
+  $("#claims").innerHTML = (r.claims||[]).map(c=>`<div class="claim c-ok"><div class="head"><span class="ic">${icon("check")}</span><div class="txt">${esc(c.text)}</div></div>
+      ${c.quote?`<div class="quote mono">“${esc(c.quote)}”</div>`:""}<div style="margin-left:32px">${(c.evidence||[]).map(evChip).join("")}</div></div>`).join("")
+    || `<div class="empty">No claim survived the evidence gate.</div>`;
+  const dropped=(r.dropped_claims||[]).map(c=>`<div class="claim c-bad"><div class="head"><span class="ic">${icon("x")}</span><div class="txt">${esc(c.text)}</div></div>
+      <div class="reason">Blocked by evidence gate: ${esc((c.rejected_because||[]).join("; "))}</div></div>`).join("");
+  const hyps=(r.rejected_hypotheses||[]).map(h=>`<div class="hyp">${icon("x")}<div><b>${esc(h.hypothesis)}</b><div class="muted" style="font-size:12.5px">${esc(h.why_rejected||"")}</div>
+      ${(h.evidence_ids||[]).length?`<div class="muted mono" style="font-size:11.5px">cites ${esc(h.evidence_ids.join(", "))}</div>`:""}</div></div>`).join("");
+  $("#ruled").innerHTML = (hyps?`<div style="font-weight:650;margin-bottom:4px">Hypotheses ruled out</div>${hyps}`:"") + (dropped?`<div style="font-weight:650;margin:12px 0 8px">Claims blocked by the gate</div>${dropped}`:"")
+    || `<div class="empty">No hypotheses were ruled out and no claims were blocked.</div>`;
+  const a=r.suggested_action;
+  const rk = a ? ({safe:{k:"good",l:"Safe · read-only"},risky:{k:"warning",l:"Risky · needs approval"},blocked:{k:"critical",l:"Blocked by policy"}}[a.risk]||{k:"neutral",l:a.risk}) : null;
+  $("#action").innerHTML = a ? `<div class="row" style="justify-content:space-between"><div><div style="font-size:18px;font-weight:700">${esc(a.action.replaceAll("_"," "))} <span class="muted" style="font-weight:500">on</span> ${esc(a.service)}</div>
+      <div class="muted" style="font-size:12.5px">${esc(a.why||a.description||"")}</div></div>${statusChip(rk)}</div>
+      <div class="muted" style="font-size:12px;margin-top:10px">Dry run — nothing has executed</div><pre class="code">$ ${esc(a.dry_run||"")}</pre>
+      ${recorded?`<p class="muted" style="font-size:12px">Approval is disabled for recorded runs.</p>`:`<label class="f">Approver name (required)</label><input id="approver" placeholder="e.g. on-call engineer">
+      <div class="row" style="margin-top:10px"><button class="btn good" id="approve" ${a.risk==="blocked"?"disabled":""}>${icon("check")}Approve &amp; run</button><button class="btn bad" id="block">${icon("x")}Block</button></div><div id="actmsg" class="muted" style="font-size:12.5px;margin-top:8px"></div>`}
+      ${!recorded?`<hr style="border:0;border-top:1px solid var(--hair);margin:16px 0"><div style="font-weight:650;margin-bottom:8px">Was this diagnosis right?</div>
+      <div class="row"><button class="btn" data-fb="confirm">${icon("check")}Confirm</button><button class="btn" data-fb="correct">Correct…</button><button class="btn" data-fb="reject">${icon("x")}Reject</button><span id="fbmsg" class="muted" style="font-size:12.5px"></span></div>`:""}`
+    : `<div class="empty">No action suggested. Diagnoses stay hypotheses until an engineer confirms them.</div>`;
+  if(a && !recorded){ $("#approve").onclick=()=>act(true); $("#block").onclick=()=>act(false); }
+  $$("[data-fb]").forEach(b=>b.onclick=()=>fb(b.dataset.fb));
+  $$("[data-ev]").forEach(b=>b.onclick=()=>openEv(b.dataset.ev));
+}
+async function act(approve){ const who=($("#approver").value||"").trim(); if(approve&&!who){ $("#actmsg").textContent="Enter your name to approve."; $("#approver").focus(); return; }
+  const res=await api(`/api/investigations/${JOB}/action`,{method:"POST",body:JSON.stringify({approved_by:who||"on-call",approve})});
+  $("#actmsg").innerHTML = res.executed?`<span class="ok">${icon("check")} Executed:</span> <code>${esc(res.command)}</code>`:`<span class="no">Not executed:</span> ${esc(res.reason||"")}`; }
+async function fb(d){ let c=null; if(d==="correct"){ c=prompt("Correct root-cause service?"); if(!c) return; }
+  await api(`/api/investigations/${JOB}/feedback`,{method:"POST",body:JSON.stringify({decision:d,corrected_service:c})}); $("#fbmsg").textContent=`Recorded: ${d}${c?" → "+c:""}`; }
+
+/* ---------- timeline (gantt) ---------- */
+function timeline(r){
+  const ev=(r.trail||[]).filter(t=>t.t!=null&&t.dur!=null);
+  if(!ev.length){ $("#timeline").innerHTML=`<div class="empty" style="padding:18px">Step timing was not recorded for this run (added in newer runs).</div>`; return; }
+  const total=Math.max(r.elapsed_s||0, ...ev.map(e=>e.t+e.dur))||1;
+  const W=460,rowH=24,P={l:150,r:16,t:6,b:26},H=P.t+ev.length*rowH+P.b,X=v=>P.l+v/total*(W-P.l-P.r);
+  const nice=[0.5,1,2,5,10,20,30,60,120,300].find(n=>total/n<=5)||600;
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Investigation timeline"><g class="grid">`;
+  for(let v=0;v<=total+1e-9;v+=nice) s+=`<line x1="${X(v)}" x2="${X(v)}" y1="${P.t}" y2="${H-P.b}"/><text x="${X(v)}" y="${H-8}" text-anchor="middle">${+v.toFixed(1)}s</text>`;
+  s+=`</g>`;
+  ev.forEach((e,i)=>{ const y=P.t+i*rowH+5, h=rowH-10, llm=e.step==="llm";
+    const name = llm ? `Gemini call ${ev.filter((x,j)=>j<=i&&x.step==="llm").length}` : e.step==="scan" ? "Health scan + call graph" : `${e.tool}(${Object.values(e.args||{})[0]??""})`;
+    const w=Math.max(3, X(e.t+e.dur)-X(e.t));
+    s+=`<text x="${P.l-8}" y="${y+h/2+4}" text-anchor="end" style="font-size:11px">${esc(name.length>22?name.slice(0,21)+"…":name)}</text>
+      <rect x="${X(e.t)}" y="${y}" width="${w}" height="${h}" rx="3" fill="${css(llm?"--s1":"--s2")}"/>
+      <rect x="0" y="${y-4}" width="${W}" height="${h+8}" fill="transparent" data-i="${i}"/>`; });
+  s+="</svg>";
+  $("#timeline").innerHTML=s+`<div class="legend"><span><i class="sw" style="background:${css("--s1")}"></i>Gemini call</span><span><i class="sw" style="background:${css("--s2")}"></i>Telemetry query</span>
+    <span class="muted">total ${r.elapsed_s}s${r.usage?.wait_s?` · ${r.usage.wait_s}s provider back-off`:""}</span></div>`;
+  $$("#timeline rect[data-i]").forEach(x=>{ const e=ev[+x.dataset.i];
+    x.onmousemove=m=>showTip(m, e.step==="llm" ? `<b>Gemini call</b><div class="mrow"><span>Model</span><b>${esc(e.model)}</b></div><div class="mrow"><span>Duration</span><b>${e.dur}s</b></div>
+      <div class="mrow"><span>Tokens</span><b>${(e.tokens||0).toLocaleString()}</b></div><div class="mrow"><span>Asked for</span><b>${esc((e.requested||[]).join(", ")||"—")}</b></div>`
+      : `<b>${esc(e.tool||"scan")}</b><div class="mrow"><span>Started</span><b>+${e.t}s</b></div><div class="mrow"><span>Duration</span><b>${e.dur}s</b></div><div class="mrow"><span>Evidence</span><b>${(e.evidence_ids||[]).length||"—"}</b></div>`);
+    x.onmouseleave=hideTip; });
+}
+function evmix(r){
+  const ids=(r.trail||[]).flatMap(t=>t.evidence_ids||[]).concat((r.trail||[]).filter(t=>t.step==="scan").flatMap(t=>[t.health_evidence_id,t.graph_evidence_id]).filter(Boolean));
+  const kinds=[["L","Logs","--s1"],["M","Metrics","--s2"],["T","Traces","--s3"],["C","Changes","--ink-2"]];
+  const cnt=kinds.map(([p])=>ids.filter(i=>i.startsWith(p+"-")).length), tot=cnt.reduce((a,b)=>a+b,0);
+  if(!tot){ $("#evmix").innerHTML=""; return; }
+  const cited=new Set((r.claims||[]).flatMap(c=>(c.evidence||[]).map(e=>e.id)));
+  let x=0; const segs=kinds.map(([p,l,c],i)=>{ if(!cnt[i]) return ""; const w=cnt[i]/tot*100; const seg=`<div title="${l}: ${cnt[i]}" style="width:calc(${w}% - 2px);background:${css(c)};height:14px;border-radius:4px"></div>`; x+=w; return seg; }).join("");
+  $("#evmix").innerHTML=`<div style="font-weight:650;font-size:13px;margin-bottom:6px">Evidence fetched: ${tot} items · ${cited.size} cited in the diagnosis</div>
+    <div style="display:flex;gap:2px">${segs}</div><div class="legend">${kinds.map(([p,l,c],i)=>cnt[i]?`<span><i class="sw" style="background:${css(c)}"></i>${l} ${cnt[i]}</span>`:"").join("")}</div>`;
+}
+
+/* ---------- evidence drawer ---------- */
+function sparkline(series){
+  const pts=(series?.[0]?.points||[]).filter(p=>p[1]!=null); if(pts.length<2) return "";
+  const W=460,H=120,P=28; const xs=pts.map(p=>p[0]), ys=pts.map(p=>p[1]);
+  const x0=Math.min(...xs),x1=Math.max(...xs),y1=Math.max(...ys)*1.1||1;
+  const X=x=>P+(x-x0)/(x1-x0||1)*(W-P-8), Y=y=>H-20-(y/y1)*(H-34);
+  const d=pts.map((p,i)=>(i?"L":"M")+X(p[0]).toFixed(1)+" "+Y(p[1]).toFixed(1)).join(" ");
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" id="spark"><line class="base" x1="${P}" x2="${W-8}" y1="${H-20}" y2="${H-20}"/>
+    <text x="${P-4}" y="${Y(y1/1.1)+4}" text-anchor="end">${+(y1/1.1).toFixed(2)}</text><text x="${P-4}" y="${H-16}" text-anchor="end">0</text>
+    <path d="${d}" fill="none" stroke="${css("--s1")}" stroke-width="2" stroke-linejoin="round"/>
+    ${pts.map(p=>`<circle cx="${X(p[0])}" cy="${Y(p[1])}" r="9" fill="transparent" data-t="${p[0]}" data-v="${p[1]}"/>`).join("")}
+    <text x="${P}" y="${H-3}">${new Date(x0*1000).toLocaleTimeString()}</text><text x="${W-8}" y="${H-3}" text-anchor="end">${new Date(x1*1000).toLocaleTimeString()}</text></svg>`;
+}
+function openEv(id){
+  const e=EVID[id]; if(!e) return; let series=null;
+  if(e.kind==="metric"){ try{ const j=JSON.parse(e.text); if(Array.isArray(j)) series=j; }catch(_){} }
+  const meta=e.meta||{};
+  $("#drawer").innerHTML = `<div class="row" style="justify-content:space-between"><span class="chip">${KIND[e.kind]||"EV"} · ${esc(e.kind)}</span><button class="iconbtn" id="dclose" aria-label="Close">${icon("x")}</button></div>
+    <h3 class="mono">${esc(e.ref)}</h3><div class="muted mono" style="font-size:12px">evidence id ${esc(e.id)} · fetched during this investigation</div>
+    ${series?`<div style="margin-top:14px;font-weight:650">${esc(meta.service||"")} · ${esc(meta.metric||"")}</div>${sparkline(series)}`:""}
+    <div style="margin-top:14px;font-weight:650">Content${e.kind==="log"?" (redacted before reaching Gemini)":""}</div><pre class="code">${esc(series?JSON.stringify(series[0]?.labels||{}):e.text)}</pre>
+    <div class="kv">${Object.entries(meta).filter(([k])=>k!=="query").map(([k,v])=>`<div>${esc(k)}</div><div class="mono" style="word-break:break-all">${esc(typeof v==="object"?JSON.stringify(v):v)}</div>`).join("")}</div>
+    ${meta.query?`<div style="margin-top:14px;font-weight:650">Query</div><pre class="code">${esc(meta.query)}</pre>`:""}`;
+  $("#drawer").classList.add("open"); $("#scrim").classList.add("open"); $("#dclose").onclick=closeEv;
+  $$("#spark circle").forEach(c=>{ c.onmousemove=ev=>showTip(ev,`<b>${(+c.dataset.v).toFixed(3)}</b><div class="muted">${new Date(c.dataset.t*1000).toLocaleTimeString()}</div>`); c.onmouseleave=hideTip; });
+}
+function closeEv(){ $("#drawer").classList.remove("open"); $("#scrim").classList.remove("open"); }
+$("#scrim").onclick=closeEv; addEventListener("keydown",e=>{ if(e.key==="Escape") closeEv(); });
+
+/* ---------- recorded runs ---------- */
+let RECORDED=[];
+async function loadRecorded(){ try{ RECORDED=await api("/api/recorded"); }catch(e){ RECORDED=[]; }
+  $("#recorded").innerHTML=`<option value="">Replay a recorded run…</option>`+RECORDED.map((r,i)=>`<option value="${i}">${esc(r.id)} · ${esc(r.truth.fault_type.replaceAll("_"," "))} on ${esc(r.truth.service)} (${r.set})</option>`).join(""); }
+$("#recorded").onchange=e=>{ const r=RECORDED[e.target.value]; if(!r||!r.result) return; JOB=null; $("#alert").value=r.alert; stepper("done");
+  feed((r.result.trail||[]).filter(t=>t.step==="tool")); $("#timer").textContent=r.result.elapsed_s+"s"; render(r.result, `${r.id}, ${r.set} set`, r.truth); };
+
+/* ---------- map ---------- */
+let MAPT=null, LASTH=null;
+async function loadMap(){
+  clearTimeout(MAPT);
+  try{ const [h,sr]=await Promise.all([api("/api/health"), api("/api/series").catch(()=>null)]); LASTH=h; SERIES=sr; drawMap(); $("#envdot").style.background=css("--good"); $("#envtxt").textContent="Recorded telemetry · 19 Nov 2026"; }
+  catch(e){ $("#topoMap").innerHTML=`<div class="empty">Telemetry unavailable. Is <code>docker compose up</code> running?</div>`; $("#envdot").style.background=css("--critical"); $("#envtxt").textContent="Telemetry offline"; }
+  if(VIEW==="map" && $("#auto").checked) MAPT=setTimeout(loadMap,5000);
+}
+let SERIES=null;
+function spark(pts, colorVar, fmt, maxHint){
+  pts=(pts||[]).filter(p=>p[1]!=null); if(pts.length<2) return `<div class="muted" style="font-size:11px;height:34px">no data</div>`;
+  const W=200,H=34,ys=pts.map(p=>p[1]),mx=Math.max(maxHint||0,...ys)||1,x0=pts[0][0],x1=pts.at(-1)[0];
+  const X=t=>(t-x0)/(x1-x0||1)*(W-2)+1, Y=v=>H-2-(v/mx)*(H-6);
+  const d=pts.map((p,i)=>(i?"L":"M")+X(p[0]).toFixed(1)+" "+Y(p[1]).toFixed(1)).join(" ");
+  return `<svg class="chart sp" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:34px" data-pts='${JSON.stringify(pts)}' data-fmt="${fmt}">
+    <line x1="0" x2="${W}" y1="${H-2}" y2="${H-2}" class="base"/><path d="${d}" fill="none" stroke="${css(colorVar)}" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>
+    <line class="xh" x1="0" x2="0" y1="0" y2="${H}" stroke="${css("--ink-2")}" stroke-width="1" vector-effect="non-scaling-stroke" opacity="0"/></svg>`;
+}
+function bindSparks(){
+  $$("svg.sp").forEach(svg=>{ const pts=JSON.parse(svg.dataset.pts), fmt=svg.dataset.fmt, xh=svg.querySelector(".xh");
+    svg.onmousemove=e=>{ const r=svg.getBoundingClientRect(), f=(e.clientX-r.left)/r.width, i=Math.round(f*(pts.length-1)), p=pts[Math.max(0,Math.min(pts.length-1,i))];
+      const xx=(i/(pts.length-1))*200; xh.setAttribute("x1",xx); xh.setAttribute("x2",xx); xh.setAttribute("opacity",1);
+      showTip(e,`<b>${fmt==="pct"?(p[1]*100).toFixed(1)+"%":Math.round(p[1])+" ms"}</b><div class="muted">${new Date(p[0]*1000).toLocaleTimeString()}</div>`); };
+    svg.onmouseleave=()=>{ xh.setAttribute("opacity",0); hideTip(); }; });
+}
+function drawMap(){
+  const h=LASTH; if(!h) return;
+  $("#mapts").textContent="updated "+new Date(h.ts*1000).toLocaleTimeString();
+  topology($("#topoMap"), h.services, h.edges, null);
+  $("#tiles").innerHTML = h.expected.map(n=>{ const s=h.services[n]||{}, k=statusOf(s), er=(s.error_ratio||0)*100;
+    return `<div class="tile"><div class="name">${esc(n)}${statusChip(k)}</div>
+      <div class="mrow" style="margin-top:8px"><span>Error ratio</span><b>${er.toFixed(1)}%</b></div><div class="bar"><i style="width:${Math.min(100,er)}%;background:${css(er>5?"--critical":"--good")}"></i></div>
+      <div class="mrow"><span>p95</span><b>${s.p95_ms??"–"} ms <span class="muted" style="font-weight:500">/ ${s.baseline_p95_ms??"–"}</span></b></div>
+      <div class="mrow"><span>Requests/s</span><b>${s.rps??0}</b></div>
+      <div class="mrow" style="margin-top:8px"><span>Error ratio · 10 min</span></div>${spark(SERIES?.services?.[n]?.error_ratio, er>5?"--critical":"--s1","pct",0.05)}
+      <div class="mrow" style="margin-top:4px"><span>p95 latency · 10 min</span></div>${spark(SERIES?.services?.[n]?.p95_ms,"--s2","ms",100)}</div>`; }).join("");
+  bindSparks();
+}
+$("#auto").onchange=()=>loadMap();
+
+/* ---------- scorecard ---------- */
+const M=[["EvidenceTrail","EvidenceTrail","--s1"],["B0_single_prompt","Single-prompt Gemini (B0)","--s2"],["B1_dashboard_rule","Dashboard rule (B1)","--s3"]];
+let SC=null, SET="standard";
+async function loadScore(){ try{ SC=await api("/api/scorecard.json"); }catch(e){ SC={}; } drawScore(); }
+function drawScore(){
+  const sets=Object.keys(SC||{});
+  if(!sets.length){ $("#accChart").innerHTML=`<div class="empty">No evaluation results yet. Run <code>python -m eval.run_eval</code>.</div>`; return; }
+  if(!sets.includes(SET)) SET=sets[0];
+  $("#setTabs").innerHTML=sets.map(s=>`<button aria-pressed="${s===SET}" data-set="${s}">${s==="hard"?"Hard set":"Standard set"} · n=${SC[s].n}</button>`).join("");
+  $$("#setTabs button").forEach(b=>b.onclick=()=>{ SET=b.dataset.set; drawScore(); });
+  const st=SC[SET], et=st.methods.EvidenceTrail, b0=st.methods.B0_single_prompt, b1=st.methods.B1_dashboard_rule;
+  const pc=(k,n)=>n?Math.round(100*k/n)+"%":"–";
+  $("#stats").innerHTML=[
+    [pc(et.top1,st.n),`EvidenceTrail top-1 accuracy (${et.top1}/${st.n})`],
+    [pc(et.type_ok,et.typed),`Fault type correct (B0: ${pc(b0.type_ok,b0.typed)})`],
+    [`${st.claims_kept}<span style="font-size:16px" class="muted"> / ${st.claims_dropped}</span>`,"Claims kept / blocked by evidence gate"],
+    [et.median_tokens?.toLocaleString?.()??"–","Median Gemini tokens per incident"]
+  ].map(([v,l])=>`<div class="stat"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
+  // horizontal bars with CI whiskers, direct labels, per-bar tooltips
+  const W=900, rowH=56, P={l:210,r:70,t:10,b:30}, H=P.t+M.length*rowH+P.b, X=v=>P.l+v*(W-P.l-P.r);
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Top-1 accuracy by method"><g class="grid">`;
+  [0,.25,.5,.75,1].forEach(t=>{ s+=`<line x1="${X(t)}" x2="${X(t)}" y1="${P.t}" y2="${H-P.b}"/><text x="${X(t)}" y="${H-10}" text-anchor="middle">${t*100}%</text>`; });
+  s+=`</g><line class="base" x1="${P.l}" x2="${P.l}" y1="${P.t}" y2="${H-P.b}"/>`;
+  M.forEach(([k,label,col],i)=>{ const m=st.methods[k], v=m.top1/st.n, y=P.t+i*rowH+12, h=24;
+    s+=`<text class="lbl" x="${P.l-12}" y="${y+h/2+4}" text-anchor="end">${label}</text>`;
+    if(v>0) s+=`<path d="M${P.l} ${y} H${X(v)-4} a4 4 0 0 1 4 4 V${y+h-4} a4 4 0 0 1 -4 4 H${P.l}Z" fill="${css(col)}"/>`;
+    const [lo,hi]=m.ci; s+=`<line class="whisk" x1="${X(lo)}" x2="${X(hi)}" y1="${y+h/2}" y2="${y+h/2}"/><line class="whisk" x1="${X(lo)}" x2="${X(lo)}" y1="${y+h/2-6}" y2="${y+h/2+6}"/><line class="whisk" x1="${X(hi)}" x2="${X(hi)}" y1="${y+h/2-6}" y2="${y+h/2+6}"/>`;
+    s+=`<text class="lbl" x="${Math.max(X(v),X(hi))+8}" y="${y+h/2+4}">${Math.round(v*100)}%</text>`;
+    s+=`<rect x="${P.l}" y="${y-8}" width="${W-P.l-P.r}" height="${h+16}" fill="transparent" data-i="${i}"/>`; });
+  s+="</svg>";
+  $("#accChart").innerHTML=s;
+  $$("#accChart rect[data-i]").forEach(r=>{ const [k,label]=M[+r.dataset.i], m=st.methods[k];
+    r.onmousemove=e=>showTip(e,`<b>${label}</b><div class="mrow"><span>Top-1</span><b>${m.top1}/${st.n}</b></div><div class="mrow"><span>Top-3</span><b>${m.top3}/${st.n}</b></div>
+      <div class="mrow"><span>95% CI</span><b>${Math.round(m.ci[0]*100)}–${Math.round(m.ci[1]*100)}%</b></div><div class="mrow"><span>Fault type</span><b>${m.typed?m.type_ok+"/"+m.typed:"n/a"}</b></div>
+      <div class="mrow"><span>Median time</span><b>${m.median_s}s</b></div><div class="mrow"><span>Inconclusive</span><b>${m.inconclusive}</b></div>`); r.onmouseleave=hideTip; });
+  $("#accLegend").innerHTML=M.map(([k,l,c])=>`<span><i class="sw" style="background:${css(c)}"></i>${l}</span>`).join("");
+  // strip plot: seconds per scenario per method (one shared axis, log scale because free-tier waits vary 100x)
+  { const W=900,rowH=50,P={l:210,r:30,t:10,b:30},H=P.t+M.length*rowH+P.b;
+    const all=st.scenarios.flatMap(r=>M.map(([k])=>r.methods[k].s||0.05)); const mx=Math.max(1,...all);
+    const lg=v=>Math.log10(Math.max(0.05,v)), X=v=>P.l+(lg(v)-lg(0.05))/(lg(mx*1.2)-lg(0.05))*(W-P.l-P.r);
+    let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Time to diagnosis"><g class="grid">`;
+    [0.1,1,10,60,300,600].filter(v=>v<=mx*1.2).forEach(v=>{ s+=`<line x1="${X(v)}" x2="${X(v)}" y1="${P.t}" y2="${H-P.b}"/><text x="${X(v)}" y="${H-8}" text-anchor="middle">${v<1?v+"s":v>=60?v/60+"m":v+"s"}</text>`; });
+    s+="</g>";
+    M.forEach(([k,label,col],i)=>{ const y=P.t+i*rowH+rowH/2; s+=`<text class="lbl" x="${P.l-12}" y="${y+4}" text-anchor="end">${label}</text><line class="base" x1="${P.l}" x2="${W-P.r}" y1="${y}" y2="${y}" opacity=".5"/>`;
+      st.scenarios.forEach((r,j)=>{ const m=r.methods[k], x=X(m.s||0.05), jy=y+((j%3)-1)*7;
+        s+= m.top1 ? `<circle cx="${x}" cy="${jy}" r="5.5" fill="${css(col)}" stroke="${css("--surface")}" stroke-width="2" data-k="${k}" data-j="${j}"/>`
+                   : `<path d="M${x-5} ${jy-5}L${x+5} ${jy+5}M${x+5} ${jy-5}L${x-5} ${jy+5}" stroke="${css("--critical")}" stroke-width="2.5"/><circle cx="${x}" cy="${jy}" r="8" fill="transparent" data-k="${k}" data-j="${j}"/>`; }); });
+    s+="</svg>"; $("#timeChart").innerHTML=s+`<div class="legend">${M.map(([k,l,c])=>`<span><i class="sw" style="background:${css(c)}"></i>${l}</span>`).join("")}<span><svg width="12" height="12"><path d="M2 2L10 10M10 2L2 10" stroke="${css("--critical")}" stroke-width="2.5"/></svg>Wrong root cause</span></div>`;
+    $$("#timeChart circle[data-k]").forEach(c=>{ const r=st.scenarios[+c.dataset.j], m=r.methods[c.dataset.k];
+      c.onmousemove=e=>showTip(e,`<b>${esc(r.id)} · ${esc(r.truth.service)} / ${esc(r.truth.fault_type.replaceAll("_"," "))}</b><div class="mrow"><span>Answer</span><b>${esc(m.svc||"—")}</b></div><div class="mrow"><span>Time</span><b>${m.s}s</b></div><div class="mrow"><span>Correct</span><b>${m.top1?"yes":"no"}</b></div>`); c.onmouseleave=hideTip; }); }
+  const cell=(m,t)=>`${m.top1?`<span class="ok">${icon("check")}</span>`:`<span class="no">${icon("x")}</span>`} ${esc(m.svc||"—")}${m.type?(m.type===t?`<span class="muted"> / ${esc(m.type.replaceAll("_"," "))}</span>`
+    :` <span class="no" title="wrong fault type (truth: ${esc(t.replaceAll("_"," "))})">/ ${esc(m.type.replaceAll("_"," "))} ✕ type</span>`):""}`;
+  $("#scTable").innerHTML=`<table><thead><tr><th>ID</th><th>Injected fault (truth)</th>${M.map(([,l])=>`<th>${l}</th>`).join("")}<th>ET time</th></tr></thead><tbody>
+    ${st.scenarios.map(r=>`<tr><td class="mono">${esc(r.id)}</td><td><b>${esc(r.truth.service)}</b> <span class="muted">/ ${esc(r.truth.fault_type.replaceAll("_"," "))}</span></td>
+    ${M.map(([k])=>`<td>${cell(r.methods[k], r.truth.fault_type)}</td>`).join("")}<td class="mono">${r.methods.EvidenceTrail.s??"–"}s</td></tr>`).join("")}</tbody></table>`;
+}
+
+/* ---------- audit ---------- */
+async function loadAudit(){ let rows=[]; try{ rows=await api("/api/audit"); }catch(e){}
+  $("#auditTable").innerHTML = rows.length ? `<table><thead><tr><th>Time</th><th>Event</th><th>Details</th></tr></thead><tbody>${rows.map(r=>{ const {ts,event,...rest}=r;
+    return `<tr><td class="mono" style="white-space:nowrap">${new Date(ts*1000).toLocaleString()}</td><td><b>${esc(event.replaceAll("_"," "))}</b></td><td class="mono" style="font-size:12px;word-break:break-all">${esc(JSON.stringify(rest))}</td></tr>`; }).join("")}</tbody></table>`
+    : `<div class="empty">No audit events yet.</div>`; }
+
+/* ---------- boot ---------- */
+function rerender(){ if(CURRENT) render(CURRENT.r,CURRENT.recorded,CURRENT.truth); if(LASTH&&VIEW==="map") drawMap(); if(SC&&VIEW==="scorecard") drawScore(); }
+(async()=>{
+  try{ const m=await api("/api/meta"); $("#modeltxt").textContent=m.model; $("#fsvc").innerHTML=m.services.map(s=>`<option>${esc(s)}</option>`).join(""); }catch(e){ $("#fsvc").innerHTML=ALL.map(s=>`<option>${s}</option>`).join(""); }
+  await loadRecorded(); go(location.hash.slice(1)||"investigate");
+  window.__staticNote = m => toast(m);
+  if (!location.hash || location.hash === "#investigate") { $("#recorded").value = "0"; $("#recorded").dispatchEvent(new Event("change")); }
+  api("/api/health").then(()=>{ $("#envtxt").textContent="Recorded telemetry · 19 Nov 2026"; }).catch(()=>{ $("#envdot").style.background=css("--critical"); $("#envtxt").textContent="Telemetry offline"; });
+})();
+</script>
+</body>
+</html>
