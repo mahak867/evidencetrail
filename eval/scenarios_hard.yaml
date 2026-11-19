@@ -1,0 +1,39 @@
+# Hard set: closer to real incidents. Healthy services emit alarming-looking but
+# benign ERROR logs (red herrings), some faults leave no log line at all, and the
+# alert names a symptom service, not the cause.
+- id: H01
+  service: currency
+  kind: latency
+  params: {ms: "1300", silent: "1"}
+  noise: [frontend, catalog, cart]
+  alert: "frontend p95 latency above 2s for 2m"
+- id: H02
+  service: shipping
+  kind: latency
+  params: {ms: "1600", silent: "1"}
+  noise: [checkout, frontend, payment]
+  alert: "checkout p95 latency above 2s for 2m"
+- id: H03
+  service: payment
+  kind: bad_deploy
+  params: {rate: "0.6"}
+  noise: [frontend, cart, recommendation]
+  alert: "checkout error rate above 5% for 1m (SLO burn)"
+- id: H04
+  service: inventory
+  kind: pool_exhaustion
+  params: {}
+  noise: [frontend, catalog, recommendation, currency]
+  alert: "frontend 5xx ratio above 5% for 1m"
+- id: H05
+  service: currency
+  kind: bad_config
+  params: {}
+  noise: [frontend, shipping, cart]
+  alert: "checkout error rate above 5% for 1m (SLO burn)"
+- id: H06
+  service: cart
+  kind: crash
+  params: {}
+  noise: [frontend, checkout, catalog, recommendation]
+  alert: "frontend 5xx ratio above 5% for 1m"

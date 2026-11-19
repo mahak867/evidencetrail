@@ -1,0 +1,97 @@
+name: evidencetrail
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:1.62.0
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports: ["16686:16686", "4318:4318"]
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=6h"]
+    volumes: ["./shop/prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    ports: ["9090:9090"]
+  frontend:
+    build: ./shop
+    image: evidencetrail/shopsim:dev
+    environment:
+      - SERVICE_NAME=frontend
+    volumes: ["./logs:/logs"]
+    ports: ["8100:8000"]
+    depends_on: [jaeger]
+    restart: "no"
+  checkout:
+    build: ./shop
+    image: evidencetrail/shopsim:dev
+    environment:
+      - SERVICE_NAME=checkout
+    volumes: ["./logs:/logs"]
+    ports: ["8101:8000"]
+    depends_on: [jaeger]
+    restart: "no"
+  catalog:
+    build: ./shop
+    image: evidencetrail/shopsim:dev
+    environment:
+      - SERVICE_NAME=catalog
+    volumes: ["./logs:/logs"]
+    ports: ["8102:8000"]
+    depends_on: [jaeger]
+    restart: "no"
+  recommendation:
+    build: ./shop
+    image: evidencetrail/shopsim:dev
+    environment:
+      - SERVICE_NAME=recommendation
+    volumes: ["./logs:/logs"]
+    ports: ["8103:8000"]
+    depends_on: [jaeger]
+    restart: "no"
+  cart:
+    build: ./shop
+    image: evidencetrail/shopsim:dev
+    environment:
+      - SERVICE_NAME=cart
+    volumes: ["./logs:/logs"]
+    ports: ["8104:8000"]
+    depends_on: [jaeger]
+    restart: "no"
+  payment:
+    build: ./shop
+    image: evidencetrail/shopsim:dev
+    environment:
+      - SERVICE_NAME=payment
+    volumes: ["./logs:/logs"]
+    ports: ["8105:8000"]
+    depends_on: [jaeger]
+    restart: "no"
+  shipping:
+    build: ./shop
+    image: evidencetrail/shopsim:dev
+    environment:
+      - SERVICE_NAME=shipping
+    volumes: ["./logs:/logs"]
+    ports: ["8106:8000"]
+    depends_on: [jaeger]
+    restart: "no"
+  currency:
+    build: ./shop
+    image: evidencetrail/shopsim:dev
+    environment:
+      - SERVICE_NAME=currency
+    volumes: ["./logs:/logs"]
+    ports: ["8107:8000"]
+    depends_on: [jaeger]
+    restart: "no"
+  inventory:
+    build: ./shop
+    image: evidencetrail/shopsim:dev
+    environment:
+      - SERVICE_NAME=inventory
+    volumes: ["./logs:/logs"]
+    ports: ["8108:8000"]
+    depends_on: [jaeger]
+    restart: "no"
+  loadgen:
+    image: evidencetrail/shopsim:dev
+    command: ["python", "loadgen.py"]
+    depends_on: [frontend]

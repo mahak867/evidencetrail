@@ -1,0 +1,95 @@
+== S01: error on payment
+  S01 B1_dashboard_rule  -> payment/None [DIAGNOSIS] top1=True (0.0s)
+  S01 B0_single_prompt   -> payment/code_error [DIAGNOSIS] top1=True (3.1s)
+  S01 EvidenceTrail      -> payment/code_error [DIAGNOSIS] top1=True (140.5s)
+== S02: error on inventory
+  S02 B1_dashboard_rule  -> inventory/None [DIAGNOSIS] top1=True (0.0s)
+  S02 B0_single_prompt   -> inventory/code_error [DIAGNOSIS] top1=True (8.1s)
+  S02 EvidenceTrail      -> inventory/code_error [DIAGNOSIS] top1=True (656.8s)
+== S03: latency on currency
+  S03 B1_dashboard_rule  -> currency/None [DIAGNOSIS] top1=True (0.0s)
+  S03 B0_single_prompt   -> currency/latency [DIAGNOSIS] top1=True (17.3s)
+  S03 EvidenceTrail      -> currency/latency [DIAGNOSIS] top1=True (8.9s)
+== S04: latency on shipping
+  S04 B1_dashboard_rule  -> shipping/None [DIAGNOSIS] top1=True (0.0s)
+  S04 B0_single_prompt   -> shipping/latency [DIAGNOSIS] top1=True (24.3s)
+  S04 EvidenceTrail      -> shipping/latency [DIAGNOSIS] top1=True (18.4s)
+== S05: crash on cart
+  S05 B1_dashboard_rule  -> frontend/None [DIAGNOSIS] top1=False (0.0s)
+  S05 B0_single_prompt   -> cart/crash_or_unreachable [DIAGNOSIS] top1=True (23.3s)
+  S05 EvidenceTrail      -> cart/crash_or_unreachable [DIAGNOSIS] top1=True (34.5s)
+== S06: crash on recommendation
+  S06 B1_dashboard_rule  -> frontend/None [DIAGNOSIS] top1=False (0.0s)
+  S06 B0_single_prompt   -> recommendation/crash_or_unreachable [DIAGNOSIS] top1=True (1.9s)
+  S06 EvidenceTrail      -> recommendation/crash_or_unreachable [DIAGNOSIS] top1=True (50.6s)
+== S07: memory_leak on recommendation
+  S07 B1_dashboard_rule  -> recommendation/None [DIAGNOSIS] top1=True (0.0s)
+  S07 B0_single_prompt   -> recommendation/resource_exhaustion [DIAGNOSIS] top1=True (4.4s)
+  S07 EvidenceTrail      -> recommendation/resource_exhaustion [DIAGNOSIS] top1=True (399.1s)
+== S08: pool_exhaustion on inventory
+  S08 B1_dashboard_rule  -> catalog/None [DIAGNOSIS] top1=False (0.0s)
+  S08 B0_single_prompt   -> inventory/resource_exhaustion [DIAGNOSIS] top1=True (264.0s)
+  S08 EvidenceTrail      -> inventory/resource_exhaustion [DIAGNOSIS] top1=True (17.6s)
+== S09: bad_config on currency
+  S09 B1_dashboard_rule  -> currency/None [DIAGNOSIS] top1=True (0.0s)
+  S09 B0_single_prompt   -> currency/bad_config [DIAGNOSIS] top1=True (13.5s)
+  S09 EvidenceTrail      -> currency/bad_config [DIAGNOSIS] top1=True (6.3s)
+== S10: bad_config on shipping
+  S10 B1_dashboard_rule  -> checkout/None [DIAGNOSIS] top1=False (0.0s)
+  S10 B0_single_prompt   -> shipping/bad_config [DIAGNOSIS] top1=True (8.7s)
+  S10 EvidenceTrail      -> shipping/bad_config [DIAGNOSIS] top1=True (8.0s)
+== S11: bad_deploy on payment
+  S11 B1_dashboard_rule  -> payment/None [DIAGNOSIS] top1=True (0.0s)
+  S11 B0_single_prompt   -> payment/code_error [DIAGNOSIS] top1=True (4.3s)
+  S11 EvidenceTrail      -> payment/bad_deploy [DIAGNOSIS] top1=True (10.9s)
+== S12: bad_deploy on cart
+  S12 B1_dashboard_rule  -> cart/None [DIAGNOSIS] top1=True (0.0s)
+  S12 B0_single_prompt   -> cart/code_error [DIAGNOSIS] top1=True (113.8s)
+  S12 EvidenceTrail      -> cart/bad_deploy [DIAGNOSIS] top1=True (43.7s)
+# EvidenceTrail evaluation scorecard
+
+- Scenarios: **12** injected faults across **6** fault types and **6** services (see `eval/scenarios.yaml`).
+- Each method investigates the same 120s telemetry window, 60s after injection.
+- 95% Wilson confidence intervals in brackets. Small n: treat as indicative, not definitive.
+
+| Method | Top-1 service | Top-3 service | Fault type correct | Inconclusive | Failed | Median time (s) | Median tokens |
+|---|---|---|---|---|---|---|---|
+| B1_dashboard_rule | 8/12 = 67% [39%–86%] | 10/12 = 83% [55%–95%] | n/a (no type) | 0 | 0 | 0 | 0 |
+| B0_single_prompt | 12/12 = 100% [76%–100%] | 12/12 = 100% [76%–100%] | 10/12 = 83% [55%–95%] | 0 | 0 | 13.5 | 13631 |
+| EvidenceTrail | 12/12 = 100% [76%–100%] | 12/12 = 100% [76%–100%] | 12/12 = 100% [76%–100%] | 0 | 0 | 34.5 | 8782 |
+
+## EvidenceTrail evidence gate
+
+- Claims kept: **23**, dropped by the gate: **7** (cited evidence never fetched, or quote not found).
+- Mean evidence precision per investigation: **76%**
+- Every suggested action labelled by policy; none executed during evaluation.
+
+## Every scenario (misses included)
+
+| ID | Truth | B1 | B0 | EvidenceTrail | ET verdict | ET conf | ET time (s) |
+|---|---|---|---|---|---|---|---|
+| S01 | payment/code_error | ✅ payment/- | ✅ payment/code_error | ✅ payment/code_error | DIAGNOSIS | 0.9 | 140.5 |
+| S02 | inventory/code_error | ✅ inventory/- | ✅ inventory/code_error | ✅ inventory/code_error | DIAGNOSIS | 1.0 | 656.8 |
+| S03 | currency/latency | ✅ currency/- | ✅ currency/latency | ✅ currency/latency | DIAGNOSIS | 0.9 | 8.9 |
+| S04 | shipping/latency | ✅ shipping/- | ✅ shipping/latency | ✅ shipping/latency | DIAGNOSIS | 0.9 | 18.4 |
+| S05 | cart/crash_or_unreachable | ❌ frontend/- | ✅ cart/crash_or_unreachable | ✅ cart/crash_or_unreachable | DIAGNOSIS | 1.0 | 34.5 |
+| S06 | recommendation/crash_or_unreachable | ❌ frontend/- | ✅ recommendation/crash_or_unreachable | ✅ recommendation/crash_or_unreachable | DIAGNOSIS | 1.0 | 50.6 |
+| S07 | recommendation/resource_exhaustion | ✅ recommendation/- | ✅ recommendation/resource_exhaustion | ✅ recommendation/resource_exhaustion | DIAGNOSIS | 1.0 | 399.1 |
+| S08 | inventory/resource_exhaustion | ❌ catalog/- | ✅ inventory/resource_exhaustion | ✅ inventory/resource_exhaustion | DIAGNOSIS | 1.0 | 17.6 |
+| S09 | currency/bad_config | ✅ currency/- | ✅ currency/bad_config | ✅ currency/bad_config | DIAGNOSIS | 1.0 | 6.3 |
+| S10 | shipping/bad_config | ❌ checkout/- | ✅ shipping/bad_config | ✅ shipping/bad_config | DIAGNOSIS | 1.0 | 8.0 |
+| S11 | payment/bad_deploy | ✅ payment/- | ✅ payment/code_error | ✅ payment/bad_deploy | DIAGNOSIS | 1.0 | 10.9 |
+| S12 | cart/bad_deploy | ✅ cart/- | ✅ cart/code_error | ✅ cart/bad_deploy | DIAGNOSIS | 1.0 | 43.7 |
+
+## Cost and reliability
+
+- EvidenceTrail total tokens: 94,646 over 12 investigations (~7,887 per incident).
+- Gemini retries (429/5xx with backoff): 8; hard failures: 20. Models used: ['gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-flash-lite-latest'].
+- Free-tier Gemini latency varies a lot with demand; elapsed time includes retry back-off.
+
+## Known limitations
+
+- Injected faults are single-cause and cleaner than real incidents.
+- Small scenario set (n per method is small); intervals are wide.
+- The shop is a simplified 9-service app; telemetry volume is far below production.
+

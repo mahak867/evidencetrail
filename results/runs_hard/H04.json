@@ -1,0 +1,673 @@
+{
+ "scenario": {
+  "id": "H04",
+  "service": "inventory",
+  "kind": "pool_exhaustion",
+  "params": {},
+  "noise": [
+   "frontend",
+   "catalog",
+   "recommendation",
+   "currency"
+  ],
+  "alert": "frontend 5xx ratio above 5% for 1m"
+ },
+ "truth": {
+  "service": "inventory",
+  "fault_type": "resource_exhaustion"
+ },
+ "injected_at": 1795100431.1733296,
+ "methods": {
+  "B1_dashboard_rule": {
+   "method": "B1_dashboard_rule",
+   "root_cause_service": "inventory",
+   "fault_type": null,
+   "ranked_candidates": [
+    "inventory",
+    "catalog",
+    "frontend"
+   ],
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 0.1,
+   "usage": {
+    "total_tokens": 0,
+    "calls": 0
+   },
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": null,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "B0_single_prompt": {
+   "method": "B0_single_prompt",
+   "root_cause_service": "inventory",
+   "fault_type": "resource_exhaustion",
+   "ranked_candidates": [
+    "inventory",
+    "catalog",
+    "frontend"
+   ],
+   "summary": "The inventory service is experiencing database connection pool exhaustion (20/20 connections in use), causing timeouts. This failure cascades to the catalog service (503 errors) and subsequently to the frontend (502 errors), resulting in the observed 5xx spike.",
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 2.7,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 14906,
+    "completion_tokens": 95,
+    "retries": 0,
+    "failures": 0,
+    "wait_s": 0.0,
+    "total_tokens": 15001
+   },
+   "model": "gemini-3.1-flash-lite",
+   "prompt_chars": 30737,
+   "error": null,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail": {
+   "alert": "frontend 5xx ratio above 5% for 1m",
+   "model": "gemini-3.1-flash-lite",
+   "elapsed_s": 18.7,
+   "usage": {
+    "calls": 2,
+    "prompt_tokens": 8587,
+    "completion_tokens": 425,
+    "retries": 0,
+    "failures": 0,
+    "wait_s": 0.0,
+    "total_tokens": 9012
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "t": 0,
+     "dur": 0.51,
+     "health_evidence_id": "M-5dddbc",
+     "graph_evidence_id": "T-ce8071",
+     "suspects": [
+      {
+       "service": "inventory",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 8.82,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 4850.0,
+        "baseline_p95_ms": 23.9
+       }
+      },
+      {
+       "service": "cart",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": null,
+        "baseline_p95_ms": 23.9
+       }
+      },
+      {
+       "service": "currency",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": null,
+        "baseline_p95_ms": 23.9
+       }
+      },
+      {
+       "service": "payment",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.066,
+        "p95_ms": null,
+        "baseline_p95_ms": 23.8
+       }
+      },
+      {
+       "service": "catalog",
+       "anomalous_dependencies": [
+        "inventory",
+        "currency"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 8.75,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 4850.0,
+        "baseline_p95_ms": 210.7
+       }
+      },
+      {
+       "service": "frontend",
+       "anomalous_dependencies": [
+        "cart",
+        "catalog",
+        "checkout",
+        "recommendation"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 8.82,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.019,
+        "p95_ms": 4850.0,
+        "baseline_p95_ms": 858.8
+       }
+      },
+      {
+       "service": "checkout",
+       "anomalous_dependencies": [
+        "catalog",
+        "shipping",
+        "currency",
+        "cart",
+        "payment"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.059,
+        "p95_ms": null,
+        "baseline_p95_ms": 459.8
+       }
+      },
+      {
+       "service": "recommendation",
+       "anomalous_dependencies": [
+        "catalog"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 4850.0,
+        "baseline_p95_ms": 239.4
+       }
+      },
+      {
+       "service": "shipping",
+       "anomalous_dependencies": [
+        "currency"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": null,
+        "baseline_p95_ms": 62.5
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "inventory",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.51,
+     "dur": 0.08,
+     "evidence_ids": [
+      "L-6ae58f"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "cart",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.59,
+     "dur": 0.02,
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "currency",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.61,
+     "dur": 0.03,
+     "evidence_ids": [
+      "L-cf8d78",
+      "L-cbdffe",
+      "L-1646b2",
+      "L-55679d",
+      "L-ecd267"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "cart"
+     },
+     "evidence_ids": [],
+     "t": 0.64,
+     "dur": 0.08
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "evidence_ids": [
+      "C-4d2f59"
+     ],
+     "t": 0.72,
+     "dur": 0.0
+    },
+    {
+     "step": "llm",
+     "t": 0.72,
+     "dur": 9.94,
+     "tokens": 4159,
+     "model": "gemini-3.1-flash-lite",
+     "requested": [
+      "get_metric"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "name": "db_pool_in_use",
+      "service": "inventory"
+     },
+     "evidence_ids": [
+      "M-388c50"
+     ],
+     "t": 10.66,
+     "dur": 0.0
+    },
+    {
+     "step": "llm",
+     "t": 10.66,
+     "dur": 8.05,
+     "tokens": 4853,
+     "model": "gemini-3.1-flash-lite",
+     "requested": [
+      "submit_diagnosis"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "inventory",
+    "cart",
+    "currency",
+    "payment",
+    "catalog",
+    "frontend",
+    "checkout",
+    "recommendation",
+    "shipping"
+   ],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "inventory",
+   "fault_type": "resource_exhaustion",
+   "ranked_candidates": [
+    "inventory",
+    "catalog",
+    "frontend"
+   ],
+   "confidence": 1.0,
+   "summary": "The inventory service is failing due to database connection pool exhaustion (20/20 connections in use). This is causing cascading failures in the catalog and frontend services. Scaling up the inventory service should resolve the connection pool saturation.",
+   "claims": [
+    {
+     "text": "The inventory service is experiencing database connection pool exhaustion, causing it to fail all requests.",
+     "quote": "timeout acquiring DB connection after 2000ms (pool 20/20 in use)",
+     "evidence_ids": [
+      "L-6ae58f"
+     ],
+     "is_root_cause_claim": true,
+     "evidence": [
+      {
+       "id": "L-6ae58f",
+       "kind": "log",
+       "ref": "inventory.log:15146",
+       "text": "timeout acquiring DB connection after 2000ms (pool 20/20 in use)",
+       "meta": {
+        "service": "inventory",
+        "line": 15146,
+        "ts": "2026-11-19T15:01:33.896+00:00",
+        "level": "ERROR",
+        "trace_id": "d390d1f44099c536c895b0e9fa87952d",
+        "count_in_window": 543
+       }
+      }
+     ]
+    },
+    {
+     "text": "The db_pool_in_use metric confirms that the inventory service's connection pool is fully saturated at 20/20 connections.",
+     "quote": "[1795100443, 20.0], [1795100453, 20.0], [1795100463, 20.0], [1795100473, 20.0], [1795100483, 20.0], [1795100493, 20.0]",
+     "is_root_cause_claim": true,
+     "evidence_ids": [
+      "M-388c50"
+     ],
+     "evidence": [
+      {
+       "id": "M-388c50",
+       "kind": "metric",
+       "ref": "inventory.db_pool_in_use",
+       "text": "[{\"labels\": {\"instance_service\": \"inventory\", \"service\": \"inventory\"}, \"points\": [[1795100373, 0.0], [1795100383, 0.0], [1795100393, 0.0], [1795100403, 0.0], [1795100413, 0.0], [1795100423, 0.0], [1795100433, 0.0], [1795100443, 20.0], [1795100453, 20.0], [1795100463, 20.0], [1795100473, 20.0], [1795100483, 20.0], [1795100493, 20.0]]}]",
+       "meta": {
+        "service": "inventory",
+        "metric": "db_pool_in_use",
+        "query": "shop_db_pool_in_use{service=\"inventory\"}",
+        "window": [
+         1795100373,
+         1795100493
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [],
+   "evidence_precision": 1.0,
+   "rejected_hypotheses": [],
+   "suggested_action": {
+    "service": "inventory",
+    "action": "scale_up",
+    "why": "The inventory service is hitting its database connection pool limit, indicating it needs more capacity to handle the current request load.",
+    "risk": "blocked",
+    "description": "Not supported in the Compose test environment; always blocked",
+    "dry_run": "(blocked)"
+   },
+   "evidence_items": 10,
+   "health": {
+    "frontend": {
+     "rps": 8.82,
+     "error_ratio": 1.0,
+     "baseline_error_ratio": 0.019,
+     "p95_ms": 4850.0,
+     "baseline_p95_ms": 858.8
+    },
+    "currency": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 23.9
+    },
+    "catalog": {
+     "rps": 8.75,
+     "error_ratio": 1.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 4850.0,
+     "baseline_p95_ms": 210.7
+    },
+    "payment": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.066,
+     "p95_ms": null,
+     "baseline_p95_ms": 23.8
+    },
+    "checkout": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.059,
+     "p95_ms": null,
+     "baseline_p95_ms": 459.8
+    },
+    "recommendation": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 4850.0,
+     "baseline_p95_ms": 239.4
+    },
+    "shipping": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 62.5
+    },
+    "inventory": {
+     "rps": 8.82,
+     "error_ratio": 1.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 4850.0,
+     "baseline_p95_ms": 23.9
+    },
+    "cart": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 23.9
+    }
+   },
+   "edges": [
+    {
+     "caller": "catalog",
+     "callee": "currency",
+     "calls": 119
+    },
+    {
+     "caller": "catalog",
+     "callee": "inventory",
+     "calls": 180
+    },
+    {
+     "caller": "checkout",
+     "callee": "cart",
+     "calls": 40
+    },
+    {
+     "caller": "checkout",
+     "callee": "catalog",
+     "calls": 40
+    },
+    {
+     "caller": "checkout",
+     "callee": "currency",
+     "calls": 39
+    },
+    {
+     "caller": "checkout",
+     "callee": "payment",
+     "calls": 39
+    },
+    {
+     "caller": "checkout",
+     "callee": "shipping",
+     "calls": 39
+    },
+    {
+     "caller": "frontend",
+     "callee": "cart",
+     "calls": 40
+    },
+    {
+     "caller": "frontend",
+     "callee": "catalog",
+     "calls": 100
+    },
+    {
+     "caller": "frontend",
+     "callee": "checkout",
+     "calls": 40
+    },
+    {
+     "caller": "frontend",
+     "callee": "recommendation",
+     "calls": 40
+    },
+    {
+     "caller": "recommendation",
+     "callee": "catalog",
+     "calls": 40
+    },
+    {
+     "caller": "shipping",
+     "callee": "currency",
+     "calls": 39
+    }
+   ],
+   "suspects": [
+    {
+     "service": "inventory",
+     "anomalous_dependencies": [],
+     "deepest": true,
+     "health": {
+      "rps": 8.82,
+      "error_ratio": 1.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 4850.0,
+      "baseline_p95_ms": 23.9
+     }
+    },
+    {
+     "service": "cart",
+     "anomalous_dependencies": [],
+     "deepest": true,
+     "health": {
+      "rps": 0.0,
+      "error_ratio": 0.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": null,
+      "baseline_p95_ms": 23.9
+     }
+    },
+    {
+     "service": "currency",
+     "anomalous_dependencies": [],
+     "deepest": true,
+     "health": {
+      "rps": 0.0,
+      "error_ratio": 0.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": null,
+      "baseline_p95_ms": 23.9
+     }
+    },
+    {
+     "service": "payment",
+     "anomalous_dependencies": [],
+     "deepest": true,
+     "health": {
+      "rps": 0.0,
+      "error_ratio": 0.0,
+      "baseline_error_ratio": 0.066,
+      "p95_ms": null,
+      "baseline_p95_ms": 23.8
+     }
+    },
+    {
+     "service": "catalog",
+     "anomalous_dependencies": [
+      "inventory",
+      "currency"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 8.75,
+      "error_ratio": 1.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 4850.0,
+      "baseline_p95_ms": 210.7
+     }
+    },
+    {
+     "service": "frontend",
+     "anomalous_dependencies": [
+      "cart",
+      "catalog",
+      "checkout",
+      "recommendation"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 8.82,
+      "error_ratio": 1.0,
+      "baseline_error_ratio": 0.019,
+      "p95_ms": 4850.0,
+      "baseline_p95_ms": 858.8
+     }
+    },
+    {
+     "service": "checkout",
+     "anomalous_dependencies": [
+      "catalog",
+      "shipping",
+      "currency",
+      "cart",
+      "payment"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 0.0,
+      "error_ratio": 0.0,
+      "baseline_error_ratio": 0.059,
+      "p95_ms": null,
+      "baseline_p95_ms": 459.8
+     }
+    },
+    {
+     "service": "recommendation",
+     "anomalous_dependencies": [
+      "catalog"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 0.0,
+      "error_ratio": 0.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 4850.0,
+      "baseline_p95_ms": 239.4
+     }
+    },
+    {
+     "service": "shipping",
+     "anomalous_dependencies": [
+      "currency"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 0.0,
+      "error_ratio": 0.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": null,
+      "baseline_p95_ms": 62.5
+     }
+    }
+   ],
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  }
+ }
+}

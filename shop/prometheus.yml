@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 5s
+scrape_configs:
+  - job_name: shop
+    static_configs:
+      - targets: ['frontend:8000', 'checkout:8000', 'catalog:8000', 'recommendation:8000', 'cart:8000', 'payment:8000', 'shipping:8000', 'currency:8000', 'inventory:8000']
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '([^:]+):.*'
+        target_label: instance_service

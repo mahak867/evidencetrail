@@ -1,0 +1,307 @@
+{
+  "alert": "ALERT: checkout error rate above 5% for 1m (SLO burn)",
+  "model": "gemini-3-flash-preview,gemini-flash-latest",
+  "elapsed_s": 241.5,
+  "usage": {
+    "calls": 10,
+    "prompt_tokens": 39798,
+    "completion_tokens": 689,
+    "retries": 7,
+    "failures": 2,
+    "total_tokens": 40487
+  },
+  "trail": [
+    {
+      "step": "scan",
+      "health_evidence_id": "M-b47c55",
+      "graph_evidence_id": "T-bd36ef",
+      "suspects": [
+        {
+          "service": "payment",
+          "anomalous_dependencies": [],
+          "deepest": true,
+          "health": {
+            "rps": 2.02,
+            "error_ratio": 1.0,
+            "baseline_error_ratio": 0.398,
+            "p95_ms": 4.8,
+            "baseline_p95_ms": 23.4
+          }
+        },
+        {
+          "service": "shipping",
+          "anomalous_dependencies": [],
+          "deepest": true,
+          "health": {
+            "rps": 0.0,
+            "error_ratio": 0.0,
+            "baseline_error_ratio": 0.0,
+            "p95_ms": null,
+            "baseline_p95_ms": 76.1
+          }
+        },
+        {
+          "service": "checkout",
+          "anomalous_dependencies": [
+            "payment"
+          ],
+          "deepest": false,
+          "health": {
+            "rps": 2.02,
+            "error_ratio": 1.0,
+            "baseline_error_ratio": 0.397,
+            "p95_ms": 242.5,
+            "baseline_p95_ms": 406.7
+          }
+        },
+        {
+          "service": "frontend",
+          "anomalous_dependencies": [
+            "checkout"
+          ],
+          "deepest": false,
+          "health": {
+            "rps": 8.29,
+            "error_ratio": 0.248,
+            "baseline_error_ratio": 0.094,
+            "p95_ms": 494.3,
+            "baseline_p95_ms": 706.6
+          }
+        }
+      ]
+    },
+    {
+      "step": "tool",
+      "tool": "get_recent_changes",
+      "args": {},
+      "evidence_ids": []
+    },
+    {
+      "step": "tool",
+      "tool": "get_logs",
+      "args": {
+        "service": "payment"
+      },
+      "evidence_ids": [
+        "L-41c292"
+      ]
+    },
+    {
+      "step": "tool",
+      "tool": "get_metric",
+      "args": {
+        "name": "up",
+        "service": "shipping"
+      },
+      "evidence_ids": [
+        "M-b46323"
+      ]
+    },
+    {
+      "step": "tool",
+      "tool": "get_metric",
+      "args": {
+        "name": "db_pool_in_use",
+        "service": "payment"
+      },
+      "evidence_ids": [
+        "M-f86db4"
+      ]
+    },
+    {
+      "step": "tool",
+      "tool": "get_error_traces",
+      "args": {
+        "service": "payment"
+      },
+      "evidence_ids": [
+        "T-ee105b",
+        "T-05b9dc",
+        "T-a9ca9b",
+        "T-c98c8e",
+        "T-771771"
+      ]
+    },
+    {
+      "step": "tool",
+      "tool": "get_metric",
+      "args": {
+        "service": "payment",
+        "name": "config_version"
+      },
+      "evidence_ids": [
+        "M-3cf1ee"
+      ]
+    },
+    {
+      "step": "tool",
+      "tool": "get_metric",
+      "args": {
+        "name": "dependency_errors",
+        "service": "payment"
+      },
+      "evidence_ids": [
+        "M-997eb1"
+      ]
+    },
+    {
+      "step": "tool",
+      "tool": "get_logs",
+      "args": {
+        "service": "checkout"
+      },
+      "evidence_ids": [
+        "L-36a1f8"
+      ]
+    },
+    {
+      "step": "tool",
+      "tool": "get_logs",
+      "args": {
+        "service": "shipping"
+      },
+      "evidence_ids": []
+    }
+  ],
+  "topology_suspects": [
+    "payment",
+    "shipping",
+    "checkout",
+    "frontend"
+  ],
+  "verdict": "DIAGNOSIS",
+  "root_cause_service": "payment",
+  "fault_type": "code_error",
+  "ranked_candidates": [
+    "payment",
+    "checkout"
+  ],
+  "confidence": 0.9,
+  "summary": "The payment service is the root cause of the checkout errors, with its error rate jumping to 100%. It is reporting a 'PaymentGatewayError: upstream gateway rejected request (code 5003)', which suggests a code-level issue or an external dependency failure.",
+  "claims": [
+    {
+      "text": "The payment service is experiencing a 100% error rate due to an upstream gateway rejection.",
+      "quote": "PaymentGatewayError: upstream gateway rejected request (code 5003)",
+      "evidence_ids": [
+        "L-41c292"
+      ],
+      "evidence": [
+        {
+          "id": "L-41c292",
+          "kind": "log",
+          "ref": "payment.log:571",
+          "text": "PaymentGatewayError: upstream gateway rejected request (code 5003)",
+          "meta": {
+            "service": "payment",
+            "line": 571,
+            "ts": "2026-11-19T13:28:29.719+00:00",
+            "level": "ERROR",
+            "trace_id": "409f5d3da9bf300f3636f1c4799c3d73",
+            "count_in_window": 242
+          }
+        }
+      ]
+    },
+    {
+      "quote": "deepest failing service: payment",
+      "evidence_ids": [
+        "T-ee105b",
+        "T-05b9dc",
+        "T-a9ca9b",
+        "T-c98c8e",
+        "T-771771"
+      ],
+      "text": "Trace analysis confirms that the payment service is the deepest failing service in the call chain.",
+      "evidence": [
+        {
+          "id": "T-ee105b",
+          "kind": "trace",
+          "ref": "trace:99bf244950aa5a4d",
+          "text": "trace 99bf244950aa5a4d77864e6e780b711e: failing server spans in call order: frontend(502, 454.9ms) -> checkout(502, 156.4ms) -> payment(500, 0.8ms); deepest failing service: payment",
+          "meta": {
+            "trace_id": "99bf244950aa5a4d77864e6e780b711e",
+            "deepest": "payment"
+          }
+        },
+        {
+          "id": "T-05b9dc",
+          "kind": "trace",
+          "ref": "trace:14cf96f473a32754",
+          "text": "trace 14cf96f473a327544d0444ff1e76cd29: failing server spans in call order: frontend(502, 402.1ms) -> checkout(502, 127.9ms) -> payment(500, 0.9ms); deepest failing service: payment",
+          "meta": {
+            "trace_id": "14cf96f473a327544d0444ff1e76cd29",
+            "deepest": "payment"
+          }
+        },
+        {
+          "id": "T-a9ca9b",
+          "kind": "trace",
+          "ref": "trace:fc1dfdafd092828b",
+          "text": "trace fc1dfdafd092828bbaaae09b866a015c: failing server spans in call order: frontend(502, 361.3ms) -> checkout(502, 145.5ms) -> payment(500, 1.1ms); deepest failing service: payment",
+          "meta": {
+            "trace_id": "fc1dfdafd092828bbaaae09b866a015c",
+            "deepest": "payment"
+          }
+        },
+        {
+          "id": "T-c98c8e",
+          "kind": "trace",
+          "ref": "trace:4becbc5e532b3085",
+          "text": "trace 4becbc5e532b30850795022b9a083c2e: failing server spans in call order: frontend(502, 406.8ms) -> checkout(502, 139.6ms) -> payment(500, 0.7ms); deepest failing service: payment",
+          "meta": {
+            "trace_id": "4becbc5e532b30850795022b9a083c2e",
+            "deepest": "payment"
+          }
+        },
+        {
+          "id": "T-771771",
+          "kind": "trace",
+          "ref": "trace:403161480d64caf1",
+          "text": "trace 403161480d64caf1885835db4183e1eb: failing server spans in call order: frontend(502, 396.8ms) -> checkout(502, 147.3ms) -> payment(500, 0.9ms); deepest failing service: payment",
+          "meta": {
+            "trace_id": "403161480d64caf1885835db4183e1eb",
+            "deepest": "payment"
+          }
+        }
+      ]
+    },
+    {
+      "evidence_ids": [
+        "M-b47c55"
+      ],
+      "text": "The payment service error rate has increased from a baseline of 39.8% to 100%.",
+      "quote": "\"payment\": {\"rps\": 2.02, \"error_ratio\": 1.0, \"baseline_error_ratio\": 0.398, \"p95_ms\": 4.8, \"baseline_p95_ms\": 23.4}",
+      "evidence": [
+        {
+          "id": "M-b47c55",
+          "kind": "metric",
+          "ref": "service_health_scan",
+          "text": "{\"frontend\": {\"rps\": 8.29, \"error_ratio\": 0.248, \"baseline_error_ratio\": 0.094, \"p95_ms\": 494.3, \"baseline_p95_ms\": 706.6}, \"currency\": {\"rps\": 18.6, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 24.0, \"baseline_p95_ms\": 23.9}, \"catalog\": {\"rps\": 18.64, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 186.5, \"baseline_p95_ms\": 179.3}, \"payment\": {\"rps\": 2.02, \"error_ratio\": 1.0, \"baseline_error_ratio\": 0.398, \"p95_ms\": 4.8, \"baseline_p95_ms\": 23.4}, \"checkout\": {\"rps\": 2.02, \"error_ratio\": 1.0, \"baseline_error_ratio\": 0.397, \"p95_ms\": 242.5, \"baseline_p95_ms\": 406.7}, \"recommendation\": {\"rps\": 8.36, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 237.6, \"baseline_p95_ms\": 235.1}, \"shipping\": {\"rps\": 0.0, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": null, \"baseline_p95_ms\": 76.1}, \"inventory\": {\"rps\": 18.33, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 23.9, \"baseline_p95_ms\": 23.9}, \"cart\": {\"rps\": 10.27, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 24.0, \"baseline_p95_ms\": 23.9}}",
+          "meta": {
+            "source": "prometheus"
+          }
+        }
+      ]
+    }
+  ],
+  "dropped_claims": [],
+  "evidence_precision": 1.0,
+  "rejected_hypotheses": [
+    {
+      "why_rejected": "The shipping service is reported as 'up' in metrics, and its 0 RPS is likely due to upstream failures in the checkout process preventing calls to it.",
+      "evidence_ids": [
+        "M-b46323"
+      ],
+      "hypothesis": "The shipping service is down."
+    }
+  ],
+  "suggested_action": {
+    "why": "The payment service is failing with a specific gateway error code (5003). Further diagnostics are needed to determine if this is an external issue or a code bug in how the service interacts with the gateway.",
+    "action": "collect_diagnostics",
+    "service": "payment",
+    "risk": "safe",
+    "description": "Read-only: snapshot logs, metrics and traces for the service",
+    "dry_run": "GET /metrics, tail logs/payment.log, query Jaeger for service=payment"
+  },
+  "evidence_items": 13
+}

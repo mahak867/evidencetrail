@@ -1,0 +1,17 @@
+== H01: latency on currency
+  H01 B1_dashboard_rule  -> frontend/None [DIAGNOSIS] top1=False (0.0s)
+  H01 B0_single_prompt   -> analytics-collector/crash_or_unreachable [DIAGNOSIS] top1=False (6.7s)
+  H01 EvidenceTrail      -> currency/latency [INCONCLUSIVE] top1=False (43.5s)
+== H02: latency on shipping
+  H02 B1_dashboard_rule  -> shipping/None [DIAGNOSIS] top1=True (0.0s)
+  H02 B0_single_prompt   -> checkout/latency [DIAGNOSIS] top1=False (9.3s)
+  H02 EvidenceTrail      -> shipping/latency [DIAGNOSIS] top1=True (38.2s)
+== H03: bad_deploy on payment
+  H03 B1_dashboard_rule  -> checkout/None [DIAGNOSIS] top1=False (0.1s)
+  H03 B0_single_prompt   -> payment/code_error [DIAGNOSIS] top1=True (8.6s)
+  H03 EvidenceTrail      -> None/None [FAILED] top1=False (35.4s)
+== H04: pool_exhaustion on inventory
+  H04 B1_dashboard_rule  -> inventory/None [DIAGNOSIS] top1=True (0.1s)
+  H04 B0_single_prompt   -> inventory/resource_exhaustion [DIAGNOSIS] top1=True (2.7s)
+  H04 EvidenceTrail      -> inventory/resource_exhaustion [DIAGNOSIS] top1=True (18.7s)
+== H05: bad_config on currency

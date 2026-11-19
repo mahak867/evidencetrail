@@ -1,0 +1,195 @@
+{
+  "alert": "frontend 5xx ratio above 5% for 1m",
+  "model": "gemini-3.1-flash-lite",
+  "elapsed_s": 8.5,
+  "usage": {
+    "calls": 2,
+    "prompt_tokens": 6818,
+    "completion_tokens": 309,
+    "retries": 0,
+    "failures": 0,
+    "total_tokens": 7127
+  },
+  "trail": [
+    {
+      "step": "scan",
+      "health_evidence_id": "M-552f51",
+      "graph_evidence_id": "T-4fc209",
+      "suspects": [
+        {
+          "service": "recommendation",
+          "anomalous_dependencies": [],
+          "deepest": true,
+          "health": {
+            "rps": 0.75,
+            "error_ratio": 0.927,
+            "baseline_error_ratio": 0.829,
+            "p95_ms": 95.5,
+            "baseline_p95_ms": 98.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "tool",
+      "tool": "get_logs",
+      "args": {
+        "service": "recommendation",
+        "level": "ERROR+WARN"
+      },
+      "evidence_ids": [
+        "L-72d977"
+      ]
+    },
+    {
+      "step": "tool",
+      "tool": "get_error_traces",
+      "args": {
+        "service": "recommendation"
+      },
+      "evidence_ids": [
+        "T-8f3375",
+        "T-a394f7",
+        "T-1272ba",
+        "T-d29b95",
+        "T-77db31"
+      ]
+    },
+    {
+      "step": "tool",
+      "tool": "get_recent_changes",
+      "args": {},
+      "evidence_ids": []
+    },
+    {
+      "step": "tool",
+      "tool": "get_logs",
+      "args": {
+        "service": "inventory"
+      },
+      "evidence_ids": [
+        "L-985feb",
+        "L-24f43d"
+      ]
+    },
+    {
+      "step": "tool",
+      "tool": "get_metric",
+      "args": {
+        "service": "inventory",
+        "name": "error_ratio"
+      },
+      "evidence_ids": [
+        "M-e62296"
+      ]
+    }
+  ],
+  "topology_suspects": [
+    "recommendation"
+  ],
+  "verdict": "DIAGNOSIS",
+  "root_cause_service": "inventory",
+  "fault_type": "code_error",
+  "ranked_candidates": [
+    "inventory",
+    "catalog",
+    "recommendation"
+  ],
+  "confidence": 1.0,
+  "summary": "The inventory service is failing due to a code error (KeyError: 'warehouse_id') when attempting to reserve stock. This failure propagates upstream, causing 5xx errors in the catalog, recommendation, and frontend services.",
+  "claims": [
+    {
+      "text": "The error traces consistently show that the failure propagates from the inventory service up to the frontend.",
+      "is_root_cause_claim": true,
+      "evidence_ids": [
+        "T-8f3375",
+        "T-a394f7",
+        "T-1272ba",
+        "T-d29b95",
+        "T-77db31"
+      ],
+      "quote": "deepest failing service: inventory",
+      "evidence": [
+        {
+          "id": "T-8f3375",
+          "kind": "trace",
+          "ref": "trace:c7c1e85c077c1788",
+          "text": "trace c7c1e85c077c1788e37d81bc52197a04: failing server spans in call order: frontend(502, 140.4ms) -> recommendation(502, 43.1ms) -> catalog(502, 16.4ms) -> inventory(500, 1.1ms); deepest failing service: inventory",
+          "meta": {
+            "trace_id": "c7c1e85c077c1788e37d81bc52197a04",
+            "deepest": "inventory"
+          }
+        },
+        {
+          "id": "T-a394f7",
+          "kind": "trace",
+          "ref": "trace:a2253599f81c39b6",
+          "text": "trace a2253599f81c39b6077d0fdddef4c236: failing server spans in call order: frontend(502, 154.2ms) -> recommendation(502, 48.9ms) -> catalog(502, 22.8ms) -> inventory(500, 0.7ms); deepest failing service: inventory",
+          "meta": {
+            "trace_id": "a2253599f81c39b6077d0fdddef4c236",
+            "deepest": "inventory"
+          }
+        },
+        {
+          "id": "T-1272ba",
+          "kind": "trace",
+          "ref": "trace:c6cbdcfd37bab77a",
+          "text": "trace c6cbdcfd37bab77a62fa70729721c857: failing server spans in call order: frontend(502, 161.5ms) -> recommendation(502, 64.0ms) -> catalog(502, 32.4ms) -> inventory(500, 0.9ms); deepest failing service: inventory",
+          "meta": {
+            "trace_id": "c6cbdcfd37bab77a62fa70729721c857",
+            "deepest": "inventory"
+          }
+        },
+        {
+          "id": "T-d29b95",
+          "kind": "trace",
+          "ref": "trace:c4acb1f17b17c8b6",
+          "text": "trace c4acb1f17b17c8b680406481aa2cecf9: failing server spans in call order: frontend(502, 147.0ms) -> recommendation(502, 46.7ms) -> catalog(502, 30.0ms) -> inventory(500, 0.6ms); deepest failing service: inventory",
+          "meta": {
+            "trace_id": "c4acb1f17b17c8b680406481aa2cecf9",
+            "deepest": "inventory"
+          }
+        },
+        {
+          "id": "T-77db31",
+          "kind": "trace",
+          "ref": "trace:7d89fb1cae7f5979",
+          "text": "trace 7d89fb1cae7f59794390962c82aa5a2f: failing server spans in call order: frontend(502, 142.8ms) -> recommendation(502, 45.9ms) -> catalog(502, 22.3ms) -> inventory(500, 0.8ms); deepest failing service: inventory",
+          "meta": {
+            "trace_id": "7d89fb1cae7f59794390962c82aa5a2f",
+            "deepest": "inventory"
+          }
+        }
+      ]
+    },
+    {
+      "text": "The inventory service is failing due to a KeyError when processing stock reservations, which is a code error.",
+      "quote": "KeyError: 'warehouse_id' while reserving stock",
+      "is_root_cause_claim": true,
+      "evidence_ids": [
+        "L-985feb"
+      ],
+      "evidence": [
+        {
+          "id": "L-985feb",
+          "kind": "log",
+          "ref": "inventory.log:3229",
+          "text": "KeyError: 'warehouse_id' while reserving stock",
+          "meta": {
+            "service": "inventory",
+            "line": 3229,
+            "ts": "2026-11-19T13:47:54.337+00:00",
+            "level": "ERROR",
+            "trace_id": "f5c9cebc07c75e22b694cf7dc3f21855",
+            "count_in_window": 972
+          }
+        }
+      ]
+    }
+  ],
+  "dropped_claims": [],
+  "evidence_precision": 1.0,
+  "rejected_hypotheses": [],
+  "suggested_action": null,
+  "evidence_items": 11
+}

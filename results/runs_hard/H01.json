@@ -1,0 +1,659 @@
+{
+ "scenario": {
+  "id": "H01",
+  "service": "currency",
+  "kind": "latency",
+  "params": {
+   "ms": "1300",
+   "silent": "1"
+  },
+  "noise": [
+   "frontend",
+   "catalog",
+   "cart"
+  ],
+  "alert": "frontend p95 latency above 2s for 2m"
+ },
+ "truth": {
+  "service": "currency",
+  "fault_type": "latency"
+ },
+ "injected_at": 1795099792.8155649,
+ "methods": {
+  "B1_dashboard_rule": {
+   "method": "B1_dashboard_rule",
+   "root_cause_service": "frontend",
+   "fault_type": null,
+   "ranked_candidates": [
+    "frontend",
+    "currency",
+    "shipping"
+   ],
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 0.0,
+   "usage": {
+    "total_tokens": 0,
+    "calls": 0
+   },
+   "score": {
+    "top1": false,
+    "top3": true,
+    "type_ok": null,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "B0_single_prompt": {
+   "method": "B0_single_prompt",
+   "root_cause_service": "analytics-collector",
+   "fault_type": "crash_or_unreachable",
+   "ranked_candidates": [
+    "analytics-collector",
+    "redis",
+    "frontend"
+   ],
+   "summary": "The analytics-collector service is returning 503 Service Unavailable errors across multiple services (frontend, cart, catalog), triggering a cascading failure. This leads to timeouts, Redis connection latency, and slow database queries as services struggle with retries and resource contention.",
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 6.7,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 14072,
+    "completion_tokens": 98,
+    "retries": 0,
+    "failures": 0,
+    "wait_s": 0.0,
+    "total_tokens": 14170
+   },
+   "model": "gemini-3.1-flash-lite",
+   "prompt_chars": 26621,
+   "error": null,
+   "score": {
+    "top1": false,
+    "top3": false,
+    "type_ok": false,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail": {
+   "alert": "frontend p95 latency above 2s for 2m",
+   "model": "gemini-flash-lite-latest,gemini-3.1-flash-lite",
+   "elapsed_s": 43.5,
+   "usage": {
+    "calls": 4,
+    "prompt_tokens": 23669,
+    "completion_tokens": 555,
+    "retries": 0,
+    "failures": 4,
+    "wait_s": 8.9,
+    "total_tokens": 24224
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "t": 0,
+     "dur": 0.75,
+     "health_evidence_id": "M-f6fb83",
+     "graph_evidence_id": "T-c5f936",
+     "suspects": [
+      {
+       "service": "currency",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 21.95,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 1950.0,
+        "baseline_p95_ms": 23.9
+       }
+      },
+      {
+       "service": "frontend",
+       "anomalous_dependencies": [
+        "catalog",
+        "checkout",
+        "recommendation"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 8.28,
+        "error_ratio": 0.234,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 8934.6,
+        "baseline_p95_ms": 809.9
+       }
+      },
+      {
+       "service": "catalog",
+       "anomalous_dependencies": [
+        "currency"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 18.13,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 1950.0,
+        "baseline_p95_ms": 188.7
+       }
+      },
+      {
+       "service": "checkout",
+       "anomalous_dependencies": [
+        "catalog",
+        "shipping",
+        "currency"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 1.89,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 4850.0,
+        "baseline_p95_ms": 465.1
+       }
+      },
+      {
+       "service": "recommendation",
+       "anomalous_dependencies": [
+        "catalog"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 8.13,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 1950.0,
+        "baseline_p95_ms": 233.3
+       }
+      },
+      {
+       "service": "shipping",
+       "anomalous_dependencies": [
+        "currency"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 1.87,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 1950.0,
+        "baseline_p95_ms": 69.8
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "currency",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.75,
+     "dur": 0.03,
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "frontend",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.78,
+     "dur": 0.12,
+     "evidence_ids": [
+      "L-647457",
+      "L-93351b",
+      "L-5467cf",
+      "L-9dea2d",
+      "L-e1db8b",
+      "L-94b3ac"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "catalog",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.9,
+     "dur": 0.08,
+     "evidence_ids": [
+      "L-a84e5f",
+      "L-192b6b",
+      "L-c7d2ea",
+      "L-d64afd",
+      "L-34caae"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "frontend"
+     },
+     "evidence_ids": [
+      "T-f12064",
+      "T-649fb5",
+      "T-1c616d",
+      "T-bb71c6",
+      "T-798c0a"
+     ],
+     "t": 0.98,
+     "dur": 0.23
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "evidence_ids": [
+      "C-008939",
+      "C-c20646",
+      "C-e6ae60"
+     ],
+     "t": 1.2,
+     "dur": 0.0
+    },
+    {
+     "step": "llm",
+     "t": 1.2,
+     "dur": 18.03,
+     "tokens": 5328,
+     "model": "gemini-flash-lite-latest",
+     "requested": [
+      "get_metric",
+      "get_metric"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "service": "currency",
+      "name": "p95_latency_ms"
+     },
+     "evidence_ids": [
+      "M-40189e"
+     ],
+     "t": 19.23,
+     "dur": 0.0
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "service": "currency",
+      "name": "error_ratio"
+     },
+     "evidence_ids": [
+      "M-99dbc5"
+     ],
+     "t": 19.24,
+     "dur": 0.0
+    },
+    {
+     "step": "llm",
+     "t": 19.24,
+     "dur": 7.34,
+     "tokens": 5713,
+     "model": "gemini-3.1-flash-lite",
+     "requested": [
+      "get_slow_traces"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_slow_traces",
+     "args": {
+      "service": "currency"
+     },
+     "evidence_ids": [
+      "T-11505d",
+      "T-03dc68",
+      "T-ef59eb",
+      "T-865420",
+      "T-77ddf8"
+     ],
+     "t": 26.58,
+     "dur": 0.56
+    },
+    {
+     "step": "llm",
+     "t": 27.14,
+     "dur": 7.11,
+     "tokens": 6211,
+     "model": "gemini-3.1-flash-lite",
+     "requested": [
+      "get_metric"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "service": "currency",
+      "name": "heap_mb"
+     },
+     "evidence_ids": [
+      "M-1589d2"
+     ],
+     "t": 34.24,
+     "dur": 0.0
+    },
+    {
+     "step": "llm",
+     "t": 34.25,
+     "dur": 9.22,
+     "tokens": 6972,
+     "model": "gemini-3.1-flash-lite",
+     "requested": [
+      "submit_diagnosis"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "currency",
+    "frontend",
+    "catalog",
+    "checkout",
+    "recommendation",
+    "shipping"
+   ],
+   "verdict": "INCONCLUSIVE",
+   "root_cause_service": "currency",
+   "fault_type": "latency",
+   "ranked_candidates": [
+    "currency",
+    "catalog",
+    "checkout"
+   ],
+   "confidence": 0.9,
+   "summary": "The currency service is the root cause of the latency incident. It is experiencing high p95 latency (spiking to ~1950ms) which is propagating upstream to the catalog, checkout, and frontend services. No resource exhaustion or errors were found in the currency service, suggesting a transient performance issue.",
+   "claims": [
+    {
+     "quote": "[1795099809, 1784.758], [1795099819, 1876.752], [1795099829, 1917.822], [1795099839, 1938.346], [1795099849, 1950.0], [1795099859, 1950.0]",
+     "text": "currency service p95 latency spiked significantly starting around 14:49:59.",
+     "evidence_ids": [
+      "M-40189e"
+     ],
+     "evidence": [
+      {
+       "id": "M-40189e",
+       "kind": "metric",
+       "ref": "currency.p95_latency_ms",
+       "text": "[{\"labels\": {}, \"points\": [[1795099739, 23.949], [1795099749, 23.966], [1795099759, 23.955], [1795099769, 23.93], [1795099779, 23.933], [1795099789, 23.93], [1795099799, 24.895], [1795099809, 1784.758], [1795099819, 1876.752], [1795099829, 1917.822], [1795099839, 1938.346], [1795099849, 1950.0], [1795099859, 1950.0]]}]",
+       "meta": {
+        "service": "currency",
+        "metric": "p95_latency_ms",
+        "query": "1000 * histogram_quantile(0.95, sum by (le) (rate(shop_request_duration_seconds_bucket{service=\"currency\"}[1m])))",
+        "window": [
+         1795099739,
+         1795099859
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [
+    {
+     "quote": "largest self-time (ms) by service: [('currency', 6887.3), ... ]",
+     "evidence_ids": [
+      "T-11505d",
+      "T-03dc68",
+      "T-ef59eb",
+      "T-865420",
+      "T-77ddf8"
+     ],
+     "text": "Slow traces confirm that the currency service is the primary contributor to latency in the call chain.",
+     "is_root_cause_claim": true,
+     "rejected_because": [
+      "quoted text not found in cited evidence"
+     ]
+    }
+   ],
+   "evidence_precision": 0.5,
+   "rejected_hypotheses": [],
+   "suggested_action": {
+    "service": "currency",
+    "why": "The currency service is experiencing high latency without resource exhaustion or errors, suggesting a transient state or thread contention that a restart may resolve.",
+    "action": "restart_service",
+    "risk": "risky",
+    "description": "Restarts the service container; in-flight requests fail",
+    "dry_run": "docker compose restart currency"
+   },
+   "evidence_items": 29,
+   "health": {
+    "frontend": {
+     "rps": 8.28,
+     "error_ratio": 0.234,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 8934.6,
+     "baseline_p95_ms": 809.9
+    },
+    "currency": {
+     "rps": 21.95,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 1950.0,
+     "baseline_p95_ms": 23.9
+    },
+    "catalog": {
+     "rps": 18.13,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 1950.0,
+     "baseline_p95_ms": 188.7
+    },
+    "payment": {
+     "rps": 1.87,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 23.9
+    },
+    "checkout": {
+     "rps": 1.89,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 4850.0,
+     "baseline_p95_ms": 465.1
+    },
+    "recommendation": {
+     "rps": 8.13,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 1950.0,
+     "baseline_p95_ms": 233.3
+    },
+    "shipping": {
+     "rps": 1.87,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 1950.0,
+     "baseline_p95_ms": 69.8
+    },
+    "inventory": {
+     "rps": 18.33,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 23.9
+    },
+    "cart": {
+     "rps": 10.16,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 23.9
+    }
+   },
+   "edges": [
+    {
+     "caller": "catalog",
+     "callee": "currency",
+     "calls": 239
+    },
+    {
+     "caller": "catalog",
+     "callee": "inventory",
+     "calls": 251
+    },
+    {
+     "caller": "checkout",
+     "callee": "cart",
+     "calls": 54
+    },
+    {
+     "caller": "checkout",
+     "callee": "catalog",
+     "calls": 48
+    },
+    {
+     "caller": "checkout",
+     "callee": "currency",
+     "calls": 36
+    },
+    {
+     "caller": "checkout",
+     "callee": "payment",
+     "calls": 50
+    },
+    {
+     "caller": "checkout",
+     "callee": "shipping",
+     "calls": 42
+    },
+    {
+     "caller": "frontend",
+     "callee": "cart",
+     "calls": 92
+    },
+    {
+     "caller": "frontend",
+     "callee": "catalog",
+     "calls": 98
+    },
+    {
+     "caller": "frontend",
+     "callee": "checkout",
+     "calls": 36
+    },
+    {
+     "caller": "frontend",
+     "callee": "recommendation",
+     "calls": 91
+    },
+    {
+     "caller": "recommendation",
+     "callee": "catalog",
+     "calls": 91
+    },
+    {
+     "caller": "shipping",
+     "callee": "currency",
+     "calls": 42
+    }
+   ],
+   "suspects": [
+    {
+     "service": "currency",
+     "anomalous_dependencies": [],
+     "deepest": true,
+     "health": {
+      "rps": 21.95,
+      "error_ratio": 0.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 1950.0,
+      "baseline_p95_ms": 23.9
+     }
+    },
+    {
+     "service": "frontend",
+     "anomalous_dependencies": [
+      "catalog",
+      "checkout",
+      "recommendation"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 8.28,
+      "error_ratio": 0.234,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 8934.6,
+      "baseline_p95_ms": 809.9
+     }
+    },
+    {
+     "service": "catalog",
+     "anomalous_dependencies": [
+      "currency"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 18.13,
+      "error_ratio": 0.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 1950.0,
+      "baseline_p95_ms": 188.7
+     }
+    },
+    {
+     "service": "checkout",
+     "anomalous_dependencies": [
+      "catalog",
+      "shipping",
+      "currency"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 1.89,
+      "error_ratio": 0.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 4850.0,
+      "baseline_p95_ms": 465.1
+     }
+    },
+    {
+     "service": "recommendation",
+     "anomalous_dependencies": [
+      "catalog"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 8.13,
+      "error_ratio": 0.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 1950.0,
+      "baseline_p95_ms": 233.3
+     }
+    },
+    {
+     "service": "shipping",
+     "anomalous_dependencies": [
+      "currency"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 1.87,
+      "error_ratio": 0.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 1950.0,
+      "baseline_p95_ms": 69.8
+     }
+    }
+   ],
+   "score": {
+    "top1": false,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": true,
+    "failed": false
+   }
+  }
+ }
+}

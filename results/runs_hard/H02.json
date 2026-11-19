@@ -1,0 +1,410 @@
+{
+ "scenario": {
+  "id": "H02",
+  "service": "shipping",
+  "kind": "latency",
+  "params": {
+   "ms": "1600",
+   "silent": "1"
+  },
+  "noise": [
+   "checkout",
+   "frontend",
+   "payment"
+  ],
+  "alert": "checkout p95 latency above 2s for 2m"
+ },
+ "truth": {
+  "service": "shipping",
+  "fault_type": "latency"
+ },
+ "injected_at": 1795100008.5832095,
+ "methods": {
+  "B1_dashboard_rule": {
+   "method": "B1_dashboard_rule",
+   "root_cause_service": "shipping",
+   "fault_type": null,
+   "ranked_candidates": [
+    "shipping",
+    "payment",
+    "checkout"
+   ],
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 0.0,
+   "usage": {
+    "total_tokens": 0,
+    "calls": 0
+   },
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": null,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "B0_single_prompt": {
+   "method": "B0_single_prompt",
+   "root_cause_service": "checkout",
+   "fault_type": "latency",
+   "ranked_candidates": [
+    "checkout",
+    "payment",
+    "frontend"
+   ],
+   "summary": "The checkout service experienced high latency, indicated by slow database queries ('slow query: SELECT * FROM sessions took 812ms') and timeouts (redis GET timeout, client closed connection 499 errors), leading to the p95 latency alert.",
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 9.3,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 14741,
+    "completion_tokens": 94,
+    "retries": 0,
+    "failures": 4,
+    "wait_s": 7.4,
+    "total_tokens": 14835
+   },
+   "model": "gemini-flash-lite-latest",
+   "prompt_chars": 26744,
+   "error": null,
+   "score": {
+    "top1": false,
+    "top3": false,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail": {
+   "alert": "checkout p95 latency above 2s for 2m",
+   "model": "gemini-flash-lite-latest,gemini-3.1-flash-lite",
+   "elapsed_s": 38.2,
+   "usage": {
+    "calls": 4,
+    "prompt_tokens": 13578,
+    "completion_tokens": 461,
+    "retries": 0,
+    "failures": 8,
+    "wait_s": 4.2,
+    "total_tokens": 14039
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "t": 0,
+     "dur": 0.81,
+     "health_evidence_id": "M-8c90c2",
+     "graph_evidence_id": "T-11f92f",
+     "suspects": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "evidence_ids": [
+      "C-c20646",
+      "C-e6ae60"
+     ],
+     "t": 0.81,
+     "dur": 0.0
+    },
+    {
+     "step": "llm",
+     "t": 0.81,
+     "dur": 6.56,
+     "tokens": 2463,
+     "model": "gemini-flash-lite-latest",
+     "requested": [
+      "get_slow_traces",
+      "get_slow_traces"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_slow_traces",
+     "args": {
+      "service": "checkout"
+     },
+     "evidence_ids": [
+      "T-8197cd",
+      "T-1aa7e6",
+      "T-d6997c",
+      "T-e7d6e0",
+      "T-f7fca8"
+     ],
+     "t": 7.37,
+     "dur": 0.36
+    },
+    {
+     "step": "tool",
+     "tool": "get_slow_traces",
+     "args": {
+      "service": "shipping"
+     },
+     "evidence_ids": [
+      "T-8197cd",
+      "T-1aa7e6",
+      "T-d6997c",
+      "T-e7d6e0",
+      "T-f7fca8"
+     ],
+     "t": 7.73,
+     "dur": 0.37
+    },
+    {
+     "step": "llm",
+     "t": 8.11,
+     "dur": 9.96,
+     "tokens": 3447,
+     "model": "gemini-3.1-flash-lite",
+     "requested": [
+      "get_metric"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "name": "p95_latency_ms",
+      "service": "shipping"
+     },
+     "evidence_ids": [
+      "M-f6b995"
+     ],
+     "t": 18.06,
+     "dur": 0.0
+    },
+    {
+     "step": "llm",
+     "t": 18.07,
+     "dur": 6.8,
+     "tokens": 3788,
+     "model": "gemini-3.1-flash-lite",
+     "requested": [
+      "get_logs"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "shipping"
+     },
+     "evidence_ids": [
+      "L-bd305a"
+     ],
+     "t": 24.86,
+     "dur": 0.0
+    },
+    {
+     "step": "llm",
+     "t": 24.87,
+     "dur": 13.29,
+     "tokens": 4341,
+     "model": "gemini-3.1-flash-lite",
+     "requested": [
+      "submit_diagnosis"
+     ]
+    }
+   ],
+   "topology_suspects": [],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "shipping",
+   "fault_type": "latency",
+   "ranked_candidates": [
+    "shipping",
+    "checkout",
+    "frontend"
+   ],
+   "confidence": 0.9,
+   "summary": "The checkout service is experiencing high p95 latency, which is being caused by the shipping service. Shipping latency has increased significantly, and traces confirm it is the bottleneck. No recent deployments were made to shipping, suggesting a latent issue or external dependency problem.",
+   "claims": [
+    {
+     "evidence_ids": [
+      "M-8c90c2"
+     ],
+     "text": "Shipping service p95 latency has increased from 1350ms to 1950ms.",
+     "quote": "\"shipping\": {\"rps\": 1.65, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 1950.0, \"baseline_p95_ms\": 1350.0}",
+     "evidence": [
+      {
+       "id": "M-8c90c2",
+       "kind": "metric",
+       "ref": "service_health_scan",
+       "text": "{\"frontend\": {\"rps\": 7.53, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.009, \"p95_ms\": 4125.4, \"baseline_p95_ms\": 2843.7}, \"currency\": {\"rps\": 19.95, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 23.9, \"baseline_p95_ms\": 1557.9}, \"catalog\": {\"rps\": 16.71, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 209.0, \"baseline_p95_ms\": 1557.3}, \"payment\": {\"rps\": 1.73, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 24.0, \"baseline_p95_ms\": 23.9}, \"checkout\": {\"rps\": 1.64, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 4386.4, \"baseline_p95_ms\": 3742.3}, \"recommendation\": {\"rps\": 7.58, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 240.9, \"baseline_p95_ms\": 1452.5}, \"shipping\": {\"rps\": 1.65, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 1950.0, \"baseline_p95_ms\": 1350.0}, \"inventory\": {\"rps\": 16.89, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 23.9, \"baseline_p95_ms\": 23.9}, \"cart\": {\"rps\": 9.29, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 23.9, \"baseline_p95_ms\": 24.0}}",
+       "meta": {
+        "source": "prometheus"
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [
+    {
+     "evidence_ids": [
+      "T-8197cd",
+      "T-1aa7e6",
+      "T-d6997c",
+      "T-e7d6e0",
+      "T-f7fca8"
+     ],
+     "quote": "\"largest self-time (ms) by service: [('shipping', 1887.9)...]\"",
+     "text": "Slow traces for checkout consistently show shipping as the primary contributor to latency.",
+     "rejected_because": [
+      "quoted text not found in cited evidence"
+     ]
+    }
+   ],
+   "evidence_precision": 0.5,
+   "rejected_hypotheses": [],
+   "suggested_action": {
+    "service": "shipping",
+    "why": "Shipping is the root cause of the checkout latency, but logs show no errors. Need to collect diagnostics to investigate the cause of the latency.",
+    "action": "collect_diagnostics",
+    "risk": "safe",
+    "description": "Read-only: snapshot logs, metrics and traces for the service",
+    "dry_run": "GET /metrics, tail logs/shipping.log, query Jaeger for service=shipping"
+   },
+   "evidence_items": 11,
+   "health": {
+    "frontend": {
+     "rps": 7.53,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.009,
+     "p95_ms": 4125.4,
+     "baseline_p95_ms": 2843.7
+    },
+    "currency": {
+     "rps": 19.95,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 1557.9
+    },
+    "catalog": {
+     "rps": 16.71,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 209.0,
+     "baseline_p95_ms": 1557.3
+    },
+    "payment": {
+     "rps": 1.73,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 24.0,
+     "baseline_p95_ms": 23.9
+    },
+    "checkout": {
+     "rps": 1.64,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 4386.4,
+     "baseline_p95_ms": 3742.3
+    },
+    "recommendation": {
+     "rps": 7.58,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 240.9,
+     "baseline_p95_ms": 1452.5
+    },
+    "shipping": {
+     "rps": 1.65,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 1950.0,
+     "baseline_p95_ms": 1350.0
+    },
+    "inventory": {
+     "rps": 16.89,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 23.9
+    },
+    "cart": {
+     "rps": 9.29,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 24.0
+    }
+   },
+   "edges": [
+    {
+     "caller": "catalog",
+     "callee": "currency",
+     "calls": 250
+    },
+    {
+     "caller": "catalog",
+     "callee": "inventory",
+     "calls": 252
+    },
+    {
+     "caller": "checkout",
+     "callee": "cart",
+     "calls": 54
+    },
+    {
+     "caller": "checkout",
+     "callee": "catalog",
+     "calls": 54
+    },
+    {
+     "caller": "checkout",
+     "callee": "currency",
+     "calls": 50
+    },
+    {
+     "caller": "checkout",
+     "callee": "payment",
+     "calls": 54
+    },
+    {
+     "caller": "checkout",
+     "callee": "shipping",
+     "calls": 51
+    },
+    {
+     "caller": "frontend",
+     "callee": "cart",
+     "calls": 91
+    },
+    {
+     "caller": "frontend",
+     "callee": "catalog",
+     "calls": 99
+    },
+    {
+     "caller": "frontend",
+     "callee": "checkout",
+     "calls": 50
+    },
+    {
+     "caller": "frontend",
+     "callee": "recommendation",
+     "calls": 98
+    },
+    {
+     "caller": "recommendation",
+     "callee": "catalog",
+     "calls": 98
+    },
+    {
+     "caller": "shipping",
+     "callee": "currency",
+     "calls": 51
+    }
+   ],
+   "suspects": [],
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  }
+ }
+}

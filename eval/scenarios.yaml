@@ -1,0 +1,63 @@
+# Fault scenarios with known root causes. Each is injected into the running
+# Compose shop, then every method investigates the same window.
+# 12 scenarios, 6 fault types, 9 services.
+- id: S01
+  service: payment
+  kind: error
+  params: {message: "PaymentGatewayError: upstream gateway rejected request (code 5003)", error_type: PaymentGatewayError}
+  alert: "checkout error rate above 5% for 1m (SLO burn)"
+- id: S02
+  service: inventory
+  kind: error
+  params: {message: "KeyError: 'warehouse_id' while reserving stock", error_type: KeyError, rate: "0.9"}
+  alert: "frontend 5xx ratio above 5% for 1m"
+- id: S03
+  service: currency
+  kind: latency
+  params: {ms: "1400"}
+  alert: "frontend p95 latency above 2s for 2m"
+- id: S04
+  service: shipping
+  kind: latency
+  params: {ms: "1800"}
+  alert: "checkout p95 latency above 2s for 2m"
+- id: S05
+  service: cart
+  kind: crash
+  params: {}
+  alert: "frontend 5xx ratio above 5% for 1m"
+- id: S06
+  service: recommendation
+  kind: crash
+  params: {}
+  alert: "frontend 5xx ratio above 5% for 1m"
+- id: S07
+  service: recommendation
+  kind: memory_leak
+  params: {bytes_per_req: "6000000"}
+  alert: "frontend p95 latency above 1s and rising"
+- id: S08
+  service: inventory
+  kind: pool_exhaustion
+  params: {}
+  alert: "frontend 5xx ratio above 5% for 1m"
+- id: S09
+  service: currency
+  kind: bad_config
+  params: {}
+  alert: "frontend 5xx ratio above 5% for 1m"
+- id: S10
+  service: shipping
+  kind: bad_config
+  params: {}
+  alert: "checkout error rate above 5% for 1m (SLO burn)"
+- id: S11
+  service: payment
+  kind: bad_deploy
+  params: {rate: "0.8"}
+  alert: "checkout error rate above 5% for 1m (SLO burn)"
+- id: S12
+  service: cart
+  kind: bad_deploy
+  params: {rate: "0.8"}
+  alert: "frontend 5xx ratio above 5% for 1m"
