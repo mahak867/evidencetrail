@@ -1,0 +1,4 @@
+{"ts": 1795101925.0149693, "event": "faults_cleared"}
+{"ts": 1795102006.6444342, "event": "fault_injected", "service": "payment", "kind": "bad_deploy"}
+{"ts": 1795102054.0184712, "event": "investigation_started", "id": "d5cf589d", "alert": "checkout error rate above 5% for 1m (SLO burn)"}
+{"ts": 1795102109.2608647, "event": "action_executed", "id": "d5cf589d", "action": {"why": "The new deployment v2.7.0-rc1 introduced a code error causing TypeErrors in the payment service.", "service": "payment", "action": "rollback_deploy", "risk": "risky", "description": "Rolls the service back to its previous image", "dry_run": "DELETE http://localhost:8105/admin/fault  (test env: roll back to v2.6.3)"}, "result": {"executed": true, "command": "DELETE http://localhost:8105/admin/fault  (test env: roll back to v2.6.3)", "approved_by": "On-call: Annika"}}

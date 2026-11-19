@@ -122,6 +122,10 @@ The scorecard compares three methods on the same faults, telemetry window and co
 
 It reports top-1 and top-3 accuracy with 95% Wilson intervals, fault-type accuracy, inconclusive and failed counts, time, tokens, evidence precision and every individual scenario, misses included. See [`results/SCORECARD.md`](results/SCORECARD.md).
 
+## Demo video
+
+[`docs/demo/EvidenceTrail_demo.mp4`](docs/demo/EvidenceTrail_demo.mp4) (2:27): a live run on the test environment. A bad deploy of payment is injected, Gemini diagnoses it with cited evidence, and the rollback runs after a named approval. Subtitles: `docs/demo/EvidenceTrail_demo.srt`.
+
 ## Recording the demo video
 
 `tools/record_demo.js` drives the real UI with Playwright against the live test environment: it injects a bad deploy, investigates, opens evidence and approves the rollback, with captions. `tools/cut_video.py` then speeds up the waiting parts with ffmpeg.

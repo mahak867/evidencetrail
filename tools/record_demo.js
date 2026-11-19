@@ -6,6 +6,7 @@ const fs = require('fs');
 const BASE = 'http://localhost:8080';
 const W = 1440, H = 900;
 const scenes = [];
+const caps = [];
 let t0;
 const mark = (name, speed = 1) => scenes.push({ name, t: (Date.now() - t0) / 1000, speed });
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -33,6 +34,7 @@ async function caption(page, text) {
     }
     c.textContent = t; c.style.display = t ? 'block' : 'none';
   }, text);
+  caps.push({ t: (Date.now() - t0) / 1000, text });
 }
 
 async function api(path, method = 'GET', body) {
@@ -51,7 +53,7 @@ async function waitForErrors(service, minRatio = 0.4, timeoutMs = 150000) {
 
 (async () => {
   await api('/api/faults', 'DELETE');
-  await sleep(70000); // let the test shop settle to healthy before recording
+  await sleep(45000); // let the test shop settle to healthy before recording
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: { width: W, height: H }, recordVideo: { dir: 'video_raw', size: { width: W, height: H } } });
   await ctx.addInitScript(() => { try { localStorage.setItem('et-theme', 'dark') } catch (e) {} });
@@ -67,6 +69,13 @@ async function waitForErrors(service, minRatio = 0.4, timeoutMs = 150000) {
   await card(page, `<div class="k">The problem</div><h2 style="margin-top:10px">One fault makes alerts fire in many services. Engineers can't trust AI answers mid-incident.</h2>
     <div class="row"><div class="s"><b>11.3%</b><span>best AI agent's root-cause accuracy on the OpenRCA benchmark (ICLR 2025)</span></div>
     <div class="s"><b>7–40%</b><span>of root causes hallucinated by frontier AI agents (ORCA-bench, 2026)</span></div></div>`, 9000);
+
+  mark('arch');
+  await card(page, `<div class="k">How it works</div><h2 style="margin-top:10px">Six steps from alert to an approved fix</h2>
+    <div class="row" style="flex-wrap:wrap;gap:14px">${[['1','Health scan','Prometheus: error ratio and p95 vs a baseline window'],['2','Call graph','Jaeger traces: the deepest failing service is the suspect'],
+      ['3','Prefetch','Logs, failing traces and recent deploys for the top suspects'],['4','Gemini','Tests hypotheses with read-only tools, then submits a structured diagnosis'],
+      ['5','Evidence gate','Claims citing evidence never fetched are blocked; weak evidence means INCONCLUSIVE'],['6','Human in charge','Fixes are labelled safe or risky, dry-run, and need a named approval']]
+      .map(([n,h,d])=>`<div class="s" style="flex:1 1 30%;min-width:300px"><span style="color:#3987e5;font-weight:700">STEP ${n}</span><div style="font-size:24px;font-weight:700;margin:4px 0">${h}</div><span>${d}</span></div>`).join('')}</div>`, 9000);
 
   mark('map_healthy');
   await page.goto(BASE + '/#map'); await sleep(2500);
@@ -133,7 +142,7 @@ async function waitForErrors(service, minRatio = 0.4, timeoutMs = 150000) {
   mark('recover', 8);
   await page.goto(BASE + '/#map'); await sleep(1000);
   await caption(page, 'After approval the deploy is rolled back and the services recover.');
-  await sleep(45000);
+  await sleep(25000);
 
   mark('scorecard');
   await page.goto(BASE + '/#scorecard'); await sleep(2000);
@@ -141,6 +150,19 @@ async function waitForErrors(service, minRatio = 0.4, timeoutMs = 150000) {
   await sleep(7000);
   await page.evaluate(() => document.querySelector('#timeChart').scrollIntoView({ behavior: 'smooth', block: 'start' }));
   await sleep(5000);
+
+  mark('results');
+  await card(page, `<div class="k">Measured results</div><h2 style="margin-top:10px">Same injected faults, same telemetry, every miss reported</h2>
+    <div class="row"><div class="s"><b>12/12</b><span>right service and fault type on the standard set (single-prompt Gemini: 10/12 fault type)</span></div>
+    <div class="s"><b>0 vs 2</b><span>confident wrong answers on the hard set (noisy logs, silent faults): EvidenceTrail vs single-prompt Gemini</span></div>
+    <div class="s"><b>7 / 30</b><span>AI claims blocked by the evidence gate for citing evidence that was never fetched or was misquoted</span></div></div>
+    <div class="m">~2 Gemini calls per incident · secrets redacted before Gemini · read-only by default · open scorecard on GitHub</div>`, 10000);
+
+  mark('team');
+  await card(page, `<div class="k">Team EvidenceTrail · Chennai Institute of Technology</div><h2 style="margin-top:10px">Everyone owns a part</h2>
+    <div class="row" style="flex-wrap:wrap;gap:14px">${[['Mahak Fahad','Team leader · AI / backend: Gemini agent, evidence gate, API'],['Roshini R','Frontend & UI/UX: investigation console, design'],
+      ['Kanish Karthikeyan','Platform & observability: test environment, faults, telemetry'],['Annika Meril Babu','Evaluation, research & pitch: scorecard, market']]
+      .map(([n,r])=>`<div class="s" style="flex:1 1 40%;min-width:420px"><div style="font-size:26px;font-weight:700;margin-bottom:4px">${n}</div><span>${r}</span></div>`).join('')}</div>`, 8000);
 
   mark('close');
   await card(page, `<div class="k">EvidenceTrail</div><h1 style="font-size:56px">Find the cause. Show the evidence.</h1>
@@ -150,6 +172,6 @@ async function waitForErrors(service, minRatio = 0.4, timeoutMs = 150000) {
 
   await ctx.close(); await browser.close();
   const vid = fs.readdirSync('video_raw').filter(f => f.endsWith('.webm')).map(f => 'video_raw/' + f).sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs)[0];
-  fs.writeFileSync('scenes.json', JSON.stringify({ video: vid, scenes, ok }, null, 1));
+  fs.writeFileSync('scenes.json', JSON.stringify({ video: vid, scenes, caps, ok }, null, 1));
   console.log('recorded', vid, 'diagnosis ok:', ok);
 })();
