@@ -91,7 +91,7 @@ def suspects(health: dict, edges: list[dict]) -> list[dict]:
         err_up = h.get("error_ratio", 0) - h.get("baseline_error_ratio", 0) > 0.05
         p95, b = h.get("p95_ms") or 0, h.get("baseline_p95_ms") or 0
         slow = p95 > max(250, 3 * (b or 50))
-        down = s not in health  # no metrics at all = down; a quiet service with zero traffic is not
+        down = s not in health or h.get("up", 1) == 0  # Prometheus could not scrape it; quiet traffic alone is not "down"
         return err_up or slow or down
     callees: dict[str, set] = {}
     for e in edges:

@@ -64,6 +64,8 @@ class Telemetry:
             for r in p95:
                 v = float(r["value"][1])
                 out[r["metric"]["service"]][f"{label}_p95_ms"] = None if v != v else round(v * 1000, 1)
+        # Prometheus' own scrape status: up == 0 means the service could not be reached (container down)
+        up = {r["metric"].get("instance_service"): float(r["value"][1]) for r in self._prom("up", self.window.end)}
         res = {}
         for svc, d in out.items():
             rps, err = d.get("now_rps", 0.0), d.get("now_err_rps", 0.0)
@@ -74,6 +76,7 @@ class Telemetry:
                 "baseline_error_ratio": round(berr / brps, 3) if brps else 0.0,
                 "p95_ms": d.get("now_p95_ms"),
                 "baseline_p95_ms": d.get("baseline_p95_ms"),
+                "up": up.get(svc, 0.0),
             }
         return res
 

@@ -22,7 +22,8 @@ def b1_dashboard_rule(window_s: int = 120, window: Window | None = None) -> dict
     tel = Telemetry(window=window or Window.last(window_s))
     h = tel.service_health()
     # a dashboard shows a service with no data as DOWN: blame it first
-    down = sorted(s for s in SERVICES if s not in h)  # no metrics at all = container down (low traffic is not down)
+    # Prometheus marks a service it cannot scrape as up == 0: that is what a dashboard shows as DOWN
+    down = sorted(s for s in SERVICES if s not in h or h[s].get("up", 1) == 0)
 
     def err_jump(s):
         return h[s]["error_ratio"] - h[s]["baseline_error_ratio"]

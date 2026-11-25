@@ -353,3 +353,1369 @@ litellm.exceptions.ServiceUnavailableError: litellm.ServiceUnavailableError: Ser
   S03 EvidenceTrail      -> currency/latency [DIAGNOSIS] top1=True (30.6s)
   S03 EvidenceTrail_ADK  -> currency/latency [DIAGNOSIS] top1=True (192.5s)
 == S04: latency on shipping
+  S04 B1_dashboard_rule  -> shipping/None [DIAGNOSIS] top1=True (0.0s)
+  S04 B0_single_prompt   -> shipping/latency [DIAGNOSIS] top1=True (24.6s)
+  S04 EvidenceTrail      -> shipping/latency [DIAGNOSIS] top1=True (352.3s)
+  S04 EvidenceTrail_ADK  -> shipping/latency [DIAGNOSIS] top1=True (299.9s)
+== S05: crash on cart
+  S05 B1_dashboard_rule  -> frontend/None [DIAGNOSIS] top1=False (0.0s)
+  S05 B0_single_prompt   -> cart/crash_or_unreachable [DIAGNOSIS] top1=True (80.5s)
+  S05 EvidenceTrail      -> cart/crash_or_unreachable [DIAGNOSIS] top1=True (77.3s)
+
+[1;31mGive Feedback / Get Help: https://github.com/BerriAI/litellm/issues/new[0m
+LiteLLM.Info: If you need to debug this error, use `litellm.turn_on_debug()'.
+
+Node execution failed with exception
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 1025, in acompletion
+    headers, response = await self.make_openai_chat_completion_request(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/logging_utils.py", line 372, in async_wrapper
+    result: Final = await func(*args, **kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 603, in make_openai_chat_completion_request
+    raise e
+  File "/usr/local/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 566, in make_openai_chat_completion_request
+    await openai_aclient.post(
+    ...<6 lines>...
+    )
+  File "/usr/local/lib/python3.13/site-packages/openai/_base_client.py", line 2085, in post
+    return await self.request(cast_to, opts, stream=stream, stream_cls=stream_cls)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/openai/_base_client.py", line 1870, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.InternalServerError: Error code: 503
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/site-packages/litellm/main.py", line 965, in acompletion
+    response = await _resolve_dispatched_chat_response(init_response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/main.py", line 1035, in _resolve_dispatched_chat_response
+    return await pending
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 1061, in acompletion
+    raise OpenAIError(
+    ...<5 lines>...
+    )
+litellm.llms.openai.common_utils.OpenAIError: Error code: 503
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner.py", line 176, in run
+    await self._execute_node(ctx, node_input)
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner.py", line 423, in _execute_node
+    await self._run_node_loop(ctx, node_input)
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner.py", line 435, in _run_node_loop
+    async for event in agen:
+    ...<8 lines>...
+        break
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_base_node.py", line 213, in run
+    item = await anext(agen, _sentinel)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/llm_agent.py", line 710, in _run_impl
+    async for event in agen:
+    ...<4 lines>...
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_llm_agent_wrapper.py", line 555, in run_llm_agent_as_node
+    async for event in run_iter:
+    ...<82 lines>...
+        break
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 377, in run_async
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 479, in _run_with_lifecycle
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 169, in stream_in_scope
+    item = await _drive(owned.__anext__())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 157, in _drive
+    return await step
+           ^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 442, in _run
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/llm_agent.py", line 659, in _run_async_impl
+    async for event in agen:
+    ...<8 lines>...
+        should_pause = True
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 295, in run_async
+    async for event in agen:
+    ...<3 lines>...
+        break
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 378, in _run_one_step_async
+    async for llm_response in agen:
+    ...<22 lines>...
+          yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 561, in _call_llm_async
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_model_call.py", line 324, in call_llm_async
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 169, in stream_in_scope
+    item = await _drive(owned.__anext__())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 157, in _drive
+    return await step
+           ^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_model_call.py", line 285, in _call_llm_with_tracing
+    async for llm_response in agen:
+    ...<20 lines>...
+      yield llm_response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 611, in _run_and_handle_error
+    async for response in agen:
+      yield response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_finalizer.py", line 579, in run_and_handle_error
+    raise model_error
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_finalizer.py", line 556, in run_and_handle_error
+    async for llm_response in agen:
+      has_unfinished_partial_stream = bool(llm_response.partial)
+      yield llm_response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/utils/_runner_utils.py", line 66, in _stream_in_caller_scope
+    item = await _InContext(ctx, agen.__anext__())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/utils/_runner_utils.py", line 93, in __await__
+    waiting_on = self._ctx.run(coro.send, value)
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_finalizer.py", line 470, in _record_model_responses
+    async for llm_response in timed:
+      tel_ctx.record_llm_response(invocation_context, llm_response)
+      yield llm_response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 1088, in time_model_awaits
+    async for response in responses:
+      yield response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/models/lite_llm.py", line 5490, in generate_content_async
+    response = await self.llm_client.acompletion(**completion_args)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/models/lite_llm.py", line 1298, in acompletion
+    return await acompletion(
+           ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/chat_completions/dispatch.py", line 130, in acompletion
+    return await _ADISPATCH.arun(
+           ^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/rust_bridge/dispatch.py", line 108, in arun
+    return await python(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/utils.py", line 2859, in wrapper_async
+    raise e
+  File "/usr/local/lib/python3.13/site-packages/litellm/utils.py", line 2648, in wrapper_async
+    result = await original_function(*args, **call_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/main.py", line 1023, in acompletion
+    raise exception_type(
+          ~~~~~~~~~~~~~~^
+        model=model,
+        ^^^^^^^^^^^^
+    ...<3 lines>...
+        extra_kwargs=kwargs,
+        ^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2999, in exception_type
+    raise e  # it's already mapped
+    ^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2741, in exception_type
+    _map_openai_exception(
+    ~~~~~~~~~~~~~~~~~~~~~^
+        model=model,
+        ^^^^^^^^^^^^
+    ...<5 lines>...
+        extra_information=extra_information,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 572, in _map_openai_exception
+    raise ServiceUnavailableError(
+    ...<5 lines>...
+    )
+litellm.exceptions.ServiceUnavailableError: litellm.ServiceUnavailableError: ServiceUnavailableError: OpenAIException - Error code: 503
+Root node evidencetrail_investigator failed.
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner_utils.py", line 267, in _drive_root_node
+    await root_ctx._run_node_internal(  # pylint: disable=protected-access
+    ...<3 lines>...
+    )
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/context.py", line 521, in _run_node_internal
+    return await _dynamic_node_scheduler.run_node_internal(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<12 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_dynamic_node_scheduler.py", line 859, in run_node_internal
+    raise DynamicNodeFailError(
+    ...<3 lines>...
+    )
+google.adk.workflow._errors.DynamicNodeFailError: Dynamic node evidencetrail_investigator failed
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/site-packages/google/adk/runners.py", line 873, in _cleanup_root_task
+    await task
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner_utils.py", line 276, in _drive_root_node
+    raise e.error
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner.py", line 176, in run
+    await self._execute_node(ctx, node_input)
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner.py", line 423, in _execute_node
+    await self._run_node_loop(ctx, node_input)
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner.py", line 435, in _run_node_loop
+    async for event in agen:
+    ...<8 lines>...
+        break
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_base_node.py", line 213, in run
+    item = await anext(agen, _sentinel)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/llm_agent.py", line 710, in _run_impl
+    async for event in agen:
+    ...<4 lines>...
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_llm_agent_wrapper.py", line 555, in run_llm_agent_as_node
+    async for event in run_iter:
+    ...<82 lines>...
+        break
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 377, in run_async
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 479, in _run_with_lifecycle
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 169, in stream_in_scope
+    item = await _drive(owned.__anext__())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 157, in _drive
+    return await step
+           ^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 442, in _run
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/llm_agent.py", line 659, in _run_async_impl
+    async for event in agen:
+    ...<8 lines>...
+        should_pause = True
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 295, in run_async
+    async for event in agen:
+    ...<3 lines>...
+        break
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 378, in _run_one_step_async
+    async for llm_response in agen:
+    ...<22 lines>...
+          yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 561, in _call_llm_async
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_model_call.py", line 324, in call_llm_async
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 169, in stream_in_scope
+    item = await _drive(owned.__anext__())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 157, in _drive
+    return await step
+           ^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_model_call.py", line 285, in _call_llm_with_tracing
+    async for llm_response in agen:
+    ...<20 lines>...
+      yield llm_response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 611, in _run_and_handle_error
+    async for response in agen:
+      yield response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_finalizer.py", line 579, in run_and_handle_error
+    raise model_error
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_finalizer.py", line 556, in run_and_handle_error
+    async for llm_response in agen:
+      has_unfinished_partial_stream = bool(llm_response.partial)
+      yield llm_response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/utils/_runner_utils.py", line 66, in _stream_in_caller_scope
+    item = await _InContext(ctx, agen.__anext__())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/utils/_runner_utils.py", line 93, in __await__
+    waiting_on = self._ctx.run(coro.send, value)
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_finalizer.py", line 470, in _record_model_responses
+    async for llm_response in timed:
+      tel_ctx.record_llm_response(invocation_context, llm_response)
+      yield llm_response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 1088, in time_model_awaits
+    async for response in responses:
+      yield response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/models/lite_llm.py", line 5490, in generate_content_async
+    response = await self.llm_client.acompletion(**completion_args)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/models/lite_llm.py", line 1298, in acompletion
+    return await acompletion(
+           ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/chat_completions/dispatch.py", line 130, in acompletion
+    return await _ADISPATCH.arun(
+           ^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/rust_bridge/dispatch.py", line 108, in arun
+    return await python(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/utils.py", line 2859, in wrapper_async
+    raise e
+  File "/usr/local/lib/python3.13/site-packages/litellm/utils.py", line 2648, in wrapper_async
+    result = await original_function(*args, **call_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/main.py", line 1023, in acompletion
+    raise exception_type(
+          ~~~~~~~~~~~~~~^
+        model=model,
+        ^^^^^^^^^^^^
+    ...<3 lines>...
+        extra_kwargs=kwargs,
+        ^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2999, in exception_type
+    raise e  # it's already mapped
+    ^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2741, in exception_type
+    _map_openai_exception(
+    ~~~~~~~~~~~~~~~~~~~~~^
+        model=model,
+        ^^^^^^^^^^^^
+    ...<5 lines>...
+        extra_information=extra_information,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 572, in _map_openai_exception
+    raise ServiceUnavailableError(
+    ...<5 lines>...
+    )
+litellm.exceptions.ServiceUnavailableError: litellm.ServiceUnavailableError: ServiceUnavailableError: OpenAIException - Error code: 503
+
+[1;31mGive Feedback / Get Help: https://github.com/BerriAI/litellm/issues/new[0m
+LiteLLM.Info: If you need to debug this error, use `litellm.turn_on_debug()'.
+
+Node execution failed with exception
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 1025, in acompletion
+    headers, response = await self.make_openai_chat_completion_request(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/logging_utils.py", line 372, in async_wrapper
+    result: Final = await func(*args, **kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 603, in make_openai_chat_completion_request
+    raise e
+  File "/usr/local/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 566, in make_openai_chat_completion_request
+    await openai_aclient.post(
+    ...<6 lines>...
+    )
+  File "/usr/local/lib/python3.13/site-packages/openai/_base_client.py", line 2085, in post
+    return await self.request(cast_to, opts, stream=stream, stream_cls=stream_cls)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/openai/_base_client.py", line 1870, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.InternalServerError: Error code: 503
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/site-packages/litellm/main.py", line 965, in acompletion
+    response = await _resolve_dispatched_chat_response(init_response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/main.py", line 1035, in _resolve_dispatched_chat_response
+    return await pending
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 1061, in acompletion
+    raise OpenAIError(
+    ...<5 lines>...
+    )
+litellm.llms.openai.common_utils.OpenAIError: Error code: 503
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner.py", line 176, in run
+    await self._execute_node(ctx, node_input)
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner.py", line 423, in _execute_node
+    await self._run_node_loop(ctx, node_input)
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner.py", line 435, in _run_node_loop
+    async for event in agen:
+    ...<8 lines>...
+        break
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_base_node.py", line 213, in run
+    item = await anext(agen, _sentinel)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/llm_agent.py", line 710, in _run_impl
+    async for event in agen:
+    ...<4 lines>...
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_llm_agent_wrapper.py", line 555, in run_llm_agent_as_node
+    async for event in run_iter:
+    ...<82 lines>...
+        break
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 377, in run_async
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 479, in _run_with_lifecycle
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 169, in stream_in_scope
+    item = await _drive(owned.__anext__())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 157, in _drive
+    return await step
+           ^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 442, in _run
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/llm_agent.py", line 659, in _run_async_impl
+    async for event in agen:
+    ...<8 lines>...
+        should_pause = True
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 295, in run_async
+    async for event in agen:
+    ...<3 lines>...
+        break
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 378, in _run_one_step_async
+    async for llm_response in agen:
+    ...<22 lines>...
+          yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 561, in _call_llm_async
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_model_call.py", line 324, in call_llm_async
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 169, in stream_in_scope
+    item = await _drive(owned.__anext__())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 157, in _drive
+    return await step
+           ^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_model_call.py", line 285, in _call_llm_with_tracing
+    async for llm_response in agen:
+    ...<20 lines>...
+      yield llm_response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 611, in _run_and_handle_error
+    async for response in agen:
+      yield response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_finalizer.py", line 579, in run_and_handle_error
+    raise model_error
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_finalizer.py", line 556, in run_and_handle_error
+    async for llm_response in agen:
+      has_unfinished_partial_stream = bool(llm_response.partial)
+      yield llm_response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/utils/_runner_utils.py", line 66, in _stream_in_caller_scope
+    item = await _InContext(ctx, agen.__anext__())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/utils/_runner_utils.py", line 93, in __await__
+    waiting_on = self._ctx.run(coro.send, value)
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_finalizer.py", line 470, in _record_model_responses
+    async for llm_response in timed:
+      tel_ctx.record_llm_response(invocation_context, llm_response)
+      yield llm_response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 1088, in time_model_awaits
+    async for response in responses:
+      yield response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/models/lite_llm.py", line 5490, in generate_content_async
+    response = await self.llm_client.acompletion(**completion_args)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/models/lite_llm.py", line 1298, in acompletion
+    return await acompletion(
+           ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/chat_completions/dispatch.py", line 130, in acompletion
+    return await _ADISPATCH.arun(
+           ^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/rust_bridge/dispatch.py", line 108, in arun
+    return await python(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/utils.py", line 2859, in wrapper_async
+    raise e
+  File "/usr/local/lib/python3.13/site-packages/litellm/utils.py", line 2648, in wrapper_async
+    result = await original_function(*args, **call_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/main.py", line 1023, in acompletion
+    raise exception_type(
+          ~~~~~~~~~~~~~~^
+        model=model,
+        ^^^^^^^^^^^^
+    ...<3 lines>...
+        extra_kwargs=kwargs,
+        ^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2999, in exception_type
+    raise e  # it's already mapped
+    ^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2741, in exception_type
+    _map_openai_exception(
+    ~~~~~~~~~~~~~~~~~~~~~^
+        model=model,
+        ^^^^^^^^^^^^
+    ...<5 lines>...
+        extra_information=extra_information,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 572, in _map_openai_exception
+    raise ServiceUnavailableError(
+    ...<5 lines>...
+    )
+litellm.exceptions.ServiceUnavailableError: litellm.ServiceUnavailableError: ServiceUnavailableError: OpenAIException - Error code: 503
+Root node evidencetrail_investigator failed.
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner_utils.py", line 267, in _drive_root_node
+    await root_ctx._run_node_internal(  # pylint: disable=protected-access
+    ...<3 lines>...
+    )
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/context.py", line 521, in _run_node_internal
+    return await _dynamic_node_scheduler.run_node_internal(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<12 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_dynamic_node_scheduler.py", line 859, in run_node_internal
+    raise DynamicNodeFailError(
+    ...<3 lines>...
+    )
+google.adk.workflow._errors.DynamicNodeFailError: Dynamic node evidencetrail_investigator failed
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/site-packages/google/adk/runners.py", line 873, in _cleanup_root_task
+    await task
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner_utils.py", line 276, in _drive_root_node
+    raise e.error
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner.py", line 176, in run
+    await self._execute_node(ctx, node_input)
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner.py", line 423, in _execute_node
+    await self._run_node_loop(ctx, node_input)
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner.py", line 435, in _run_node_loop
+    async for event in agen:
+    ...<8 lines>...
+        break
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_base_node.py", line 213, in run
+    item = await anext(agen, _sentinel)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/llm_agent.py", line 710, in _run_impl
+    async for event in agen:
+    ...<4 lines>...
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_llm_agent_wrapper.py", line 555, in run_llm_agent_as_node
+    async for event in run_iter:
+    ...<82 lines>...
+        break
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 377, in run_async
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 479, in _run_with_lifecycle
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 169, in stream_in_scope
+    item = await _drive(owned.__anext__())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 157, in _drive
+    return await step
+           ^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 442, in _run
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/llm_agent.py", line 659, in _run_async_impl
+    async for event in agen:
+    ...<8 lines>...
+        should_pause = True
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 295, in run_async
+    async for event in agen:
+    ...<3 lines>...
+        break
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 378, in _run_one_step_async
+    async for llm_response in agen:
+    ...<22 lines>...
+          yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 561, in _call_llm_async
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_model_call.py", line 324, in call_llm_async
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 169, in stream_in_scope
+    item = await _drive(owned.__anext__())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 157, in _drive
+    return await step
+           ^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_model_call.py", line 285, in _call_llm_with_tracing
+    async for llm_response in agen:
+    ...<20 lines>...
+      yield llm_response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 611, in _run_and_handle_error
+    async for response in agen:
+      yield response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_finalizer.py", line 579, in run_and_handle_error
+    raise model_error
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_finalizer.py", line 556, in run_and_handle_error
+    async for llm_response in agen:
+      has_unfinished_partial_stream = bool(llm_response.partial)
+      yield llm_response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/utils/_runner_utils.py", line 66, in _stream_in_caller_scope
+    item = await _InContext(ctx, agen.__anext__())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/utils/_runner_utils.py", line 93, in __await__
+    waiting_on = self._ctx.run(coro.send, value)
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_finalizer.py", line 470, in _record_model_responses
+    async for llm_response in timed:
+      tel_ctx.record_llm_response(invocation_context, llm_response)
+      yield llm_response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 1088, in time_model_awaits
+    async for response in responses:
+      yield response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/models/lite_llm.py", line 5490, in generate_content_async
+    response = await self.llm_client.acompletion(**completion_args)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/models/lite_llm.py", line 1298, in acompletion
+    return await acompletion(
+           ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/chat_completions/dispatch.py", line 130, in acompletion
+    return await _ADISPATCH.arun(
+           ^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/rust_bridge/dispatch.py", line 108, in arun
+    return await python(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/utils.py", line 2859, in wrapper_async
+    raise e
+  File "/usr/local/lib/python3.13/site-packages/litellm/utils.py", line 2648, in wrapper_async
+    result = await original_function(*args, **call_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/main.py", line 1023, in acompletion
+    raise exception_type(
+          ~~~~~~~~~~~~~~^
+        model=model,
+        ^^^^^^^^^^^^
+    ...<3 lines>...
+        extra_kwargs=kwargs,
+        ^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2999, in exception_type
+    raise e  # it's already mapped
+    ^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2741, in exception_type
+    _map_openai_exception(
+    ~~~~~~~~~~~~~~~~~~~~~^
+        model=model,
+        ^^^^^^^^^^^^
+    ...<5 lines>...
+        extra_information=extra_information,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 572, in _map_openai_exception
+    raise ServiceUnavailableError(
+    ...<5 lines>...
+    )
+litellm.exceptions.ServiceUnavailableError: litellm.ServiceUnavailableError: ServiceUnavailableError: OpenAIException - Error code: 503
+
+[1;31mGive Feedback / Get Help: https://github.com/BerriAI/litellm/issues/new[0m
+LiteLLM.Info: If you need to debug this error, use `litellm.turn_on_debug()'.
+
+Node execution failed with exception
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 1025, in acompletion
+    headers, response = await self.make_openai_chat_completion_request(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/logging_utils.py", line 372, in async_wrapper
+    result: Final = await func(*args, **kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 603, in make_openai_chat_completion_request
+    raise e
+  File "/usr/local/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 566, in make_openai_chat_completion_request
+    await openai_aclient.post(
+    ...<6 lines>...
+    )
+  File "/usr/local/lib/python3.13/site-packages/openai/_base_client.py", line 2085, in post
+    return await self.request(cast_to, opts, stream=stream, stream_cls=stream_cls)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/openai/_base_client.py", line 1870, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.InternalServerError: Error code: 503
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/site-packages/litellm/main.py", line 965, in acompletion
+    response = await _resolve_dispatched_chat_response(init_response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/main.py", line 1035, in _resolve_dispatched_chat_response
+    return await pending
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 1061, in acompletion
+    raise OpenAIError(
+    ...<5 lines>...
+    )
+litellm.llms.openai.common_utils.OpenAIError: Error code: 503
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner.py", line 176, in run
+    await self._execute_node(ctx, node_input)
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner.py", line 423, in _execute_node
+    await self._run_node_loop(ctx, node_input)
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner.py", line 435, in _run_node_loop
+    async for event in agen:
+    ...<8 lines>...
+        break
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_base_node.py", line 213, in run
+    item = await anext(agen, _sentinel)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/llm_agent.py", line 710, in _run_impl
+    async for event in agen:
+    ...<4 lines>...
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_llm_agent_wrapper.py", line 555, in run_llm_agent_as_node
+    async for event in run_iter:
+    ...<82 lines>...
+        break
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 377, in run_async
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 479, in _run_with_lifecycle
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 169, in stream_in_scope
+    item = await _drive(owned.__anext__())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 157, in _drive
+    return await step
+           ^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 442, in _run
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/llm_agent.py", line 659, in _run_async_impl
+    async for event in agen:
+    ...<8 lines>...
+        should_pause = True
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 295, in run_async
+    async for event in agen:
+    ...<3 lines>...
+        break
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 378, in _run_one_step_async
+    async for llm_response in agen:
+    ...<22 lines>...
+          yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 561, in _call_llm_async
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_model_call.py", line 324, in call_llm_async
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 169, in stream_in_scope
+    item = await _drive(owned.__anext__())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 157, in _drive
+    return await step
+           ^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_model_call.py", line 285, in _call_llm_with_tracing
+    async for llm_response in agen:
+    ...<20 lines>...
+      yield llm_response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 611, in _run_and_handle_error
+    async for response in agen:
+      yield response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_finalizer.py", line 579, in run_and_handle_error
+    raise model_error
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_finalizer.py", line 556, in run_and_handle_error
+    async for llm_response in agen:
+      has_unfinished_partial_stream = bool(llm_response.partial)
+      yield llm_response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/utils/_runner_utils.py", line 66, in _stream_in_caller_scope
+    item = await _InContext(ctx, agen.__anext__())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/utils/_runner_utils.py", line 93, in __await__
+    waiting_on = self._ctx.run(coro.send, value)
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_finalizer.py", line 470, in _record_model_responses
+    async for llm_response in timed:
+      tel_ctx.record_llm_response(invocation_context, llm_response)
+      yield llm_response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 1088, in time_model_awaits
+    async for response in responses:
+      yield response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/models/lite_llm.py", line 5490, in generate_content_async
+    response = await self.llm_client.acompletion(**completion_args)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/models/lite_llm.py", line 1298, in acompletion
+    return await acompletion(
+           ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/chat_completions/dispatch.py", line 130, in acompletion
+    return await _ADISPATCH.arun(
+           ^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/rust_bridge/dispatch.py", line 108, in arun
+    return await python(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/utils.py", line 2859, in wrapper_async
+    raise e
+  File "/usr/local/lib/python3.13/site-packages/litellm/utils.py", line 2648, in wrapper_async
+    result = await original_function(*args, **call_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/main.py", line 1023, in acompletion
+    raise exception_type(
+          ~~~~~~~~~~~~~~^
+        model=model,
+        ^^^^^^^^^^^^
+    ...<3 lines>...
+        extra_kwargs=kwargs,
+        ^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2999, in exception_type
+    raise e  # it's already mapped
+    ^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2741, in exception_type
+    _map_openai_exception(
+    ~~~~~~~~~~~~~~~~~~~~~^
+        model=model,
+        ^^^^^^^^^^^^
+    ...<5 lines>...
+        extra_information=extra_information,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 572, in _map_openai_exception
+    raise ServiceUnavailableError(
+    ...<5 lines>...
+    )
+litellm.exceptions.ServiceUnavailableError: litellm.ServiceUnavailableError: ServiceUnavailableError: OpenAIException - Error code: 503
+Root node evidencetrail_investigator failed.
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner_utils.py", line 267, in _drive_root_node
+    await root_ctx._run_node_internal(  # pylint: disable=protected-access
+    ...<3 lines>...
+    )
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/context.py", line 521, in _run_node_internal
+    return await _dynamic_node_scheduler.run_node_internal(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<12 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_dynamic_node_scheduler.py", line 859, in run_node_internal
+    raise DynamicNodeFailError(
+    ...<3 lines>...
+    )
+google.adk.workflow._errors.DynamicNodeFailError: Dynamic node evidencetrail_investigator failed
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/site-packages/google/adk/runners.py", line 873, in _cleanup_root_task
+    await task
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner_utils.py", line 276, in _drive_root_node
+    raise e.error
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner.py", line 176, in run
+    await self._execute_node(ctx, node_input)
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner.py", line 423, in _execute_node
+    await self._run_node_loop(ctx, node_input)
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner.py", line 435, in _run_node_loop
+    async for event in agen:
+    ...<8 lines>...
+        break
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_base_node.py", line 213, in run
+    item = await anext(agen, _sentinel)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/llm_agent.py", line 710, in _run_impl
+    async for event in agen:
+    ...<4 lines>...
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_llm_agent_wrapper.py", line 555, in run_llm_agent_as_node
+    async for event in run_iter:
+    ...<82 lines>...
+        break
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 377, in run_async
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 479, in _run_with_lifecycle
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 169, in stream_in_scope
+    item = await _drive(owned.__anext__())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 157, in _drive
+    return await step
+           ^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 442, in _run
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/llm_agent.py", line 659, in _run_async_impl
+    async for event in agen:
+    ...<8 lines>...
+        should_pause = True
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 295, in run_async
+    async for event in agen:
+    ...<3 lines>...
+        break
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 378, in _run_one_step_async
+    async for llm_response in agen:
+    ...<22 lines>...
+          yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 561, in _call_llm_async
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_model_call.py", line 324, in call_llm_async
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 169, in stream_in_scope
+    item = await _drive(owned.__anext__())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 157, in _drive
+    return await step
+           ^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_model_call.py", line 285, in _call_llm_with_tracing
+    async for llm_response in agen:
+    ...<20 lines>...
+      yield llm_response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 611, in _run_and_handle_error
+    async for response in agen:
+      yield response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_finalizer.py", line 579, in run_and_handle_error
+    raise model_error
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_finalizer.py", line 556, in run_and_handle_error
+    async for llm_response in agen:
+      has_unfinished_partial_stream = bool(llm_response.partial)
+      yield llm_response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/utils/_runner_utils.py", line 66, in _stream_in_caller_scope
+    item = await _InContext(ctx, agen.__anext__())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/utils/_runner_utils.py", line 93, in __await__
+    waiting_on = self._ctx.run(coro.send, value)
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_finalizer.py", line 470, in _record_model_responses
+    async for llm_response in timed:
+      tel_ctx.record_llm_response(invocation_context, llm_response)
+      yield llm_response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 1088, in time_model_awaits
+    async for response in responses:
+      yield response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/models/lite_llm.py", line 5490, in generate_content_async
+    response = await self.llm_client.acompletion(**completion_args)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/models/lite_llm.py", line 1298, in acompletion
+    return await acompletion(
+           ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/chat_completions/dispatch.py", line 130, in acompletion
+    return await _ADISPATCH.arun(
+           ^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/rust_bridge/dispatch.py", line 108, in arun
+    return await python(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/utils.py", line 2859, in wrapper_async
+    raise e
+  File "/usr/local/lib/python3.13/site-packages/litellm/utils.py", line 2648, in wrapper_async
+    result = await original_function(*args, **call_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/main.py", line 1023, in acompletion
+    raise exception_type(
+          ~~~~~~~~~~~~~~^
+        model=model,
+        ^^^^^^^^^^^^
+    ...<3 lines>...
+        extra_kwargs=kwargs,
+        ^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2999, in exception_type
+    raise e  # it's already mapped
+    ^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2741, in exception_type
+    _map_openai_exception(
+    ~~~~~~~~~~~~~~~~~~~~~^
+        model=model,
+        ^^^^^^^^^^^^
+    ...<5 lines>...
+        extra_information=extra_information,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 572, in _map_openai_exception
+    raise ServiceUnavailableError(
+    ...<5 lines>...
+    )
+litellm.exceptions.ServiceUnavailableError: litellm.ServiceUnavailableError: ServiceUnavailableError: OpenAIException - Error code: 503
+
+[1;31mGive Feedback / Get Help: https://github.com/BerriAI/litellm/issues/new[0m
+LiteLLM.Info: If you need to debug this error, use `litellm.turn_on_debug()'.
+
+Node execution failed with exception
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 1025, in acompletion
+    headers, response = await self.make_openai_chat_completion_request(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/logging_utils.py", line 372, in async_wrapper
+    result: Final = await func(*args, **kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 603, in make_openai_chat_completion_request
+    raise e
+  File "/usr/local/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 566, in make_openai_chat_completion_request
+    await openai_aclient.post(
+    ...<6 lines>...
+    )
+  File "/usr/local/lib/python3.13/site-packages/openai/_base_client.py", line 2085, in post
+    return await self.request(cast_to, opts, stream=stream, stream_cls=stream_cls)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/openai/_base_client.py", line 1870, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.InternalServerError: Error code: 503
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/site-packages/litellm/main.py", line 965, in acompletion
+    response = await _resolve_dispatched_chat_response(init_response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/main.py", line 1035, in _resolve_dispatched_chat_response
+    return await pending
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 1061, in acompletion
+    raise OpenAIError(
+    ...<5 lines>...
+    )
+litellm.llms.openai.common_utils.OpenAIError: Error code: 503
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner.py", line 176, in run
+    await self._execute_node(ctx, node_input)
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner.py", line 423, in _execute_node
+    await self._run_node_loop(ctx, node_input)
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner.py", line 435, in _run_node_loop
+    async for event in agen:
+    ...<8 lines>...
+        break
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_base_node.py", line 213, in run
+    item = await anext(agen, _sentinel)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/llm_agent.py", line 710, in _run_impl
+    async for event in agen:
+    ...<4 lines>...
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_llm_agent_wrapper.py", line 555, in run_llm_agent_as_node
+    async for event in run_iter:
+    ...<82 lines>...
+        break
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 377, in run_async
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 479, in _run_with_lifecycle
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 169, in stream_in_scope
+    item = await _drive(owned.__anext__())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 157, in _drive
+    return await step
+           ^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 442, in _run
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/llm_agent.py", line 659, in _run_async_impl
+    async for event in agen:
+    ...<8 lines>...
+        should_pause = True
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 295, in run_async
+    async for event in agen:
+    ...<3 lines>...
+        break
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 378, in _run_one_step_async
+    async for llm_response in agen:
+    ...<22 lines>...
+          yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 561, in _call_llm_async
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_model_call.py", line 324, in call_llm_async
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 169, in stream_in_scope
+    item = await _drive(owned.__anext__())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 157, in _drive
+    return await step
+           ^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_model_call.py", line 285, in _call_llm_with_tracing
+    async for llm_response in agen:
+    ...<20 lines>...
+      yield llm_response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 611, in _run_and_handle_error
+    async for response in agen:
+      yield response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_finalizer.py", line 579, in run_and_handle_error
+    raise model_error
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_finalizer.py", line 556, in run_and_handle_error
+    async for llm_response in agen:
+      has_unfinished_partial_stream = bool(llm_response.partial)
+      yield llm_response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/utils/_runner_utils.py", line 66, in _stream_in_caller_scope
+    item = await _InContext(ctx, agen.__anext__())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/utils/_runner_utils.py", line 93, in __await__
+    waiting_on = self._ctx.run(coro.send, value)
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_finalizer.py", line 470, in _record_model_responses
+    async for llm_response in timed:
+      tel_ctx.record_llm_response(invocation_context, llm_response)
+      yield llm_response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 1088, in time_model_awaits
+    async for response in responses:
+      yield response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/models/lite_llm.py", line 5490, in generate_content_async
+    response = await self.llm_client.acompletion(**completion_args)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/models/lite_llm.py", line 1298, in acompletion
+    return await acompletion(
+           ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/chat_completions/dispatch.py", line 130, in acompletion
+    return await _ADISPATCH.arun(
+           ^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/rust_bridge/dispatch.py", line 108, in arun
+    return await python(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/utils.py", line 2859, in wrapper_async
+    raise e
+  File "/usr/local/lib/python3.13/site-packages/litellm/utils.py", line 2648, in wrapper_async
+    result = await original_function(*args, **call_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/main.py", line 1023, in acompletion
+    raise exception_type(
+          ~~~~~~~~~~~~~~^
+        model=model,
+        ^^^^^^^^^^^^
+    ...<3 lines>...
+        extra_kwargs=kwargs,
+        ^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2999, in exception_type
+    raise e  # it's already mapped
+    ^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2741, in exception_type
+    _map_openai_exception(
+    ~~~~~~~~~~~~~~~~~~~~~^
+        model=model,
+        ^^^^^^^^^^^^
+    ...<5 lines>...
+        extra_information=extra_information,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 572, in _map_openai_exception
+    raise ServiceUnavailableError(
+    ...<5 lines>...
+    )
+litellm.exceptions.ServiceUnavailableError: litellm.ServiceUnavailableError: ServiceUnavailableError: OpenAIException - Error code: 503
+Root node evidencetrail_investigator failed.
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner_utils.py", line 267, in _drive_root_node
+    await root_ctx._run_node_internal(  # pylint: disable=protected-access
+    ...<3 lines>...
+    )
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/context.py", line 521, in _run_node_internal
+    return await _dynamic_node_scheduler.run_node_internal(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<12 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_dynamic_node_scheduler.py", line 859, in run_node_internal
+    raise DynamicNodeFailError(
+    ...<3 lines>...
+    )
+google.adk.workflow._errors.DynamicNodeFailError: Dynamic node evidencetrail_investigator failed
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.13/site-packages/google/adk/runners.py", line 873, in _cleanup_root_task
+    await task
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner_utils.py", line 276, in _drive_root_node
+    raise e.error
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner.py", line 176, in run
+    await self._execute_node(ctx, node_input)
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner.py", line 423, in _execute_node
+    await self._run_node_loop(ctx, node_input)
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_node_runner.py", line 435, in _run_node_loop
+    async for event in agen:
+    ...<8 lines>...
+        break
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_base_node.py", line 213, in run
+    item = await anext(agen, _sentinel)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/llm_agent.py", line 710, in _run_impl
+    async for event in agen:
+    ...<4 lines>...
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/workflow/_llm_agent_wrapper.py", line 555, in run_llm_agent_as_node
+    async for event in run_iter:
+    ...<82 lines>...
+        break
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 377, in run_async
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 479, in _run_with_lifecycle
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 169, in stream_in_scope
+    item = await _drive(owned.__anext__())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 157, in _drive
+    return await step
+           ^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 442, in _run
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/agents/llm_agent.py", line 659, in _run_async_impl
+    async for event in agen:
+    ...<8 lines>...
+        should_pause = True
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 295, in run_async
+    async for event in agen:
+    ...<3 lines>...
+        break
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 378, in _run_one_step_async
+    async for llm_response in agen:
+    ...<22 lines>...
+          yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 561, in _call_llm_async
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_model_call.py", line 324, in call_llm_async
+    async for event in agen:
+      yield event
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 169, in stream_in_scope
+    item = await _drive(owned.__anext__())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 157, in _drive
+    return await step
+           ^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_model_call.py", line 285, in _call_llm_with_tracing
+    async for llm_response in agen:
+    ...<20 lines>...
+      yield llm_response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 611, in _run_and_handle_error
+    async for response in agen:
+      yield response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_finalizer.py", line 579, in run_and_handle_error
+    raise model_error
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_finalizer.py", line 556, in run_and_handle_error
+    async for llm_response in agen:
+      has_unfinished_partial_stream = bool(llm_response.partial)
+      yield llm_response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/utils/_runner_utils.py", line 66, in _stream_in_caller_scope
+    item = await _InContext(ctx, agen.__anext__())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/utils/_runner_utils.py", line 93, in __await__
+    waiting_on = self._ctx.run(coro.send, value)
+  File "/usr/local/lib/python3.13/site-packages/google/adk/flows/llm_flows/core/_finalizer.py", line 470, in _record_model_responses
+    async for llm_response in timed:
+      tel_ctx.record_llm_response(invocation_context, llm_response)
+      yield llm_response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/telemetry/_instrumentation.py", line 1088, in time_model_awaits
+    async for response in responses:
+      yield response
+  File "/usr/local/lib/python3.13/site-packages/google/adk/models/lite_llm.py", line 5490, in generate_content_async
+    response = await self.llm_client.acompletion(**completion_args)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/google/adk/models/lite_llm.py", line 1298, in acompletion
+    return await acompletion(
+           ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/chat_completions/dispatch.py", line 130, in acompletion
+    return await _ADISPATCH.arun(
+           ^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/rust_bridge/dispatch.py", line 108, in arun
+    return await python(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/utils.py", line 2859, in wrapper_async
+    raise e
+  File "/usr/local/lib/python3.13/site-packages/litellm/utils.py", line 2648, in wrapper_async
+    result = await original_function(*args, **call_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/main.py", line 1023, in acompletion
+    raise exception_type(
+          ~~~~~~~~~~~~~~^
+        model=model,
+        ^^^^^^^^^^^^
+    ...<3 lines>...
+        extra_kwargs=kwargs,
+        ^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2999, in exception_type
+    raise e  # it's already mapped
+    ^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2741, in exception_type
+    _map_openai_exception(
+    ~~~~~~~~~~~~~~~~~~~~~^
+        model=model,
+        ^^^^^^^^^^^^
+    ...<5 lines>...
+        extra_information=extra_information,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 572, in _map_openai_exception
+    raise ServiceUnavailableError(
+    ...<5 lines>...
+    )
+litellm.exceptions.ServiceUnavailableError: litellm.ServiceUnavailableError: ServiceUnavailableError: OpenAIException - Error code: 503
+  S05 EvidenceTrail_ADK  -> cart/crash_or_unreachable [DIAGNOSIS] top1=True (275.9s)
+== S06: crash on recommendation
