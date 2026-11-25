@@ -1,0 +1,307 @@
+{
+ "scenario": {
+  "id": "S08",
+  "service": "inventory",
+  "kind": "pool_exhaustion",
+  "params": {},
+  "alert": "frontend 5xx ratio above 5% for 1m"
+ },
+ "truth": {
+  "service": "inventory",
+  "fault_type": "resource_exhaustion"
+ },
+ "injected_at": 1795098504.7016644,
+ "methods": {
+  "B1_dashboard_rule": {
+   "method": "B1_dashboard_rule",
+   "root_cause_service": "catalog",
+   "fault_type": null,
+   "ranked_candidates": [
+    "catalog",
+    "inventory",
+    "frontend"
+   ],
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 0.0,
+   "usage": {
+    "total_tokens": 0,
+    "calls": 0
+   },
+   "score": {
+    "top1": false,
+    "top3": true,
+    "type_ok": null,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "B0_single_prompt": {
+   "method": "B0_single_prompt",
+   "root_cause_service": "inventory",
+   "fault_type": "resource_exhaustion",
+   "ranked_candidates": [
+    "inventory",
+    "catalog",
+    "frontend"
+   ],
+   "summary": "The inventory service experienced resource exhaustion (database connection pool exhaustion with 20/20 connections in use), which caused timeouts, leading to cascading HTTP 503 errors in the catalog service and subsequently HTTP 502 errors and high 5xx ratios in the frontend service.",
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 264.0,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 13508,
+    "completion_tokens": 123,
+    "retries": 2,
+    "failures": 4,
+    "total_tokens": 13631
+   },
+   "model": "gemini-flash-lite-latest",
+   "prompt_chars": 26293,
+   "error": null,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail": {
+   "alert": "frontend 5xx ratio above 5% for 1m",
+   "model": "gemini-flash-lite-latest,gemini-3.1-flash-lite",
+   "elapsed_s": 17.6,
+   "usage": {
+    "calls": 3,
+    "prompt_tokens": 8391,
+    "completion_tokens": 391,
+    "retries": 0,
+    "failures": 4,
+    "total_tokens": 8782
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "health_evidence_id": "M-5c5e49",
+     "graph_evidence_id": "T-3e5a4b",
+     "suspects": [
+      {
+       "service": "cart",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": null,
+        "baseline_p95_ms": null
+       }
+      },
+      {
+       "service": "checkout",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": null,
+        "baseline_p95_ms": null
+       }
+      },
+      {
+       "service": "currency",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": null,
+        "baseline_p95_ms": null
+       }
+      },
+      {
+       "service": "payment",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": null,
+        "baseline_p95_ms": null
+       }
+      },
+      {
+       "service": "recommendation",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": null,
+        "baseline_p95_ms": null
+       }
+      },
+      {
+       "service": "shipping",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": null,
+        "baseline_p95_ms": null
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "cart",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "checkout",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "currency",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "checkout"
+     },
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "inventory"
+     },
+     "evidence_ids": [
+      "L-471bd0"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "service": "inventory",
+      "name": "db_pool_in_use"
+     },
+     "evidence_ids": [
+      "M-097607"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "cart",
+    "checkout",
+    "currency",
+    "payment",
+    "recommendation",
+    "shipping"
+   ],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "inventory",
+   "fault_type": "resource_exhaustion",
+   "ranked_candidates": [
+    "inventory",
+    "catalog",
+    "frontend"
+   ],
+   "confidence": 1.0,
+   "summary": "The inventory service is experiencing resource exhaustion due to database connection pool saturation (20/20 in use), which is causing timeouts and propagating errors up to the catalog and frontend services. No recent deployments or configuration changes were found.",
+   "claims": [
+    {
+     "is_root_cause_claim": true,
+     "evidence_ids": [
+      "L-471bd0"
+     ],
+     "text": "The inventory service is failing because it has exhausted its database connection pool.",
+     "quote": "timeout acquiring DB connection after 2000ms (pool 20/20 in use)",
+     "evidence": [
+      {
+       "id": "L-471bd0",
+       "kind": "log",
+       "ref": "inventory.log:13102",
+       "text": "timeout acquiring DB connection after 2000ms (pool 20/20 in use)",
+       "meta": {
+        "service": "inventory",
+        "line": 13102,
+        "ts": "2026-11-19T14:33:48.509+00:00",
+        "level": "ERROR",
+        "trace_id": "8d3fd872ddfd90c4ada1eda82f87f507",
+        "count_in_window": 922
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [
+    {
+     "quote": "[1795098708, 20.0], [1795098718, 20.0]... [1795098828, 20.0]",
+     "is_root_cause_claim": false,
+     "evidence_ids": [
+      "M-097607"
+     ],
+     "text": "The database connection pool for the inventory service is consistently at its maximum capacity of 20.",
+     "rejected_because": [
+      "quoted text not found in cited evidence"
+     ]
+    }
+   ],
+   "evidence_precision": 0.5,
+   "rejected_hypotheses": [],
+   "suggested_action": {
+    "why": "The inventory service is hitting its database connection pool limit, indicating it needs more resources or a larger pool to handle the current request volume.",
+    "service": "inventory",
+    "action": "scale_up",
+    "risk": "blocked",
+    "description": "Not supported in the Compose test environment; always blocked",
+    "dry_run": "(blocked)"
+   },
+   "evidence_items": 4,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  }
+ }
+}

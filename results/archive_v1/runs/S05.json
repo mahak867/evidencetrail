@@ -1,0 +1,322 @@
+{
+ "scenario": {
+  "id": "S05",
+  "service": "cart",
+  "kind": "crash",
+  "params": {},
+  "alert": "frontend 5xx ratio above 5% for 1m"
+ },
+ "truth": {
+  "service": "cart",
+  "fault_type": "crash_or_unreachable"
+ },
+ "injected_at": 1795097583.4851143,
+ "methods": {
+  "B1_dashboard_rule": {
+   "method": "B1_dashboard_rule",
+   "root_cause_service": "frontend",
+   "fault_type": null,
+   "ranked_candidates": [
+    "frontend",
+    "catalog",
+    "recommendation"
+   ],
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 0.0,
+   "usage": {
+    "total_tokens": 0,
+    "calls": 0
+   },
+   "score": {
+    "top1": false,
+    "top3": false,
+    "type_ok": null,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "B0_single_prompt": {
+   "method": "B0_single_prompt",
+   "root_cause_service": "cart",
+   "fault_type": "crash_or_unreachable",
+   "ranked_candidates": [
+    "cart",
+    "frontend",
+    "checkout"
+   ],
+   "summary": "The cart service stopped generating logs and incoming TCP connections from frontend to cart:8000 failed with 'connection refused', indicating the cart service crashed or became unreachable.",
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 23.3,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 12253,
+    "completion_tokens": 101,
+    "retries": 0,
+    "failures": 2,
+    "total_tokens": 12354
+   },
+   "model": "gemini-3.5-flash",
+   "prompt_chars": 21669,
+   "error": null,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail": {
+   "alert": "frontend 5xx ratio above 5% for 1m",
+   "model": "gemini-3.1-flash-lite,gemini-3.5-flash",
+   "elapsed_s": 34.5,
+   "usage": {
+    "calls": 3,
+    "prompt_tokens": 10078,
+    "completion_tokens": 316,
+    "retries": 0,
+    "failures": 2,
+    "total_tokens": 10394
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "health_evidence_id": "M-9e636f",
+     "graph_evidence_id": "T-7e0ee6",
+     "suspects": [
+      {
+       "service": "cart",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": null,
+        "baseline_p95_ms": 23.9
+       }
+      },
+      {
+       "service": "payment",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": null,
+        "baseline_p95_ms": 24.0
+       }
+      },
+      {
+       "service": "shipping",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": null,
+        "baseline_p95_ms": 3884.4
+       }
+      },
+      {
+       "service": "frontend",
+       "anomalous_dependencies": [
+        "cart",
+        "checkout"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 7.91,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 462.0,
+        "baseline_p95_ms": 3683.7
+       }
+      },
+      {
+       "service": "checkout",
+       "anomalous_dependencies": [
+        "cart",
+        "payment",
+        "shipping"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": null,
+        "baseline_p95_ms": 4442.2
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "cart",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "payment",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "shipping",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "payment"
+     },
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "frontend"
+     },
+     "evidence_ids": [
+      "L-688a89",
+      "L-28eb03"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "frontend"
+     },
+     "evidence_ids": [
+      "T-ce80fe",
+      "T-fb43aa",
+      "T-8b94dd",
+      "T-a87eaa",
+      "T-e48c9b"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "service": "cart",
+      "name": "up"
+     },
+     "evidence_ids": [
+      "M-21bb71"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "cart",
+    "payment",
+    "shipping",
+    "frontend",
+    "checkout"
+   ],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "cart",
+   "fault_type": "crash_or_unreachable",
+   "ranked_candidates": [
+    "cart",
+    "frontend"
+   ],
+   "confidence": 1.0,
+   "summary": "The frontend service is experiencing 5xx errors because the cart service is down and refusing connections. The 'up' metric for the cart service confirms it is currently unreachable.",
+   "claims": [
+    {
+     "evidence_ids": [
+      "L-688a89"
+     ],
+     "is_root_cause_claim": true,
+     "text": "The frontend service is failing because it cannot connect to the cart service.",
+     "quote": "connection refused: cart:8000 (dial tcp: connect: connection refused)",
+     "evidence": [
+      {
+       "id": "L-688a89",
+       "kind": "log",
+       "ref": "frontend.log:11717",
+       "text": "connection refused: cart:8000 (dial tcp: connect: connection refused)",
+       "meta": {
+        "service": "frontend",
+        "line": 11717,
+        "ts": "2026-11-19T14:14:26.728+00:00",
+        "level": "ERROR",
+        "trace_id": "8afe9dcf386fd1ea14e7869c391c7a3d",
+        "count_in_window": 664
+       }
+      }
+     ]
+    },
+    {
+     "is_root_cause_claim": true,
+     "text": "The cart service is down, as indicated by the 'up' metric dropping to 0.",
+     "quote": "[1795097586, 0.0]",
+     "evidence_ids": [
+      "M-21bb71"
+     ],
+     "evidence": [
+      {
+       "id": "M-21bb71",
+       "kind": "metric",
+       "ref": "cart.up",
+       "text": "[{\"labels\": {\"instance_service\": \"cart\"}, \"points\": [[1795097546, 1.0], [1795097556, 1.0], [1795097566, 1.0], [1795097576, 1.0], [1795097586, 0.0], [1795097596, 0.0], [1795097606, 0.0], [1795097616, 0.0], [1795097626, 0.0], [1795097636, 0.0], [1795097646, 0.0], [1795097656, 0.0], [1795097666, 0.0]]}]",
+       "meta": {
+        "service": "cart",
+        "metric": "up",
+        "query": "up{instance_service=\"cart\"}",
+        "window": [
+         1795097546,
+         1795097666
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [],
+   "evidence_precision": 1.0,
+   "rejected_hypotheses": [],
+   "suggested_action": {
+    "action": "start_service",
+    "why": "The cart service is currently unreachable and needs to be restarted.",
+    "service": "cart",
+    "risk": "risky",
+    "description": "Starts a stopped service container",
+    "dry_run": "docker compose start cart"
+   },
+   "evidence_items": 10,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  }
+ }
+}

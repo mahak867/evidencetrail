@@ -35,7 +35,26 @@ class EvidenceStore:
 
 
 def _norm(s: str) -> str:
-    return re.sub(r"\s+", " ", s.lower()).strip()
+    s = s.lower().replace("\u201c", '"').replace("\u201d", '"').replace("\u2019", "'")
+    s = re.sub(r"[^a-z0-9.%:_/ -]+", " ", s)
+    return re.sub(r"\s+", " ", s).strip()
+
+
+def quote_supported(quote: str, text: str) -> bool:
+    """True if the quote appears in the evidence, allowing for punctuation and spacing
+    differences, or if at least 85% of its words (4+ words) appear in order in the evidence."""
+    q, t = _norm(quote), _norm(text)
+    if not q or q in t:
+        return True
+    words = q.split()
+    if len(words) < 4:
+        return False
+    pos, hits = 0, 0
+    for w in words:
+        i = t.find(w, pos)
+        if i >= 0:
+            hits, pos = hits + 1, i + len(w)
+    return hits / len(words) >= 0.85
 
 
 @dataclass
@@ -62,7 +81,7 @@ def gate(claims: list[dict], store: EvidenceStore) -> GateResult:
                 problems.append(f"{eid} was never fetched (fabricated citation)")
         quote = (c.get("quote") or "").strip()
         if quote and ids and not problems:
-            if not any(_norm(quote) in _norm(store.get(e).text) for e in ids):
+            if not any(quote_supported(quote, store.get(e).text) for e in ids):
                 problems.append("quoted text not found in cited evidence")
         if problems:
             dropped.append({**c, "rejected_because": problems})

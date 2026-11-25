@@ -21,7 +21,7 @@ REASONING = os.environ.get("GEMINI_REASONING", "none")
 FALLBACKS = [m for m in os.environ.get("GEMINI_FALLBACKS", "gemini-3-flash-preview,gemini-3.5-flash,gemini-flash-latest,gemini-flash-lite-latest").split(",") if m]
 
 
-PASSES = int(os.environ.get("GEMINI_PASSES", "2"))
+PASSES = max(1, int(os.environ.get("GEMINI_PASSES", "2")))
 PASS_WAIT_S = float(os.environ.get("GEMINI_PASS_WAIT_S", "30"))
 
 
@@ -81,7 +81,9 @@ class Gemini:
             if tool_choice:
                 body["tool_choice"] = tool_choice
         delay = 2.0
+        tries = 0
         for attempt in range(self.max_retries + 1):
+            tries += 1
             t_call = time.time()
             try:
                 r = httpx.post(f"{BASE}/chat/completions", json=body, timeout=120,
@@ -112,7 +114,7 @@ class Gemini:
             time.sleep(pause)
             delay = min(delay * 2, 40)
         self.usage.failures += 1
-        raise GeminiUnavailable(f"Gemini unavailable after {self.max_retries} retries (last: {status} {err})")
+        raise GeminiUnavailable(f"Gemini {model} unavailable after {tries} attempt(s) (last: {status} {err})")
 
 
 def parse_args(call: dict) -> dict:

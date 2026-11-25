@@ -1,0 +1,289 @@
+{
+ "scenario": {
+  "id": "S07",
+  "service": "recommendation",
+  "kind": "memory_leak",
+  "params": {
+   "bytes_per_req": "6000000"
+  },
+  "alert": "frontend p95 latency above 1s and rising"
+ },
+ "truth": {
+  "service": "recommendation",
+  "fault_type": "resource_exhaustion"
+ },
+ "injected_at": 1795097965.7593424,
+ "methods": {
+  "B1_dashboard_rule": {
+   "method": "B1_dashboard_rule",
+   "root_cause_service": "recommendation",
+   "fault_type": null,
+   "ranked_candidates": [
+    "recommendation",
+    "shipping",
+    "catalog"
+   ],
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 0.0,
+   "usage": {
+    "total_tokens": 0,
+    "calls": 0
+   },
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": null,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "B0_single_prompt": {
+   "method": "B0_single_prompt",
+   "root_cause_service": "recommendation",
+   "fault_type": "resource_exhaustion",
+   "ranked_candidates": [
+    "recommendation",
+    "frontend",
+    "catalog"
+   ],
+   "summary": "The recommendation service is experiencing severe memory pressure, evidenced by repeated 'java.lang.OutOfMemoryError' logs and frequent long GC pauses. This causes the frontend to time out while waiting for responses, leading to the observed p95 latency spike.",
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 4.4,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 12993,
+    "completion_tokens": 92,
+    "retries": 0,
+    "failures": 0,
+    "total_tokens": 13085
+   },
+   "model": "gemini-3.1-flash-lite",
+   "prompt_chars": 22703,
+   "error": null,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail": {
+   "alert": "frontend p95 latency above 1s and rising",
+   "model": "gemini-3.1-flash-lite,gemini-flash-lite-latest",
+   "elapsed_s": 399.1,
+   "usage": {
+    "calls": 2,
+    "prompt_tokens": 7768,
+    "completion_tokens": 431,
+    "retries": 3,
+    "failures": 4,
+    "total_tokens": 8199
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "health_evidence_id": "M-caf8bb",
+     "graph_evidence_id": "T-2c957f",
+     "suspects": [
+      {
+       "service": "recommendation",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 6.73,
+        "error_ratio": 0.489,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 4901.3,
+        "baseline_p95_ms": 234.7
+       }
+      },
+      {
+       "service": "frontend",
+       "anomalous_dependencies": [
+        "recommendation"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 7.15,
+        "error_ratio": 0.735,
+        "baseline_error_ratio": 0.695,
+        "p95_ms": 4822.4,
+        "baseline_p95_ms": 474.5
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "recommendation",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": [
+      "L-51410a",
+      "L-4b3f89",
+      "L-b145c5"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "frontend",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": [
+      "L-e69b5c",
+      "L-aa227c"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "frontend"
+     },
+     "evidence_ids": [
+      "T-c02857",
+      "T-19bff1",
+      "T-9296f7",
+      "T-83d2e2",
+      "T-98a115"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "service": "recommendation",
+      "name": "heap_mb"
+     },
+     "evidence_ids": [
+      "M-d39473"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "recommendation",
+    "frontend"
+   ],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "recommendation",
+   "fault_type": "resource_exhaustion",
+   "ranked_candidates": [
+    "recommendation",
+    "frontend5",
+    "checkout"
+   ],
+   "confidence": 1.0,
+   "summary": "The incident was caused by resource exhaustion (Java heap space OutOfMemoryError) in the recommendation service, leading to severe GC pressure, high latency, and HTTP 500 errors. This caused upstream timeouts and errors in the frontend service.",
+   "claims": [
+    {
+     "text": "The recommendation service experienced an OutOfMemoryError due to Java heap space exhaustion.",
+     "quote": "java.lang.OutOfMemoryError: Java heap space (simulated)",
+     "is_root_cause_claim": true,
+     "evidence_ids": [
+      "L-51410a"
+     ],
+     "evidence": [
+      {
+       "id": "L-51410a",
+       "kind": "log",
+       "ref": "recommendation.log:2282",
+       "text": "java.lang.OutOfMemoryError: Java heap space (simulated)",
+       "meta": {
+        "service": "recommendation",
+        "line": 2282,
+        "ts": "2026-11-19T14:20:30.176+00:00",
+        "level": "ERROR",
+        "trace_id": "d97538dff5a96d7644ae63ab26ebc98c",
+        "count_in_window": 197
+       }
+      }
+     ]
+    },
+    {
+     "quote": "GC pause 1.1s, heap 2832MB of 256MB limit",
+     "text": "Excessive garbage collection pauses severely impacted the latency and availability of the recommendation service.",
+     "is_root_cause_claim": true,
+     "evidence_ids": [
+      "L-4b3f89"
+     ],
+     "evidence": [
+      {
+       "id": "L-4b3f89",
+       "kind": "log",
+       "ref": "recommendation.log:2283",
+       "text": "GC pause 1.1s, heap 2832MB of 256MB limit",
+       "meta": {
+        "service": "recommendation",
+        "line": 2283,
+        "ts": "2026-11-19T14:20:30.177+00:00",
+        "level": "WARN",
+        "trace_id": "391bc267d5c56e405d014ccb7ccb608c",
+        "count_in_window": 306
+       }
+      }
+     ]
+    },
+    {
+     "evidence_ids": [
+      "L-e69b5c"
+     ],
+     "text": "The frontend service experienced timeouts and errors while calling the failing recommendation service.",
+     "quote": "timeout calling recommendation after 3000ms",
+     "is_root_cause_claim": false,
+     "evidence": [
+      {
+       "id": "L-e69b5c",
+       "kind": "log",
+       "ref": "frontend.log:13292",
+       "text": "timeout calling recommendation after 3000ms",
+       "meta": {
+        "service": "frontend",
+        "line": 13292,
+        "ts": "2026-11-19T14:20:29.999+00:00",
+        "level": "ERROR",
+        "trace_id": "ca58b28447c9c81ea17bfbcf2c6cb84f",
+        "count_in_window": 229
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [],
+   "evidence_precision": 1.0,
+   "rejected_hypotheses": [
+    {
+     "evidence_ids": [],
+     "why_rejected": "No recent changes or deployments were found; errors originated from downstream resource exhaustion in recommendation.",
+     "hypothesis": "Bad deploy or bad configuration change causing frontend errors"
+    }
+   ],
+   "suggested_action": {
+    "service": "recommendation",
+    "action": "scale_up",
+    "why": "Scale up the heap size or resources for the recommendation service to resolve the Java heap space OutOfMemoryError.",
+    "risk": "blocked",
+    "description": "Not supported in the Compose test environment; always blocked",
+    "dry_run": "(blocked)"
+   },
+   "evidence_items": 13,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  }
+ }
+}

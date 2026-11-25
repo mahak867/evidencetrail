@@ -13,13 +13,16 @@ import time
 
 from .gemini import Gemini, GeminiUnavailable
 from .investigator import FAULT_TYPES
+from .safety import SERVICES
 from .telemetry import Telemetry, Window
 
 
-def b1_dashboard_rule(window_s: int = 120) -> dict:
+def b1_dashboard_rule(window_s: int = 120, window: Window | None = None) -> dict:
     t0 = time.time()
-    tel = Telemetry(window=Window.last(window_s))
+    tel = Telemetry(window=window or Window.last(window_s))
     h = tel.service_health()
+    # a dashboard shows a service with no data as DOWN: blame it first
+    down = sorted(s for s in SERVICES if s not in h or not h[s].get("rps"))
 
     def err_jump(s):
         return h[s]["error_ratio"] - h[s]["baseline_error_ratio"]
@@ -31,6 +34,7 @@ def b1_dashboard_rule(window_s: int = 120) -> dict:
     ranked = sorted(h, key=lambda s: (-round(err_jump(s), 2), -lat_jump(s)))
     if not any(err_jump(s) > 0.05 for s in h):
         ranked = sorted(h, key=lambda s: -lat_jump(s))
+    ranked = down + [s for s in ranked if s not in down]
     return {"method": "B1_dashboard_rule", "root_cause_service": ranked[0] if ranked else None, "fault_type": None,
             "ranked_candidates": ranked[:3], "verdict": "DIAGNOSIS", "elapsed_s": round(time.time() - t0, 1),
             "usage": {"total_tokens": 0, "calls": 0}}
@@ -45,9 +49,9 @@ LOGS:
 {logs}"""
 
 
-def b0_single_prompt(alert: str, window_s: int = 120, max_lines: int = 400) -> dict:
+def b0_single_prompt(alert: str, window_s: int = 120, max_lines: int = 400, window: Window | None = None) -> dict:
     t0 = time.time()
-    tel = Telemetry(window=Window.last(window_s))
+    tel = Telemetry(window=window or Window.last(window_s))
     llm = Gemini()
     prompt = B0_PROMPT.format(alert=alert, types=", ".join(FAULT_TYPES), logs=tel.all_log_lines(max_lines))
     try:

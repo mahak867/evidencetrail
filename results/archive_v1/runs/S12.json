@@ -1,0 +1,330 @@
+{
+ "scenario": {
+  "id": "S12",
+  "service": "cart",
+  "kind": "bad_deploy",
+  "params": {
+   "rate": "0.8"
+  },
+  "alert": "frontend 5xx ratio above 5% for 1m"
+ },
+ "truth": {
+  "service": "cart",
+  "fault_type": "bad_deploy"
+ },
+ "injected_at": 1795099379.5575216,
+ "methods": {
+  "B1_dashboard_rule": {
+   "method": "B1_dashboard_rule",
+   "root_cause_service": "cart",
+   "fault_type": null,
+   "ranked_candidates": [
+    "cart",
+    "frontend",
+    "checkout"
+   ],
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 0.0,
+   "usage": {
+    "total_tokens": 0,
+    "calls": 0
+   },
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": null,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "B0_single_prompt": {
+   "method": "B0_single_prompt",
+   "root_cause_service": "cart",
+   "fault_type": "code_error",
+   "ranked_candidates": [
+    "cart",
+    "checkout",
+    "frontend"
+   ],
+   "summary": "The cart service is failing with a runtime unhandled exception ('TypeError: cannot read property 'amount' of undefined' on v2.7.0-rc1), causing upstream HTTP 500 errors in checkout and frontend.",
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 113.8,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 14534,
+    "completion_tokens": 111,
+    "retries": 0,
+    "failures": 2,
+    "total_tokens": 14645
+   },
+   "model": "gemini-3.5-flash",
+   "prompt_chars": 26277,
+   "error": null,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": false,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail": {
+   "alert": "frontend 5xx ratio above 5% for 1m",
+   "model": "gemini-3.1-flash-lite",
+   "elapsed_s": 43.7,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 4076,
+    "completion_tokens": 408,
+    "retries": 0,
+    "failures": 0,
+    "total_tokens": 4484
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "health_evidence_id": "M-cfec63",
+     "graph_evidence_id": "T-db3a1a",
+     "suspects": [
+      {
+       "service": "cart",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 8.6,
+        "error_ratio": 0.816,
+        "baseline_error_ratio": 0.701,
+        "p95_ms": 19.4,
+        "baseline_p95_ms": 21.0
+       }
+      },
+      {
+       "service": "frontend",
+       "anomalous_dependencies": [
+        "cart",
+        "checkout"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 8.22,
+        "error_ratio": 0.856,
+        "baseline_error_ratio": 0.777,
+        "p95_ms": 471.3,
+        "baseline_p95_ms": 447.2
+       }
+      },
+      {
+       "service": "checkout",
+       "anomalous_dependencies": [
+        "cart"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 0.4,
+        "error_ratio": 0.773,
+        "baseline_error_ratio": 0.586,
+        "p95_ms": 246.2,
+        "baseline_p95_ms": 243.9
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "cart",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": [
+      "L-ba0a92"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "frontend",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": [
+      "L-829b0a",
+      "L-6e2c4b"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "checkout",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": [
+      "L-0868cc"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "frontend"
+     },
+     "evidence_ids": [
+      "T-1336d5",
+      "T-7b3acc",
+      "T-c519d3",
+      "T-aee76f",
+      "T-de5148"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "evidence_ids": [
+      "C-037268",
+      "C-008939",
+      "C-c20646",
+      "C-e6ae60"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "cart",
+    "frontend",
+    "checkout"
+   ],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "cart",
+   "fault_type": "bad_deploy",
+   "ranked_candidates": [
+    "cart",
+    "frontend",
+    "checkout"
+   ],
+   "confidence": 1.0,
+   "summary": "The cart service is failing due to a code error (TypeError) introduced in the recent v2.7.0-rc1 deployment. This is causing 5xx errors in the frontend and checkout services that depend on it.",
+   "claims": [
+    {
+     "is_root_cause_claim": true,
+     "quote": "TypeError: cannot read property 'amount' of undefined (v2.7.0-rc1)",
+     "evidence_ids": [
+      "L-ba0a92"
+     ],
+     "text": "The cart service is throwing a TypeError after the recent deployment to v2.7.0-rc1.",
+     "evidence": [
+      {
+       "id": "L-ba0a92",
+       "kind": "log",
+       "ref": "cart.log:2462",
+       "text": "TypeError: cannot read property 'amount' of undefined (v2.7.0-rc1)",
+       "meta": {
+        "service": "cart",
+        "line": 2462,
+        "ts": "2026-11-19T14:45:53.202+00:00",
+        "level": "ERROR",
+        "trace_id": "4687c1d7b949db8ab85a352db9c2846f",
+        "count_in_window": 792
+       }
+      }
+     ]
+    },
+    {
+     "text": "The call traces confirm that the cart service is the deepest failing service in the call chain.",
+     "quote": "deepest failing service: cart",
+     "is_root_cause_claim": false,
+     "evidence_ids": [
+      "T-1336d5",
+      "T-7b3acc",
+      "T-c519d3",
+      "T-aee76f",
+      "T-de5148"
+     ],
+     "evidence": [
+      {
+       "id": "T-1336d5",
+       "kind": "trace",
+       "ref": "trace:ca93ca7d69f9d3f7",
+       "text": "trace ca93ca7d69f9d3f74120aa810a7ce433: failing server spans in call order: frontend(502, 193.7ms) -> cart(500, 0.8ms); deepest failing service: cart",
+       "meta": {
+        "trace_id": "ca93ca7d69f9d3f74120aa810a7ce433",
+        "deepest": "cart"
+       }
+      },
+      {
+       "id": "T-7b3acc",
+       "kind": "trace",
+       "ref": "trace:492db6b7ecc28c3a",
+       "text": "trace 492db6b7ecc28c3a42b55210cff90c3c: failing server spans in call order: frontend(502, 195.5ms) -> cart(500, 0.7ms); deepest failing service: cart",
+       "meta": {
+        "trace_id": "492db6b7ecc28c3a42b55210cff90c3c",
+        "deepest": "cart"
+       }
+      },
+      {
+       "id": "T-c519d3",
+       "kind": "trace",
+       "ref": "trace:58f88fe8a706a39a",
+       "text": "trace 58f88fe8a706a39a8629cecfea805e4e: failing server spans in call order: frontend(502, 217.4ms) -> cart(500, 0.6ms); deepest failing service: cart",
+       "meta": {
+        "trace_id": "58f88fe8a706a39a8629cecfea805e4e",
+        "deepest": "cart"
+       }
+      },
+      {
+       "id": "T-aee76f",
+       "kind": "trace",
+       "ref": "trace:b4f64e8b85c7c7a2",
+       "text": "trace b4f64e8b85c7c7a26a2b9199843c4da9: failing server spans in call order: frontend(502, 241.0ms) -> cart(500, 0.6ms); deepest failing service: cart",
+       "meta": {
+        "trace_id": "b4f64e8b85c7c7a26a2b9199843c4da9",
+        "deepest": "cart"
+       }
+      },
+      {
+       "id": "T-de5148",
+       "kind": "trace",
+       "ref": "trace:74c4e50eef485008",
+       "text": "trace 74c4e50eef4850083473ffa1f9ac61da: failing server spans in call order: frontend(502, 268.5ms) -> cart(500, 1.1ms); deepest failing service: cart",
+       "meta": {
+        "trace_id": "74c4e50eef4850083473ffa1f9ac61da",
+        "deepest": "cart"
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [
+    {
+     "quote": "service: cart, kind: DeploymentRolledOut, image: shopsim/cart:v2.7.0-rc1",
+     "text": "The cart service was deployed to v2.7.0-rc1 shortly before the errors began.",
+     "is_root_cause_claim": false,
+     "evidence_ids": [
+      "C-e6ae60"
+     ],
+     "rejected_because": [
+      "quoted text not found in cited evidence"
+     ]
+    }
+   ],
+   "evidence_precision": 0.667,
+   "rejected_hypotheses": [],
+   "suggested_action": {
+    "action": "rollback_deploy",
+    "service": "cart",
+    "why": "The cart service deployment to v2.7.0-rc1 introduced a code error causing TypeErrors.",
+    "risk": "risky",
+    "description": "Rolls the service back to its previous image",
+    "dry_run": "DELETE http://localhost:8104/admin/fault  (test env: roll back to v2.6.3)"
+   },
+   "evidence_items": 15,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  }
+ }
+}

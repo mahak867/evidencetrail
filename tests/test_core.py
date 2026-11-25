@@ -60,3 +60,35 @@ def test_suspects_flags_missing_service_as_down():
     health = {"frontend": {"rps": 5, "error_ratio": 0.4, "baseline_error_ratio": 0, "p95_ms": 40, "baseline_p95_ms": 30}}
     edges = [{"caller": "frontend", "callee": "cart"}]
     assert suspects(health, edges)[0]["service"] == "cart"
+
+
+def test_gate_accepts_punctuation_and_spacing_differences():
+    from evidencetrail.evidence import quote_supported
+    assert quote_supported('“TypeError: cannot read property amount”', "TypeError: cannot read property 'amount' of undefined (v2.7.0-rc1)")
+    assert not quote_supported("connection refused by payment gateway", "slow operation: /work took 1400ms")
+
+
+def test_suspects_includes_service_with_no_data_as_down():
+    health = {"frontend": {"rps": 5, "error_ratio": 0.4, "baseline_error_ratio": 0, "p95_ms": 40, "baseline_p95_ms": 30}}
+    names = [s["service"] for s in suspects(health, [])]
+    assert "cart" in names and "payment" in names
+
+
+def test_fit_keeps_json_valid():
+    import json
+    from evidencetrail.investigator import _fit
+    big = {"groups": [{"msg": "x" * 900, "evidence_id": f"L-{i:06d}"} for i in range(200)]}
+    out = _fit(big, 6000)
+    assert len(out) <= 6000 and json.loads(out)
+
+
+def test_root_cause_must_be_supported_by_kept_claim():
+    from evidencetrail.investigator import Investigation
+    inv = Investigation.__new__(Investigation)
+    from evidencetrail.evidence import EvidenceStore
+    from evidencetrail.gemini import Gemini
+    class T: store = EvidenceStore()
+    inv.tel, inv.llm, inv.trail, inv.alert = T(), Gemini(), [], "a"
+    eid = T.store.add("log", "frontend.log:1", "upstream call to catalog failed", meta={"service": "frontend"})
+    r = inv._finish({"root_cause_service": "payment", "confidence": "high", "claims": [{"text": "frontend errors", "evidence_ids": [eid]}]}, None, [], 1.0)
+    assert r["verdict"] == "INCONCLUSIVE" and r["confidence"] == 0.0

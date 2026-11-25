@@ -227,6 +227,8 @@ tr:hover td{background:var(--surface-2)}
     <symbol id="i-git" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="9" r="2.5"/><path d="M6 8.5v7M8.3 7.2 15.7 8.5"/></symbol>
     <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></symbol>
     <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6L4 20h16L14 9V3"/></symbol>
+    <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 2v6M15 2v6M6 8h12v4a6 6 0 0 1-12 0zM12 18v4"/></symbol>
+    <symbol id="i-net" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2.5"/><circle cx="19" cy="5" r="2.5"/><circle cx="19" cy="19" r="2.5"/><path d="M7.4 11 16.6 6M7.4 13l9.2 5"/></symbol>
     <symbol id="i-gem" viewBox="0 0 24 24"><path d="M12 2 4 9l8 13 8-13z"/><path d="M4 9h16"/></symbol>
   </defs>
 </svg>
@@ -237,6 +239,7 @@ tr:hover td{background:var(--surface-2)}
     <button class="nav" data-view="investigate"><svg class="i"><use href="#i-search"/></svg>Investigate</button>
     <button class="nav" data-view="map"><svg class="i"><use href="#i-map"/></svg>Service map</button>
     <button class="nav" data-view="scorecard"><svg class="i"><use href="#i-chart"/></svg>Scorecard</button>
+    <button class="nav" data-view="integrations"><svg class="i"><use href="#i-plug"/></svg>Integrations</button>
     <button class="nav" data-view="audit"><svg class="i"><use href="#i-list"/></svg>Audit log</button>
     <div class="aside-foot">
       <div class="envpill"><span class="dot" id="envdot"></span><span id="envtxt">Test environment</span></div>
@@ -295,6 +298,10 @@ tr:hover td{background:var(--surface-2)}
           <h2><svg class="i"><use href="#i-pulse"/></svg>Timeline &amp; evidence mix <span class="right muted" style="font-size:12px">where the seconds went</span></h2>
           <div id="timeline"><div class="empty">—</div></div>
           <div id="evmix" style="margin-top:14px"></div>
+        </div>
+        <div class="card c12">
+          <h2><svg class="i"><use href="#i-net"/></svg>Evidence graph <span class="right muted" style="font-size:12px">claim → cited evidence → service · red dashed = blocked by the gate</span></h2>
+          <div id="egraph"><div class="empty">—</div></div>
         </div>
         <div class="card c7">
           <h2><svg class="i"><use href="#i-check"/></svg>Evidence-backed claims <span class="right muted" id="precision"></span></h2>
@@ -361,6 +368,49 @@ tr:hover td{background:var(--surface-2)}
     </section>
 
     <!-- ================= AUDIT ================= -->
+    <section class="view" id="v-integrations">
+      <div class="grid">
+        <div class="card c7">
+          <h2><svg class="i"><use href="#i-plug"/></svg>EvidenceTrail MCP server</h2>
+          <p style="margin-top:0">EvidenceTrail is also a <b>Model Context Protocol</b> server, so <b>Claude Code, Claude Desktop, Gemini CLI</b> or any MCP agent can investigate incidents with the same read-only tools and evidence gate. It never injects faults or runs actions.</p>
+          <div class="muted" style="font-size:12px;font-weight:650;margin-top:12px">Connect from Claude Code</div>
+          <pre class="code">claude mcp add evidencetrail -- python -m evidencetrail.mcp_server</pre>
+          <div class="muted" style="font-size:12px;font-weight:650">Gemini CLI (~/.gemini/settings.json)</div>
+          <pre class="code">{"mcpServers": {"evidencetrail": {"command": "python", "args": ["-m", "evidencetrail.mcp_server"]}}}</pre>
+          <div class="muted" style="font-size:12px;font-weight:650">Remote (streamable HTTP)</div>
+          <pre class="code">python -m evidencetrail.mcp_server --http 8765</pre>
+        </div>
+        <div class="card c5">
+          <h2><svg class="i"><use href="#i-list"/></svg>Tools exposed</h2>
+          <table><tbody>
+            <tr><td class="mono">get_service_health</td><td class="muted">error ratio and p95 vs baseline</td></tr>
+            <tr><td class="mono">get_suspects</td><td class="muted">call-graph-ranked anomalous services</td></tr>
+            <tr><td class="mono">get_logs</td><td class="muted">grouped, redacted, with evidence IDs</td></tr>
+            <tr><td class="mono">get_metric</td><td class="muted">time series for one metric</td></tr>
+            <tr><td class="mono">get_error_traces</td><td class="muted">chain of failing spans</td></tr>
+            <tr><td class="mono">get_recent_changes</td><td class="muted">deploys and config changes</td></tr>
+            <tr><td class="mono">investigate</td><td class="muted">full Gemini investigation + evidence gate</td></tr>
+          </tbody></table>
+          <p class="muted" style="font-size:12px;margin-bottom:0">All tools are annotated read-only. Suggested actions are returned, never executed.</p>
+        </div>
+        <div class="card c6">
+          <h2><svg class="i"><use href="#i-gem"/></svg>Google ADK engine</h2>
+          <p style="margin-top:0">The investigation can run on Google's <b>Agent Development Kit</b>: an ADK <code>LlmAgent</code> with Gemini and EvidenceTrail's tools runs the agent loop, then the same evidence gate and safety policy verify the result. <b>ADK proposes, EvidenceTrail verifies.</b></p>
+          <pre class="code">ENGINE=adk uvicorn evidencetrail.server:app --port 8080</pre>
+          <p class="muted" style="font-size:12px;margin-bottom:0">Both engines are scored on the same faults; see the Scorecard.</p>
+        </div>
+        <div class="card c6">
+          <h2><svg class="i"><use href="#i-shield"/></svg>Guarantees in every integration</h2>
+          <ul style="margin:0;padding-left:18px;line-height:1.9">
+            <li>Every claim must cite evidence fetched in this investigation</li>
+            <li>Secrets, card numbers and emails redacted before any model sees logs</li>
+            <li>Read-only telemetry; action risk set by policy, not the model</li>
+            <li>Any change needs a named human approval and is audit-logged</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
     <section class="view" id="v-audit">
       <div class="card"><h2><svg class="i"><use href="#i-list"/></svg>Audit log <span class="right muted" style="font-size:12px">investigations, feedback, approvals, blocks, fault injections</span></h2>
         <div style="overflow:auto" id="auditTable"></div></div>
@@ -390,7 +440,7 @@ $("#theme").innerHTML=icon(document.documentElement.dataset.theme==="dark"?"sun"
 $("#theme").onclick=()=>setTheme(document.documentElement.dataset.theme==="dark"?"light":"dark");
 
 /* ---------- routing ---------- */
-const TITLES={investigate:["Investigate","From alert to an evidence-backed diagnosis"],map:["Service map","Live health of the test environment"],
+const TITLES={integrations:["Integrations","MCP server for Claude & Gemini CLI · Google ADK engine"],investigate:["Investigate","From alert to an evidence-backed diagnosis"],map:["Service map","Live health of the test environment"],
   scorecard:["Scorecard","EvidenceTrail vs baselines on injected faults"],audit:["Audit log","Every decision a human or the system made"]};
 let VIEW="investigate";
 function go(v){ VIEW=TITLES[v]?v:"investigate"; $$(".view").forEach(e=>e.classList.toggle("on",e.id==="v-"+VIEW));
@@ -508,7 +558,7 @@ function render(r, recorded, truth){
   const truthOk = truth ? (truth.service===r.root_cause_service) : null;
   $("#verdictCard").innerHTML = `${recorded?`<div class="recbanner">${icon("file")}Recorded evaluation run (${esc(recorded)}) — replayed from saved results, not live.</div>`:""}
   <div class="hero"><div>
-    <div class="row">${statusChip(vs)}<span class="chip">${icon("gem")}${esc(r.model||"gemini")}</span>${(r.ranked_candidates||[]).length>1?`<span class="chip">Next: ${esc(r.ranked_candidates.slice(1).join(" → "))}</span>`:""}</div>
+    <div class="row">${statusChip(vs)}<span class="chip">${icon("gem")}${esc(r.model||"gemini")}</span><span class="chip" title="agent loop">${r.engine==="adk"?"Engine: Google ADK":"Engine: native"}</span>${(r.ranked_candidates||[]).length>1?`<span class="chip">Next: ${esc(r.ranked_candidates.slice(1).join(" → "))}</span>`:""}</div>
     <div class="rc">${esc(r.root_cause_service||"No confident root cause")}</div>
     <div class="ftype">${esc((r.fault_type||"").replaceAll("_"," "))}</div>
     ${r.summary?`<p class="summary">${esc(r.summary)}</p>`:""}${r.error?`<p class="summary" style="color:var(--critical)">${esc(r.error)}</p>`:""}
@@ -522,7 +572,7 @@ function render(r, recorded, truth){
   </div></div></div>`;
   topology($("#topoInv"), r.health, r.edges, r.root_cause_service, r.topology_suspects);
   if(!r.health) $("#topoInv").insertAdjacentHTML("afterbegin",`<p class="muted" style="font-size:12px;margin:0 0 6px">This run predates health snapshots: services flagged by the scan are shown, and the call graph is the reference topology.</p>`);
-  timeline(r); evmix(r);
+  timeline(r); evmix(r); egraph(r);
   $("#precision").textContent = r.evidence_precision!=null ? `precision ${Math.round(r.evidence_precision*100)}%` : "";
   $("#claims").innerHTML = (r.claims||[]).map(c=>`<div class="claim c-ok"><div class="head"><span class="ic">${icon("check")}</span><div class="txt">${esc(c.text)}</div></div>
       ${c.quote?`<div class="quote mono">“${esc(c.quote)}”</div>`:""}<div style="margin-left:32px">${(c.evidence||[]).map(evChip).join("")}</div></div>`).join("")
@@ -577,6 +627,37 @@ function timeline(r){
       <div class="mrow"><span>Tokens</span><b>${(e.tokens||0).toLocaleString()}</b></div><div class="mrow"><span>Asked for</span><b>${esc((e.requested||[]).join(", ")||"—")}</b></div>`
       : `<b>${esc(e.tool||"scan")}</b><div class="mrow"><span>Started</span><b>+${e.t}s</b></div><div class="mrow"><span>Duration</span><b>${e.dur}s</b></div><div class="mrow"><span>Evidence</span><b>${(e.evidence_ids||[]).length||"—"}</b></div>`);
     x.onmouseleave=hideTip; });
+}
+function egraph(r){
+  const el=$("#egraph"); if(!el) return;
+  const claims=[...(r.claims||[]).map(c=>({...c,ok:true})),...(r.dropped_claims||[]).map(c=>({...c,ok:false}))];
+  if(!claims.length){ el.innerHTML=`<div class="empty">No claims in this investigation.</div>`; return; }
+  const ev=new Map(); (r.claims||[]).forEach(c=>(c.evidence||[]).forEach(e=>ev.set(e.id,e)));
+  claims.forEach(c=>(c.evidence_ids||[]).forEach(id=>{ if(!ev.has(id)) ev.set(id,{id,ref:id,kind:"missing",meta:{},text:""}); }));
+  const svcOf=e=>e.meta?.service||(String(e.ref).match(/^([a-z]+)\./)||[])[1]||(e.kind==="trace"?(e.meta?.deepest||"trace"):e.kind==="metric"?"prometheus":"—");
+  const evs=[...ev.values()], svcs=[...new Set(evs.map(svcOf))];
+  const W=980,colX=[20,400,760],rowH=46,H=Math.max(claims.length,evs.length,svcs.length)*rowH+30;
+  const y=(i,n)=>15+i*rowH+(H-30-n*rowH)/2;
+  const KCOL={log:"--s1",metric:"--s2",trace:"--s3",change:"--ink-2",missing:"--critical"};
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Evidence graph">`;
+  const cy=claims.map((c,i)=>y(i,claims.length)+rowH/2-4), ey=new Map(evs.map((e,i)=>[e.id,y(i,evs.length)+rowH/2-4])), sy=new Map(svcs.map((v,i)=>[v,y(i,svcs.length)+rowH/2-4]));
+  claims.forEach((c,i)=>(c.evidence_ids||[]).forEach(id=>{ const y2=ey.get(id); if(y2==null) return;
+    s+=`<path d="M${colX[0]+300} ${cy[i]} C ${colX[0]+350} ${cy[i]}, ${colX[1]-50} ${y2}, ${colX[1]} ${y2}" fill="none" stroke="${css(c.ok?"--good":"--critical")}" stroke-width="${c.ok?2:1.6}" ${c.ok?"":'stroke-dasharray="5 4"'} opacity=".75"/>`; }));
+  evs.forEach(e=>{ const y1=ey.get(e.id), y2=sy.get(svcOf(e)); s+=`<path d="M${colX[1]+250} ${y1} C ${colX[1]+290} ${y1}, ${colX[2]-40} ${y2}, ${colX[2]} ${y2}" fill="none" stroke="${css("--axis")}" stroke-width="1.5"/>`; });
+  claims.forEach((c,i)=>{ const t=c.text.length>46?c.text.slice(0,45)+"…":c.text;
+    s+=`<g data-c="${i}"><rect x="${colX[0]}" y="${cy[i]-16}" width="300" height="32" rx="8" fill="${css("--surface-2")}" stroke="${css(c.ok?"--good":"--critical")}" stroke-width="1.5" ${c.ok?"":'stroke-dasharray="5 4"'}/>
+      <text x="${colX[0]+12}" y="${cy[i]+4}" style="font-size:12px;fill:${css("--ink")}">${c.ok?"✓":"✕"} ${esc(t)}</text></g>`; });
+  evs.forEach(e=>{ const yy=ey.get(e.id);
+    s+=`<g data-e="${esc(e.id)}" style="cursor:pointer"><rect x="${colX[1]}" y="${yy-14}" width="250" height="28" rx="7" fill="${css("--surface")}" stroke="${css(KCOL[e.kind]||"--axis")}" stroke-width="1.8"/>
+      <circle cx="${colX[1]+14}" cy="${yy}" r="5" fill="${css(KCOL[e.kind]||"--axis")}"/><text x="${colX[1]+26}" y="${yy+4}" class="mono" style="font:12px ui-monospace,monospace;fill:${css("--ink")}">${esc(String(e.ref).slice(0,30))}</text></g>`; });
+  svcs.forEach(v=>{ const yy=sy.get(v), rc=v===r.root_cause_service;
+    s+=`<rect x="${colX[2]}" y="${yy-15}" width="190" height="30" rx="15" fill="${css(rc?"--critical":"--surface-2")}" opacity="${rc?.16:1}" stroke="${css(rc?"--critical":"--hair")}" stroke-width="${rc?2:1}"/>
+      <text x="${colX[2]+95}" y="${yy+4}" text-anchor="middle" style="font-size:12.5px;font-weight:700;fill:${css("--ink")}">${esc(v)}${rc?" · root cause":""}</text>`; });
+  ["CLAIMS","EVIDENCE CITED","SERVICE"].forEach((h,i)=>{ s+=`<text x="${colX[i]}" y="10" style="font-size:10.5px;font-weight:700;letter-spacing:.06em;fill:${css("--muted")}">${h}</text>`; });
+  s+="</svg>";
+  el.innerHTML=s+`<div class="legend"><span><i class="sw" style="background:${css("--s1")}"></i>Log</span><span><i class="sw" style="background:${css("--s2")}"></i>Metric</span><span><i class="sw" style="background:${css("--s3")}"></i>Trace</span><span><i class="sw" style="background:${css("--ink-2")}"></i>Change</span><span><i class="sw" style="background:${css("--critical")}"></i>Never fetched</span><span class="muted">click an evidence box to open it</span></div>`;
+  el.querySelectorAll("g[data-e]").forEach(g=>{ const e=ev.get(g.dataset.e); if(e&&e.kind!=="missing"){ EVID[e.id]=e; g.onclick=()=>openEv(e.id); } });
+  el.querySelectorAll("g[data-c]").forEach(g=>{ const c=claims[+g.dataset.c]; g.onmousemove=m=>showTip(m,`<b>${c.ok?"Kept":"Blocked"} claim</b><div style="max-width:240px">${esc(c.text)}</div>${c.ok?"":`<div class="no" style="margin-top:4px">${esc((c.rejected_because||[]).join("; "))}</div>`}`); g.onmouseleave=hideTip; });
 }
 function evmix(r){
   const ids=(r.trail||[]).flatMap(t=>t.evidence_ids||[]).concat((r.trail||[]).filter(t=>t.step==="scan").flatMap(t=>[t.health_evidence_id,t.graph_evidence_id]).filter(Boolean));

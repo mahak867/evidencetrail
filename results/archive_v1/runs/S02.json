@@ -1,0 +1,334 @@
+{
+ "scenario": {
+  "id": "S02",
+  "service": "inventory",
+  "kind": "error",
+  "params": {
+   "message": "KeyError: 'warehouse_id' while reserving stock",
+   "error_type": "KeyError",
+   "rate": "0.9"
+  },
+  "alert": "frontend 5xx ratio above 5% for 1m"
+ },
+ "truth": {
+  "service": "inventory",
+  "fault_type": "code_error"
+ },
+ "injected_at": 1795096442.4686127,
+ "methods": {
+  "B1_dashboard_rule": {
+   "method": "B1_dashboard_rule",
+   "root_cause_service": "inventory",
+   "fault_type": null,
+   "ranked_candidates": [
+    "inventory",
+    "catalog",
+    "recommendation"
+   ],
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 0.0,
+   "usage": {
+    "total_tokens": 0,
+    "calls": 0
+   },
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": null,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "B0_single_prompt": {
+   "method": "B0_single_prompt",
+   "root_cause_service": "inventory",
+   "fault_type": "code_error",
+   "ranked_candidates": [
+    "inventory",
+    "catalog",
+    "recommendation"
+   ],
+   "summary": "The inventory service encountered a Python KeyError ('warehouse_id') while trying to reserve stock, which caused downstream 500 errors in the catalog service and cascading 502 errors across recommendation and frontend services.",
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 8.1,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 12777,
+    "completion_tokens": 108,
+    "retries": 0,
+    "failures": 4,
+    "total_tokens": 12885
+   },
+   "model": "gemini-flash-lite-latest",
+   "prompt_chars": 25441,
+   "error": null,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail": {
+   "alert": "frontend 5xx ratio above 5% for 1m",
+   "model": "gemini-3.1-flash-lite,gemini-flash-lite-latest",
+   "elapsed_s": 656.8,
+   "usage": {
+    "calls": 3,
+    "prompt_tokens": 9733,
+    "completion_tokens": 380,
+    "retries": 4,
+    "failures": 4,
+    "total_tokens": 10113
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "health_evidence_id": "M-fb4473",
+     "graph_evidence_id": "T-aff63e",
+     "suspects": [
+      {
+       "service": "inventory",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 8.67,
+        "error_ratio": 0.912,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 13.1,
+        "baseline_p95_ms": 23.9
+       }
+      },
+      {
+       "service": "payment",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.593,
+        "p95_ms": null,
+        "baseline_p95_ms": 22.7
+       }
+      },
+      {
+       "service": "shipping",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": null,
+        "baseline_p95_ms": 60.0
+       }
+      },
+      {
+       "service": "checkout",
+       "anomalous_dependencies": [
+        "catalog",
+        "payment",
+        "shipping"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 0.02,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.588,
+        "p95_ms": 97.5,
+        "baseline_p95_ms": 296.4
+       }
+      },
+      {
+       "service": "frontend",
+       "anomalous_dependencies": [
+        "catalog",
+        "recommendation",
+        "checkout"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 7.93,
+        "error_ratio": 0.995,
+        "baseline_error_ratio": 0.157,
+        "p95_ms": 172.0,
+        "baseline_p95_ms": 592.6
+       }
+      },
+      {
+       "service": "recommendation",
+       "anomalous_dependencies": [
+        "catalog"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 0.71,
+        "error_ratio": 0.923,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 95.1,
+        "baseline_p95_ms": 235.3
+       }
+      },
+      {
+       "service": "catalog",
+       "anomalous_dependencies": [
+        "inventory"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 8.75,
+        "error_ratio": 0.911,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 73.3,
+        "baseline_p95_ms": 178.1
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "inventory",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": [
+      "L-5e2a2a"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "payment",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "shipping",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "payment"
+     },
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "service": "inventory",
+      "name": "error_ratio"
+     },
+     "evidence_ids": [
+      "M-8c946c"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "inventory",
+    "payment",
+    "shipping",
+    "checkout",
+    "frontend",
+    "recommendation",
+    "catalog"
+   ],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "inventory",
+   "fault_type": "code_error",
+   "ranked_candidates": [
+    "inventory",
+    "catalog",
+    "frontend"
+   ],
+   "confidence": 1.0,
+   "summary": "The frontend and catalog services are experiencing high error rates due to failures in the inventory service. The inventory service is throwing a KeyError for 'warehouse_id' while attempting to reserve stock, which is a code or data contract error.",
+   "claims": [
+    {
+     "quote": "KeyError: 'warehouse_id' while reserving stock",
+     "text": "The inventory service is throwing KeyError: 'warehouse_id' while reserving stock, causing all downstream and upstream calls (catalog, frontend) to fail with high error ratios.",
+     "is_root_cause_claim": true,
+     "evidence_ids": [
+      "L-5e2a2a"
+     ],
+     "evidence": [
+      {
+       "id": "L-5e2a2a",
+       "kind": "log",
+       "ref": "inventory.log:4201",
+       "text": "KeyError: 'warehouse_id' while reserving stock",
+       "meta": {
+        "service": "inventory",
+        "line": 4201,
+        "ts": "2026-11-19T13:55:10.362+00:00",
+        "level": "ERROR",
+        "trace_id": "59da3f6ed35fdc28c78f1f12f713dd76",
+        "count_in_window": 532
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [
+    {
+     "is_root_cause_claim": false,
+     "quote": "'inventory': {'rps': 8.67, 'error_ratio': 0.912, ...}",
+     "text": "Inventory service error ratio spiked to 0.912 during the incident window.",
+     "evidence_ids": [
+      "M-fb4473"
+     ],
+     "rejected_because": [
+      "quoted text not found in cited evidence"
+     ]
+    }
+   ],
+   "evidence_precision": 0.5,
+   "rejected_hypotheses": [
+    {
+     "hypothesis": "Bad deployment or config change causing the failure",
+     "evidence_ids": [],
+     "why_rejected": "get_recent_changes returned no recent deployments or configuration changes."
+    }
+   ],
+   "suggested_action": {
+    "action": "collect_diagnostics",
+    "service": "inventory",
+    "why": "Investigate the KeyError in inventory service code regarding warehouse_id.",
+    "risk": "safe",
+    "description": "Read-only: snapshot logs, metrics and traces for the service",
+    "dry_run": "GET /metrics, tail logs/inventory.log, query Jaeger for service=inventory"
+   },
+   "evidence_items": 4,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  }
+ }
+}

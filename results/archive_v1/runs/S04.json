@@ -1,0 +1,208 @@
+{
+ "scenario": {
+  "id": "S04",
+  "service": "shipping",
+  "kind": "latency",
+  "params": {
+   "ms": "1800"
+  },
+  "alert": "checkout p95 latency above 2s for 2m"
+ },
+ "truth": {
+  "service": "shipping",
+  "fault_type": "latency"
+ },
+ "injected_at": 1795097404.4779027,
+ "methods": {
+  "B1_dashboard_rule": {
+   "method": "B1_dashboard_rule",
+   "root_cause_service": "shipping",
+   "fault_type": null,
+   "ranked_candidates": [
+    "shipping",
+    "payment",
+    "inventory"
+   ],
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 0.0,
+   "usage": {
+    "total_tokens": 0,
+    "calls": 0
+   },
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": null,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "B0_single_prompt": {
+   "method": "B0_single_prompt",
+   "root_cause_service": "shipping",
+   "fault_type": "latency",
+   "ranked_candidates": [
+    "shipping",
+    "checkout",
+    "payment"
+   ],
+   "summary": "The shipping service is experiencing high processing latency, consistently logging slow operation warnings up to ~2.16s for /work. Because checkout depends on shipping during transaction processing, this downstream slowness directly caused checkout's p95 latency alert to fire.",
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 24.3,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 14273,
+    "completion_tokens": 104,
+    "retries": 0,
+    "failures": 2,
+    "total_tokens": 14377
+   },
+   "model": "gemini-3.5-flash",
+   "prompt_chars": 23324,
+   "error": null,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail": {
+   "alert": "checkout p95 latency above 2s for 2m",
+   "model": "gemini-3.1-flash-lite",
+   "elapsed_s": 18.4,
+   "usage": {
+    "calls": 4,
+    "prompt_tokens": 11425,
+    "completion_tokens": 495,
+    "retries": 0,
+    "failures": 0,
+    "total_tokens": 11920
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "health_evidence_id": "M-564abd",
+     "graph_evidence_id": "T-570961",
+     "suspects": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_slow_traces",
+     "args": {
+      "service": "shipping"
+     },
+     "evidence_ids": [
+      "T-76fe4e",
+      "T-e9a82d",
+      "T-4ba31c",
+      "T-a0da7e",
+      "T-2f9e0a"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "name": "p95_latency_ms",
+      "service": "shipping"
+     },
+     "evidence_ids": [
+      "M-b227f5"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "shipping"
+     },
+     "evidence_ids": [
+      "L-5391f1",
+      "L-ae872a"
+     ]
+    }
+   ],
+   "topology_suspects": [],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "shipping",
+   "fault_type": "latency",
+   "ranked_candidates": [
+    "shipping"
+   ],
+   "confidence": 0.9,
+   "summary": "The shipping service is the root cause of the checkout latency incident. Traces and logs confirm that the service is experiencing high self-time latency during its /work operation, which is propagating upstream to the checkout service.",
+   "claims": [
+    {
+     "quote": "\"shipping\": {\"rps\": 1.84, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 4278.6, \"baseline_p95_ms\": 1857.7}",
+     "text": "The shipping service shows a significant increase in p95 latency compared to its baseline.",
+     "evidence_ids": [
+      "M-564abd"
+     ],
+     "evidence": [
+      {
+       "id": "M-564abd",
+       "kind": "metric",
+       "ref": "service_health_scan",
+       "text": "{\"frontend\": {\"rps\": 6.82, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.073, \"p95_ms\": 4269.5, \"baseline_p95_ms\": 6858.1}, \"currency\": {\"rps\": 18.53, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 23.9, \"baseline_p95_ms\": 1840.5}, \"catalog\": {\"rps\": 15.13, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 142.4, \"baseline_p95_ms\": 1841.3}, \"payment\": {\"rps\": 1.67, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 24.0, \"baseline_p95_ms\": 23.8}, \"checkout\": {\"rps\": 1.71, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 4686.7, \"baseline_p95_ms\": 4494.3}, \"recommendation\": {\"rps\": 7.05, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 230.2, \"baseline_p95_ms\": 1869.0}, \"shipping\": {\"rps\": 1.84, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 4278.6, \"baseline_p95_ms\": 1857.7}, \"inventory\": {\"rps\": 15.55, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 23.9, \"baseline_p95_ms\": 23.9}, \"cart\": {\"rps\": 8.62, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 24.0, \"baseline_p95_ms\": 24.0}}",
+       "meta": {
+        "source": "prometheus"
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [
+    {
+     "text": "Slow traces confirm that the shipping service itself is responsible for the majority of the latency, with high self-time.",
+     "evidence_ids": [
+      "T-76fe4e",
+      "T-e9a82d",
+      "T-4ba31c",
+      "T-a0da7e",
+      "T-2f9e0a"
+     ],
+     "quote": "\"largest self-time (ms) by service: [('shipping', 2182.4), ('catalog', 100.3), ('currency', 87.0)]\"",
+     "rejected_because": [
+      "quoted text not found in cited evidence"
+     ]
+    },
+    {
+     "quote": "\"msg\": \"slow operation: /work took 1771ms\"",
+     "text": "Logs indicate that the /work operation in the shipping service is consistently slow.",
+     "evidence_ids": [
+      "L-5391f1"
+     ],
+     "rejected_because": [
+      "quoted text not found in cited evidence"
+     ]
+    }
+   ],
+   "evidence_precision": 0.333,
+   "rejected_hypotheses": [],
+   "suggested_action": {
+    "why": "The shipping service is experiencing high latency in its /work operation, which needs further investigation via diagnostics.",
+    "service": "shipping",
+    "action": "collect_diagnostics",
+    "risk": "safe",
+    "description": "Read-only: snapshot logs, metrics and traces for the service",
+    "dry_run": "GET /metrics, tail logs/shipping.log, query Jaeger for service=shipping"
+   },
+   "evidence_items": 10,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  }
+ }
+}

@@ -1,0 +1,329 @@
+{
+ "scenario": {
+  "id": "S09",
+  "service": "currency",
+  "kind": "bad_config",
+  "params": {},
+  "alert": "frontend 5xx ratio above 5% for 1m"
+ },
+ "truth": {
+  "service": "currency",
+  "fault_type": "bad_config"
+ },
+ "injected_at": 1795098921.679191,
+ "methods": {
+  "B1_dashboard_rule": {
+   "method": "B1_dashboard_rule",
+   "root_cause_service": "currency",
+   "fault_type": null,
+   "ranked_candidates": [
+    "currency",
+    "catalog",
+    "frontend"
+   ],
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 0.0,
+   "usage": {
+    "total_tokens": 0,
+    "calls": 0
+   },
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": null,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "B0_single_prompt": {
+   "method": "B0_single_prompt",
+   "root_cause_service": "currency",
+   "fault_type": "bad_config",
+   "ranked_candidates": [
+    "currency",
+    "catalog",
+    "frontend"
+   ],
+   "summary": "The currency service is failing due to a missing 'FX_RATE_SOURCE' configuration, which causes cascading 500 errors in the catalog service and subsequent 502 errors in the frontend.",
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 13.5,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 11963,
+    "completion_tokens": 80,
+    "retries": 0,
+    "failures": 0,
+    "total_tokens": 12043
+   },
+   "model": "gemini-3.1-flash-lite",
+   "prompt_chars": 23435,
+   "error": null,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail": {
+   "alert": "frontend 5xx ratio above 5% for 1m",
+   "model": "gemini-3.1-flash-lite",
+   "elapsed_s": 6.3,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 3251,
+    "completion_tokens": 308,
+    "retries": 0,
+    "failures": 0,
+    "total_tokens": 3559
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "health_evidence_id": "M-bc9e9b",
+     "graph_evidence_id": "T-3804fb",
+     "suspects": [
+      {
+       "service": "currency",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 7.73,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 4.8,
+        "baseline_p95_ms": 23.9
+       }
+      },
+      {
+       "service": "cart",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": null,
+        "baseline_p95_ms": 24.0
+       }
+      },
+      {
+       "service": "payment",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": null,
+        "baseline_p95_ms": 23.9
+       }
+      },
+      {
+       "service": "catalog",
+       "anomalous_dependencies": [
+        "currency"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 7.75,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.309,
+        "p95_ms": 96.5,
+        "baseline_p95_ms": 4514.6
+       }
+      },
+      {
+       "service": "frontend",
+       "anomalous_dependencies": [
+        "cart",
+        "catalog",
+        "recommendation",
+        "checkout"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 7.71,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.525,
+        "p95_ms": 185.1,
+        "baseline_p95_ms": 4714.3
+       }
+      },
+      {
+       "service": "checkout",
+       "anomalous_dependencies": [
+        "catalog",
+        "cart",
+        "payment",
+        "shipping",
+        "currency"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": null,
+        "baseline_p95_ms": 460.2
+       }
+      },
+      {
+       "service": "recommendation",
+       "anomalous_dependencies": [
+        "catalog"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": null,
+        "baseline_p95_ms": 236.0
+       }
+      },
+      {
+       "service": "shipping",
+       "anomalous_dependencies": [
+        "currency"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": null,
+        "baseline_p95_ms": 64.0
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "currency",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": [
+      "L-3063a3"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "cart",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "payment",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "cart"
+     },
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "evidence_ids": [
+      "C-037268"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "currency",
+    "cart",
+    "payment",
+    "catalog",
+    "frontend",
+    "checkout",
+    "recommendation",
+    "shipping"
+   ],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "currency",
+   "fault_type": "bad_config",
+   "ranked_candidates": [
+    "currency",
+    "catalog",
+    "frontend"
+   ],
+   "confidence": 1.0,
+   "summary": "The 'currency' service is failing due to a bad configuration change that set 'FX_RATE_SOURCE' to an empty string. This error is propagating upstream, causing failures in the 'catalog' and 'frontend' services.",
+   "claims": [
+    {
+     "evidence_ids": [
+      "C-037268"
+     ],
+     "quote": "\"changed\": {\"FX_RATE_SOURCE\": \"\"}",
+     "is_root_cause_claim": true,
+     "text": "A configuration change was pushed to the 'currency' service setting 'FX_RATE_SOURCE' to an empty string.",
+     "evidence": [
+      {
+       "id": "C-037268",
+       "kind": "change",
+       "ref": "events.log:1",
+       "text": "{\"ts\": \"2026-11-19T14:35:21.678+00:00\", \"service\": \"currency\", \"kind\": \"ConfigUpdated\", \"version\": 42, \"changed\": {\"FX_RATE_SOURCE\": \"\"}, \"author\": \"deploy-bot\"}",
+       "meta": {
+        "ts": "2026-11-19T14:35:21.678+00:00",
+        "service": "currency",
+        "kind": "ConfigUpdated",
+        "version": 42,
+        "changed": {
+         "FX_RATE_SOURCE": ""
+        },
+        "author": "deploy-bot"
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [
+    {
+     "quote": "\"msg\": \"config error: FX_RATE_SOURCE is empty; cannot load exchange rates\"",
+     "text": "The 'currency' service is failing with a configuration error because 'FX_RATE_SOURCE' is empty.",
+     "evidence_ids": [
+      "L-3063a3"
+     ],
+     "is_root_cause_claim": true,
+     "rejected_because": [
+      "quoted text not found in cited evidence"
+     ]
+    }
+   ],
+   "evidence_precision": 0.5,
+   "rejected_hypotheses": [],
+   "suggested_action": {
+    "action": "rollback_config",
+    "service": "currency",
+    "why": "The service is failing due to an invalid configuration change that set FX_RATE_SOURCE to an empty string. Rolling back to the previous configuration should resolve the issue.",
+    "risk": "risky",
+    "description": "Restores the previous configuration version",
+    "dry_run": "DELETE http://localhost:8107/admin/fault  (test env: restore config v41)"
+   },
+   "evidence_items": 4,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  }
+ }
+}

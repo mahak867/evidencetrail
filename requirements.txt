@@ -1,4 +1,7 @@
 httpx==0.28.1
-fastapi==0.115.6
+fastapi==0.165.0
 uvicorn==0.34.0
-pyyaml==6.0.2
+pyyaml==6.0.4
+google-adk==2.15.1
+litellm==1.111.0
+mcp[cli]==2.3.0

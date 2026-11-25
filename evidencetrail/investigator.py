@@ -15,7 +15,9 @@ Pipeline
 from __future__ import annotations
 
 import json
+import os
 import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 
 from . import safety
@@ -94,7 +96,7 @@ def suspects(health: dict, edges: list[dict]) -> list[dict]:
     callees: dict[str, set] = {}
     for e in edges:
         callees.setdefault(e["caller"], set()).add(e["callee"])
-    all_svcs = set(health) | {e["callee"] for e in edges} | {e["caller"] for e in edges}
+    all_svcs = set(health) | {e["callee"] for e in edges} | {e["caller"] for e in edges} | set(safety.SERVICES)
     out = []
     for s in sorted(all_svcs):
         if anomalous(s):
@@ -111,13 +113,15 @@ class Investigation:
     window_s: int = 120
     model: str | None = None
     max_steps: int = 4
+    window: Window | None = None
+    engine: str = field(default_factory=lambda: os.environ.get("ENGINE", "native"))  # native | adk
     tel: Telemetry = field(init=False)
     llm: Gemini = field(init=False)
     trail: list[dict] = field(default_factory=list)
     stage: str = "queued"  # for live progress in the UI
 
     def __post_init__(self):
-        self.tel = Telemetry(window=Window.last(self.window_s))
+        self.tel = Telemetry(window=self.window or Window.last(self.window_s))
         self.llm = Gemini(model=self.model) if self.model else Gemini()
 
     def _log(self, entry: dict) -> None:
@@ -160,24 +164,27 @@ class Investigation:
         # can usually decide in one or two calls (free-tier friendly, and faster).
         self.stage = "prefetch"
         prefetched = {}
-        for sv in [x["service"] for x in sus[:3]]:
-            ts = time.time()
-            prefetched[sv] = {"logs": self._run_tool("get_logs", {"service": sv, "level": "ERROR"}),
-                              "warnings": self._run_tool("get_logs", {"service": sv, "level": "WARN"})}
-            self._log({"step": "tool", "tool": "get_logs", "args": {"service": sv, "level": "ERROR+WARN"},
-                       "t": round(ts - t0, 2), "dur": round(time.time() - ts, 2),
-                               "evidence_ids": _ids(prefetched[sv]["logs"]) + _ids(prefetched[sv]["warnings"])})
-        if sus:
-            top = sus[0]["service"]
-            prefetched[top]["error_traces"] = self._run_tool("get_error_traces", {"service": sus[1]["service"] if len(sus) > 1 else top})
-            self._log({"step": "tool", "tool": "get_error_traces", "args": {"service": sus[1]["service"] if len(sus) > 1 else top},
-                               "evidence_ids": _ids(prefetched[top]["error_traces"])})
-        changes = self._run_tool("get_recent_changes", {})
-        self._log({"step": "tool", "tool": "get_recent_changes", "args": {}, "evidence_ids": _ids(changes)})
+        top3 = [x["service"] for x in sus[:3]]
+        entry = next((sv for sv in ("checkout", "frontend") if sv in self.alert), "frontend")
+        jobs = [(sv, "logs", "get_logs", {"service": sv, "level": "ERROR"}) for sv in top3] + \
+               [(sv, "warnings", "get_logs", {"service": sv, "level": "WARN"}) for sv in top3] + \
+               [("_entry", "error_traces", "get_error_traces", {"service": entry}), ("_changes", "changes", "get_recent_changes", {})]
+        ts = time.time()
+        with ThreadPoolExecutor(max_workers=8) as ex:  # independent read-only queries run in parallel
+            results = list(ex.map(lambda j: (j, self._run_tool(j[2], j[3])), jobs))
+        dur = round(time.time() - ts, 2)
+        for (key, kind, tool, args), res in results:
+            prefetched.setdefault(key, {})[kind] = res
+        for sv in top3:
+            self._log({"step": "tool", "tool": "get_logs", "args": {"service": sv, "level": "ERROR+WARN"}, "t": round(ts - t0, 2), "dur": dur,
+                       "evidence_ids": _ids(prefetched[sv]["logs"]) + _ids(prefetched[sv]["warnings"])})
+        self._log({"step": "tool", "tool": "get_error_traces", "args": {"service": entry}, "t": round(ts - t0, 2), "dur": dur,
+                   "evidence_ids": _ids(prefetched["_entry"]["error_traces"])})
+        changes = prefetched.pop("_changes")["changes"]
+        self._log({"step": "tool", "tool": "get_recent_changes", "args": {}, "t": round(ts - t0, 2), "dur": dur, "evidence_ids": _ids(changes)})
+        prefetched["error_traces_via_" + entry] = prefetched.pop("_entry")["error_traces"]
 
-        msgs = [
-            {"role": "system", "content": SYSTEM},
-            {"role": "user", "content": json.dumps({
+        context = {
                 "alert": self.alert,
                 "service_health": {"evidence_id": health_id, "services": health},
                 "call_graph": {"evidence_id": graph["evidence_id"], "edges": graph["edges"]},
@@ -187,10 +194,15 @@ class Investigation:
                 "recent_changes": changes,
                 "instructions": "Evidence for the top suspects is already fetched above. Call more tools ONLY if a hypothesis "
                                 "still needs testing (e.g. heap_mb, db_pool_in_use, p95_latency_ms, slow traces); otherwise call submit_diagnosis now.",
-            })[:30000]},
-        ]
+        }
         self.stage = "gemini"
         diagnosis, error = None, None
+        prompt = _fit(context, PROMPT_BUDGET)
+        if self.engine == "adk":
+            from .adk_agent import run_adk
+            diagnosis, error = run_adk(self, json.loads(prompt))
+            return self._done(diagnosis, error, sus, health, graph, t0)
+        msgs = [{"role": "system", "content": SYSTEM}, {"role": "user", "content": prompt}]
         try:
             for step in range(self.max_steps):
                 force = step == self.max_steps - 1
@@ -214,17 +226,18 @@ class Investigation:
                     res = self._run_tool(name, args)
                     self._log({"step": "tool", "tool": name, "args": args,
                                        "evidence_ids": _ids(res)})
-                    msgs.append({"role": "tool", "tool_call_id": c.get("id", name), "name": name, "content": json.dumps(res)[:6000]})
+                    msgs.append({"role": "tool", "tool_call_id": c.get("id", name), "name": name, "content": _fit(res, TOOL_BUDGET)})
                 if diagnosis:
                     break
         except GeminiUnavailable as e:
             error = str(e)
 
+        return self._done(diagnosis, error, sus, health, graph, t0)
+
+    def _done(self, diagnosis, error, sus, health, graph, t0) -> dict:
         self.stage = "gate"
         out = self._finish(diagnosis, error, sus, time.time() - t0)
-        out["health"] = health
-        out["edges"] = graph["edges"]
-        out["suspects"] = sus
+        out.update(health=health, edges=graph["edges"], suspects=sus, engine=self.engine)
         self.stage = "done"
         return out
 
@@ -235,9 +248,14 @@ class Investigation:
             return {**base, "verdict": "FAILED" if error else "INCONCLUSIVE", "error": error or "no diagnosis submitted",
                     "root_cause_service": None, "fault_type": None, "ranked_candidates": [s["service"] for s in sus][:3]}
         g = gate(d.get("claims", []), self.tel.store)
-        rc_ok = any(c.get("is_root_cause_claim") for c in g.kept) or (
-            g.kept and not any(c.get("is_root_cause_claim") for c in d.get("claims", [])))
-        conf = float(d.get("confidence", 0))
+        rc = d.get("root_cause_service")
+        # the named root cause must be supported by at least one claim that survived the gate
+        rc_ok = bool(rc) and any(rc in c.get("text", "") or any(e.get("meta", {}).get("service") == rc or rc in e.get("ref", "") or rc in e.get("text", "")
+                                                             for e in c.get("evidence", [])) for c in g.kept)
+        try:
+            conf = min(1.0, max(0.0, float(d.get("confidence") or 0)))
+        except (TypeError, ValueError):
+            conf = 0.0
         verdict = "DIAGNOSIS" if (rc_ok and conf >= 0.5) else "INCONCLUSIVE"
         action = safety.classify(d["suggested_action"]) if d.get("suggested_action") else None
         return {**base, "verdict": verdict,
@@ -247,6 +265,31 @@ class Investigation:
                 "claims": g.kept, "dropped_claims": g.dropped, "evidence_precision": round(g.precision, 3),
                 "rejected_hypotheses": d.get("rejected_hypotheses", []),
                 "suggested_action": action, "evidence_items": len(self.tel.store.items)}
+
+
+PROMPT_BUDGET = 30000  # characters of JSON sent to Gemini; reported per run as prompt tokens
+TOOL_BUDGET = 6000
+
+
+def _fit(obj, budget: int) -> str:
+    """Serialise to JSON within a size budget by trimming data, never by cutting the string,
+    so the model always receives valid JSON and every evidence ID it sees is complete."""
+    txt = json.dumps(obj)
+    if len(txt) <= budget:
+        return txt
+    def shrink(o, n):
+        if isinstance(o, dict):
+            return {k: shrink(v, n) for k, v in o.items()}
+        if isinstance(o, list):
+            return [shrink(v, n) for v in o[:n]]
+        if isinstance(o, str) and len(o) > 400:
+            return o[:400] + "…"
+        return o
+    for n in (12, 8, 5, 3, 2, 1):
+        txt = json.dumps(shrink(obj, n))
+        if len(txt) <= budget:
+            return txt
+    return json.dumps({"truncated": True, "note": "payload too large; call narrower tools"})
 
 
 def _ids(res):

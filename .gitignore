@@ -3,4 +3,3 @@ shop/wheels/
 .env
 __pycache__/
 *.pyc
-results/runs/

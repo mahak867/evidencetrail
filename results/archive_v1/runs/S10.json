@@ -1,0 +1,268 @@
+{
+ "scenario": {
+  "id": "S10",
+  "service": "shipping",
+  "kind": "bad_config",
+  "params": {},
+  "alert": "checkout error rate above 5% for 1m (SLO burn)"
+ },
+ "truth": {
+  "service": "shipping",
+  "fault_type": "bad_config"
+ },
+ "injected_at": 1795099076.8457825,
+ "methods": {
+  "B1_dashboard_rule": {
+   "method": "B1_dashboard_rule",
+   "root_cause_service": "checkout",
+   "fault_type": null,
+   "ranked_candidates": [
+    "checkout",
+    "shipping",
+    "payment"
+   ],
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 0.0,
+   "usage": {
+    "total_tokens": 0,
+    "calls": 0
+   },
+   "score": {
+    "top1": false,
+    "top3": true,
+    "type_ok": null,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "B0_single_prompt": {
+   "method": "B0_single_prompt",
+   "root_cause_service": "shipping",
+   "fault_type": "bad_config",
+   "ranked_candidates": [
+    "shipping",
+    "checkout",
+    "frontend"
+   ],
+   "summary": "The shipping service is failing to load exchange rates because the FX_RATE_SOURCE configuration variable is empty. This causes upstream HTTP 500 errors in the checkout service, resulting in high error rates and subsequent HTTP 502 errors in the frontend.",
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 8.7,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 16013,
+    "completion_tokens": 116,
+    "retries": 0,
+    "failures": 4,
+    "total_tokens": 16129
+   },
+   "model": "gemini-flash-lite-latest",
+   "prompt_chars": 29571,
+   "error": null,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail": {
+   "alert": "checkout error rate above 5% for 1m (SLO burn)",
+   "model": "gemini-3.1-flash-lite",
+   "elapsed_s": 8.0,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 3462,
+    "completion_tokens": 361,
+    "retries": 0,
+    "failures": 0,
+    "total_tokens": 3823
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "health_evidence_id": "M-c4d686",
+     "graph_evidence_id": "T-f5005f",
+     "suspects": [
+      {
+       "service": "shipping",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 1.75,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 4.8,
+        "baseline_p95_ms": 60.0
+       }
+      },
+      {
+       "service": "checkout",
+       "anomalous_dependencies": [
+        "shipping"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 1.73,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 242.5,
+        "baseline_p95_ms": 457.1
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "shipping",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": [
+      "L-7e4a4b"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "checkout",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": [
+      "L-7f047b"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "checkout"
+     },
+     "evidence_ids": [
+      "T-998adf",
+      "T-d38a48",
+      "T-208ac3",
+      "T-659122",
+      "T-777594"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "evidence_ids": [
+      "C-037268",
+      "C-008939"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "shipping",
+    "checkout"
+   ],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "shipping",
+   "fault_type": "bad_config",
+   "ranked_candidates": [
+    "shipping",
+    "checkout",
+    "frontend"
+   ],
+   "confidence": 1.0,
+   "summary": "The shipping service is failing due to a bad configuration change where 'FX_RATE_SOURCE' was set to an empty string. This causes the service to return 500 errors, which propagate to the checkout service and cause checkout failures.",
+   "claims": [
+    {
+     "evidence_ids": [
+      "L-7e4a4b"
+     ],
+     "quote": "config error: FX_RATE_SOURCE is empty; cannot load exchange rates",
+     "text": "The shipping service is failing because the FX_RATE_SOURCE configuration was set to an empty string.",
+     "is_root_cause_claim": true,
+     "evidence": [
+      {
+       "id": "L-7e4a4b",
+       "kind": "log",
+       "ref": "shipping.log:431",
+       "text": "config error: FX_RATE_SOURCE is empty; cannot load exchange rates",
+       "meta": {
+        "service": "shipping",
+        "line": 431,
+        "ts": "2026-11-19T14:39:05.259+00:00",
+        "level": "ERROR",
+        "trace_id": "b9c8a547e325888ae7b3b99e6aa62585",
+        "count_in_window": 123
+       }
+      }
+     ]
+    },
+    {
+     "quote": "\"FX_RATE_SOURCE\": \"\"",
+     "text": "A configuration change was applied to the shipping service, setting FX_RATE_SOURCE to an empty string.",
+     "is_root_cause_claim": true,
+     "evidence_ids": [
+      "C-008939"
+     ],
+     "evidence": [
+      {
+       "id": "C-008939",
+       "kind": "change",
+       "ref": "events.log:2",
+       "text": "{\"ts\": \"2026-11-19T14:37:56.844+00:00\", \"service\": \"shipping\", \"kind\": \"ConfigUpdated\", \"version\": 42, \"changed\": {\"FX_RATE_SOURCE\": \"\"}, \"author\": \"deploy-bot\"}",
+       "meta": {
+        "ts": "2026-11-19T14:37:56.844+00:00",
+        "service": "shipping",
+        "kind": "ConfigUpdated",
+        "version": 42,
+        "changed": {
+         "FX_RATE_SOURCE": ""
+        },
+        "author": "deploy-bot"
+       }
+      }
+     ]
+    },
+    {
+     "quote": "deepest failing service: shipping",
+     "text": "The checkout service is failing because it depends on the shipping service, which is returning 500 errors.",
+     "is_root_cause_claim": false,
+     "evidence_ids": [
+      "T-998adf"
+     ],
+     "evidence": [
+      {
+       "id": "T-998adf",
+       "kind": "trace",
+       "ref": "trace:91859e2b28708edc",
+       "text": "trace 91859e2b28708edc2bb72331b2c210f8: failing server spans in call order: frontend(502, 384.6ms) -> checkout(502, 146.1ms) -> shipping(500, 0.6ms); deepest failing service: shipping",
+       "meta": {
+        "trace_id": "91859e2b28708edc2bb72331b2c210f8",
+        "deepest": "shipping"
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [],
+   "evidence_precision": 1.0,
+   "rejected_hypotheses": [],
+   "suggested_action": {
+    "why": "The shipping service's configuration was recently changed to an invalid value (empty FX_RATE_SOURCE), causing it to fail. Rolling back will restore the previous valid configuration.",
+    "action": "rollback_config",
+    "service": "shipping",
+    "risk": "risky",
+    "description": "Restores the previous configuration version",
+    "dry_run": "DELETE http://localhost:8106/admin/fault  (test env: restore config v41)"
+   },
+   "evidence_items": 11,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  }
+ }
+}

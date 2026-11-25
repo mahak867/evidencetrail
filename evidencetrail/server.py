@@ -200,7 +200,7 @@ def _wilson(k: int, n: int, z: float = 1.96):
 
 @app.get("/api/scorecard.json")
 def scorecard_json():
-    methods = ["B1_dashboard_rule", "B0_single_prompt", "EvidenceTrail"]
+    methods = ["B1_dashboard_rule", "B0_single_prompt", "EvidenceTrail", "EvidenceTrail_ADK"]
     sets = {}
     for folder, label in (("runs", "standard"), ("runs_hard", "hard")):
         runs = _load_runs(folder)

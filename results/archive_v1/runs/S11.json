@@ -1,0 +1,295 @@
+{
+ "scenario": {
+  "id": "S11",
+  "service": "payment",
+  "kind": "bad_deploy",
+  "params": {
+   "rate": "0.8"
+  },
+  "alert": "checkout error rate above 5% for 1m (SLO burn)"
+ },
+ "truth": {
+  "service": "payment",
+  "fault_type": "bad_deploy"
+ },
+ "injected_at": 1795099228.897089,
+ "methods": {
+  "B1_dashboard_rule": {
+   "method": "B1_dashboard_rule",
+   "root_cause_service": "payment",
+   "fault_type": null,
+   "ranked_candidates": [
+    "payment",
+    "checkout",
+    "frontend"
+   ],
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 0.0,
+   "usage": {
+    "total_tokens": 0,
+    "calls": 0
+   },
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": null,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "B0_single_prompt": {
+   "method": "B0_single_prompt",
+   "root_cause_service": "payment",
+   "fault_type": "code_error",
+   "ranked_candidates": [
+    "payment",
+    "checkout",
+    "frontend"
+   ],
+   "summary": "The payment service is throwing a 'TypeError: cannot read property 'amount' of undefined' in version v2.7.0-rc1, causing upstream 500 errors in the checkout service and subsequent 502 errors in the frontend.",
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 4.3,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 14061,
+    "completion_tokens": 91,
+    "retries": 0,
+    "failures": 0,
+    "total_tokens": 14152
+   },
+   "model": "gemini-3.1-flash-lite",
+   "prompt_chars": 25072,
+   "error": null,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": false,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail": {
+   "alert": "checkout error rate above 5% for 1m (SLO burn)",
+   "model": "gemini-3.1-flash-lite",
+   "elapsed_s": 10.9,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 3909,
+    "completion_tokens": 441,
+    "retries": 0,
+    "failures": 0,
+    "total_tokens": 4350
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "health_evidence_id": "M-7e6339",
+     "graph_evidence_id": "T-7a2ca6",
+     "suspects": [
+      {
+       "service": "payment",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 2.13,
+        "error_ratio": 0.829,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 16.2,
+        "baseline_p95_ms": 23.9
+       }
+      },
+      {
+       "service": "checkout",
+       "anomalous_dependencies": [
+        "payment"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 2.13,
+        "error_ratio": 0.829,
+        "baseline_error_ratio": 0.69,
+        "p95_ms": 247.4,
+        "baseline_p95_ms": 242.5
+       }
+      },
+      {
+       "service": "frontend",
+       "anomalous_dependencies": [
+        "checkout"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 7.95,
+        "error_ratio": 0.224,
+        "baseline_error_ratio": 0.162,
+        "p95_ms": 498.1,
+        "baseline_p95_ms": 490.0
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "payment",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": [
+      "L-078651"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "checkout",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": [
+      "L-5e7bcf"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "frontend",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": [
+      "L-733524"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "checkout"
+     },
+     "evidence_ids": [
+      "T-f05f85",
+      "T-528c08",
+      "T-1d3a35",
+      "T-daa781",
+      "T-c72a76"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "evidence_ids": [
+      "C-037268",
+      "C-008939",
+      "C-c20646"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "payment",
+    "checkout",
+    "frontend"
+   ],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "payment",
+   "fault_type": "bad_deploy",
+   "ranked_candidates": [
+    "payment",
+    "checkout",
+    "frontend"
+   ],
+   "confidence": 1.0,
+   "summary": "The payment service is failing due to a code error introduced in the latest deployment (v2.7.0-rc1). The error 'TypeError: cannot read property 'amount' of undefined' is causing 500 errors, which propagate upstream to checkout and frontend.",
+   "claims": [
+    {
+     "evidence_ids": [
+      "C-c20646"
+     ],
+     "text": "A new version of the payment service (v2.7.0-rc1) was deployed just before the errors started.",
+     "is_root_cause_claim": true,
+     "quote": "2026-11-19T14:40:28.893+00:00\", \"service\": \"payment\", \"kind\": \"DeploymentRolledOut\", \"image\": \"shopsim/payment:v2.7.0-rc1\"",
+     "evidence": [
+      {
+       "id": "C-c20646",
+       "kind": "change",
+       "ref": "events.log:3",
+       "text": "{\"ts\": \"2026-11-19T14:40:28.893+00:00\", \"service\": \"payment\", \"kind\": \"DeploymentRolledOut\", \"image\": \"shopsim/payment:v2.7.0-rc1\", \"previous\": \"shopsim/payment:v2.6.3\", \"author\": \"ci-pipeline\"}",
+       "meta": {
+        "ts": "2026-11-19T14:40:28.893+00:00",
+        "service": "payment",
+        "kind": "DeploymentRolledOut",
+        "image": "shopsim/payment:v2.7.0-rc1",
+        "previous": "shopsim/payment:v2.6.3",
+        "author": "ci-pipeline"
+       }
+      }
+     ]
+    },
+    {
+     "evidence_ids": [
+      "L-078651"
+     ],
+     "text": "The payment service is throwing a TypeError immediately after the deployment of v2.7.0-rc1.",
+     "quote": "TypeError: cannot read property 'amount' of undefined (v2.7.0-rc1)",
+     "is_root_cause_claim": true,
+     "evidence": [
+      {
+       "id": "L-078651",
+       "kind": "log",
+       "ref": "payment.log:5048",
+       "text": "TypeError: cannot read property 'amount' of undefined (v2.7.0-rc1)",
+       "meta": {
+        "service": "payment",
+        "line": 5048,
+        "ts": "2026-11-19T14:41:32.113+00:00",
+        "level": "ERROR",
+        "trace_id": "3e94c3d10a33e6e0dd38718d88e2f1e9",
+        "count_in_window": 112
+       }
+      }
+     ]
+    },
+    {
+     "evidence_ids": [
+      "T-f05f85"
+     ],
+     "quote": "deepest failing service: payment",
+     "is_root_cause_claim": false,
+     "text": "Tracing confirms that the payment service is the deepest failing service in the call chain.",
+     "evidence": [
+      {
+       "id": "T-f05f85",
+       "kind": "trace",
+       "ref": "trace:9df78e2ecbbce72e",
+       "text": "trace 9df78e2ecbbce72eb608f3fa2618905f: failing server spans in call order: frontend(502, 396.4ms) -> checkout(502, 162.5ms) -> payment(500, 0.7ms); deepest failing service: payment",
+       "meta": {
+        "trace_id": "9df78e2ecbbce72eb608f3fa2618905f",
+        "deepest": "payment"
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [],
+   "evidence_precision": 1.0,
+   "rejected_hypotheses": [],
+   "suggested_action": {
+    "service": "payment",
+    "action": "rollback_deploy",
+    "why": "The payment service deployment v2.7.0-rc1 introduced a code error causing 500s. Rolling back to the previous version (v2.6.3) should resolve the issue.",
+    "risk": "risky",
+    "description": "Rolls the service back to its previous image",
+    "dry_run": "DELETE http://localhost:8105/admin/fault  (test env: roll back to v2.6.3)"
+   },
+   "evidence_items": 13,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  }
+ }
+}

@@ -1,0 +1,361 @@
+{
+ "scenario": {
+  "id": "S03",
+  "service": "currency",
+  "kind": "latency",
+  "params": {
+   "ms": "1400"
+  },
+  "alert": "frontend p95 latency above 2s for 2m"
+ },
+ "truth": {
+  "service": "currency",
+  "fault_type": "latency"
+ },
+ "injected_at": 1795097242.792477,
+ "methods": {
+  "B1_dashboard_rule": {
+   "method": "B1_dashboard_rule",
+   "root_cause_service": "currency",
+   "fault_type": null,
+   "ranked_candidates": [
+    "currency",
+    "shipping",
+    "catalog"
+   ],
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 0.0,
+   "usage": {
+    "total_tokens": 0,
+    "calls": 0
+   },
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": null,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "B0_single_prompt": {
+   "method": "B0_single_prompt",
+   "root_cause_service": "currency",
+   "fault_type": "latency",
+   "ranked_candidates": [
+    "currency",
+    "checkout",
+    "frontend"
+   ],
+   "summary": "The currency service is experiencing slow operations (taking 1100-1650ms), causing downstream latency in checkout and subsequent timeout errors on the frontend.",
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 17.3,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 13159,
+    "completion_tokens": 76,
+    "retries": 0,
+    "failures": 4,
+    "total_tokens": 13235
+   },
+   "model": "gemini-flash-lite-latest",
+   "prompt_chars": 22394,
+   "error": null,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail": {
+   "alert": "frontend p95 latency above 2s for 2m",
+   "model": "gemini-3.1-flash-lite",
+   "elapsed_s": 8.9,
+   "usage": {
+    "calls": 2,
+    "prompt_tokens": 8056,
+    "completion_tokens": 455,
+    "retries": 0,
+    "failures": 0,
+    "total_tokens": 8511
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "health_evidence_id": "M-2d017c",
+     "graph_evidence_id": "T-6f001f",
+     "suspects": [
+      {
+       "service": "currency",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 21.56,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 1950.0,
+        "baseline_p95_ms": 23.9
+       }
+      },
+      {
+       "service": "frontend",
+       "anomalous_dependencies": [
+        "catalog",
+        "recommendation",
+        "checkout"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 7.87,
+        "error_ratio": 0.236,
+        "baseline_error_ratio": 0.437,
+        "p95_ms": 8938.7,
+        "baseline_p95_ms": 505.4
+       }
+      },
+      {
+       "service": "catalog",
+       "anomalous_dependencies": [
+        "currency"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 17.93,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.241,
+        "p95_ms": 1950.0,
+        "baseline_p95_ms": 157.2
+       }
+      },
+      {
+       "service": "checkout",
+       "anomalous_dependencies": [
+        "catalog",
+        "shipping",
+        "currency"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 1.85,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 4850.0,
+        "baseline_p95_ms": 442.3
+       }
+      },
+      {
+       "service": "recommendation",
+       "anomalous_dependencies": [
+        "catalog"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 8.02,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.052,
+        "p95_ms": 1950.0,
+        "baseline_p95_ms": 235.0
+       }
+      },
+      {
+       "service": "shipping",
+       "anomalous_dependencies": [
+        "currency"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 1.87,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 1950.0,
+        "baseline_p95_ms": 62.5
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "currency",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": [
+      "L-a0e860"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "frontend",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": [
+      "L-584db2"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "catalog",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "frontend"
+     },
+     "evidence_ids": [
+      "T-67dfe7",
+      "T-30c4e0",
+      "T-5e6b8b",
+      "T-ab5c5a",
+      "T-dfa7dd"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "service": "currency",
+      "name": "p95_latency_ms"
+     },
+     "evidence_ids": [
+      "M-f0b201"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_slow_traces",
+     "args": {
+      "service": "currency"
+     },
+     "evidence_ids": [
+      "T-448009",
+      "T-dfc869",
+      "T-75fc34",
+      "T-a16c47",
+      "T-76f94e"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "currency",
+    "frontend",
+    "catalog",
+    "checkout",
+    "recommendation",
+    "shipping"
+   ],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "currency",
+   "fault_type": "latency",
+   "ranked_candidates": [
+    "currency",
+    "catalog",
+    "checkout"
+   ],
+   "confidence": 0.9,
+   "summary": "The currency service is the root cause of the incident, exhibiting high latency (p95 ~1950ms) due to a slow operation in its /work endpoint. This latency is propagating upstream to catalog, checkout, and frontend services.",
+   "claims": [
+    {
+     "is_root_cause_claim": true,
+     "text": "The currency service logs indicate a recurring slow operation in the /work endpoint.",
+     "evidence_ids": [
+      "L-a0e860"
+     ],
+     "quote": "slow operation: /work took 1668ms",
+     "evidence": [
+      {
+       "id": "L-a0e860",
+       "kind": "log",
+       "ref": "currency.log:3355",
+       "text": "slow operation: /work took 1668ms",
+       "meta": {
+        "service": "currency",
+        "line": 3355,
+        "ts": "2026-11-19T14:08:40.052+00:00",
+        "level": "WARN",
+        "trace_id": "af65fba9e17695c82fff1376a2484987",
+        "count_in_window": 1647
+       }
+      }
+     ]
+    },
+    {
+     "is_root_cause_claim": true,
+     "evidence_ids": [
+      "T-448009",
+      "T-dfc869"
+     ],
+     "text": "Slow traces confirm that the currency service is the primary contributor to the latency, with high self-time.",
+     "quote": "largest self-time (ms) by service: [('currency', 7239.7)",
+     "evidence": [
+      {
+       "id": "T-448009",
+       "kind": "trace",
+       "ref": "trace:ebfae6d3e2a70b30",
+       "text": "trace ebfae6d3e2a70b30218ea58755927411: largest self-time (ms) by service: [('currency', 7239.7), ('catalog', 122.1), ('inventory', 37.1)]",
+       "meta": {
+        "trace_id": "ebfae6d3e2a70b30218ea58755927411"
+       }
+      },
+      {
+       "id": "T-dfc869",
+       "kind": "trace",
+       "ref": "trace:3b994ebdee8906e5",
+       "text": "trace 3b994ebdee8906e52605a053a8d4705d: largest self-time (ms) by service: [('currency', 7200.4), ('catalog', 87.4), ('inventory', 44.3)]",
+       "meta": {
+        "trace_id": "3b994ebdee8906e52605a053a8d4705d"
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [
+    {
+     "text": "The currency service shows a significant increase in p95 latency, jumping from a baseline of ~24ms to 1950ms.",
+     "quote": "p95_ms: 1950.0, baseline_p95_ms: 23.9",
+     "is_root_cause_claim": true,
+     "evidence_ids": [
+      "M-2d017c",
+      "M-f0b201"
+     ],
+     "rejected_because": [
+      "quoted text not found in cited evidence"
+     ]
+    }
+   ],
+   "evidence_precision": 0.667,
+   "rejected_hypotheses": [],
+   "suggested_action": {
+    "service": "currency",
+    "action": "restart_service",
+    "why": "The currency service is experiencing high latency due to a slow operation, and a restart may clear transient issues or resource contention.",
+    "risk": "risky",
+    "description": "Restarts the service container; in-flight requests fail",
+    "dry_run": "docker compose restart currency"
+   },
+   "evidence_items": 15,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  }
+ }
+}

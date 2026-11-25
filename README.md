@@ -19,6 +19,7 @@ EvidenceTrail helps an on-call engineer reach a checked root-cause diagnosis in 
 | Hypothesis-testing investigation agent (tool calling over logs, metrics, traces, changes) | `gemini-3.1-flash-lite` (primary); on 503 "high demand" or a daily-quota 429 it falls back to `gemini-3-flash-preview` → `gemini-3.5-flash` → `gemini-flash-latest` → `gemini-flash-lite-latest` | `evidencetrail/investigator.py`, `evidencetrail/gemini.py` |
 | Structured diagnosis (service, fault type, cited claims, rejected hypotheses, suggested action) | same | `submit_diagnosis` tool in `investigator.py` |
 | Baseline B0 (single prompt with raw logs) | same model, for a fair comparison | `evidencetrail/baselines.py` |
+| Google ADK engine (`ENGINE=adk`) | same model via ADK `LiteLlm` | `evidencetrail/adk_agent.py` |
 
 The model actually used for each run is recorded in its result JSON. Override the defaults with `GEMINI_MODEL`, `GEMINI_FALLBACKS` and `GEMINI_REASONING`.
 
@@ -45,6 +46,19 @@ Safety by design:
 - Secrets, card numbers, emails and JWTs are redacted before anything reaches Gemini (`redact.py`; the payment service deliberately logs a fake API key to demonstrate this).
 - Action risk is decided by an allow-list policy, never by the model (`safety.py`).
 - Every approval, block and feedback event goes to `results/audit.log`.
+
+## Integrations: MCP server and Google ADK
+
+**MCP server.** EvidenceTrail is also a [Model Context Protocol](https://modelcontextprotocol.io) server, so Claude Code, Claude Desktop, Gemini CLI or any MCP agent can investigate incidents with the same read-only tools and the same evidence gate (`evidencetrail/mcp_server.py`).
+
+```bash
+claude mcp add evidencetrail -- python -m evidencetrail.mcp_server     # Claude Code
+python -m evidencetrail.mcp_server --http 8765                         # streamable HTTP
+```
+
+Tools: `get_service_health`, `get_suspects`, `get_logs`, `get_metric`, `get_error_traces`, `get_recent_changes`, `investigate`. All are annotated read-only. The server never injects faults or executes actions; suggested actions are returned with their policy label only.
+
+**Google ADK engine.** The investigation can run on Google's Agent Development Kit (`evidencetrail/adk_agent.py`). An ADK `LlmAgent` with Gemini (through ADK's `LiteLlm` connector to the Gemini API's OpenAI-compatible endpoint) and EvidenceTrail's tools runs the agent loop. The same evidence gate and safety policy then verify the result: **ADK proposes, EvidenceTrail verifies.** Select it with `ENGINE=adk`, `engine="adk"` in the MCP `investigate` tool, or `Investigation(engine="adk")`. The evaluation scores both engines on the same faults.
 
 ## Target application and fault injection
 

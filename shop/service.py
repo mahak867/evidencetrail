@@ -188,7 +188,8 @@ async def apply_fault(route: str) -> None:
             log("WARN", f"slow operation: {route} took {int(delay*1000)}ms", route=route, duration_ms=int(delay * 1000))
         await asyncio.sleep(delay)
     if k == "memory_leak":
-        _leak.append(bytes(int(FAULT.get("bytes_per_req", 2_000_000))))
+        if sum(len(b) for b in _leak) < 300_000_000:  # cap the simulated leak so the host never runs out of memory
+            _leak.append(bytes(int(FAULT.get("bytes_per_req", 2_000_000))))
         held = sum(len(b) for b in _leak)
         if held > 150_000_000:
             log("WARN", f"GC pause 1.{random.randint(1,9)}s, heap {held//1_000_000}MB of 256MB limit", route=route, heap_mb=held // 1_000_000)

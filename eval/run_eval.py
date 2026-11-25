@@ -21,6 +21,7 @@ import yaml
 from evidencetrail import faults
 from evidencetrail.baselines import b0_single_prompt, b1_dashboard_rule
 from evidencetrail.investigator import investigate
+from evidencetrail.telemetry import Window
 
 HERE = os.path.dirname(__file__)
 RUNS = os.path.join(HERE, "..", "results", "runs")
@@ -42,7 +43,8 @@ def score(res: dict, truth_svc: str, truth_type: str) -> dict:
     ranked = [s for s in (res.get("ranked_candidates") or []) if s]
     top1 = res.get("root_cause_service") == truth_svc and res.get("verdict") == "DIAGNOSIS"
     return {"top1": top1, "top3": truth_svc in ranked[:3] or top1,
-            "type_ok": res.get("fault_type") == truth_type if res.get("fault_type") else None,
+            # methods that name a fault type are scored on it; a failed or empty answer counts as a miss
+            "type_ok": (res.get("fault_type") == truth_type) if res.get("method") != "B1_dashboard_rule" else None,
             "inconclusive": res.get("verdict") == "INCONCLUSIVE", "failed": res.get("verdict") == "FAILED"}
 
 
@@ -58,9 +60,12 @@ def run_one(sc: dict) -> dict:
     time.sleep(SOAK_S)
     truth_type = faults.KINDS[sc["kind"]]
     out = {"scenario": sc, "truth": {"service": sc["service"], "fault_type": truth_type}, "injected_at": injected_at, "methods": {}}
-    for name, fn in (("B1_dashboard_rule", lambda: b1_dashboard_rule(WINDOW_S)),
-                     ("B0_single_prompt", lambda: b0_single_prompt(sc["alert"], WINDOW_S)),
-                     ("EvidenceTrail", lambda: investigate(sc["alert"], window_s=WINDOW_S))):
+    win = Window.last(WINDOW_S)  # frozen: every method sees exactly the same telemetry window
+    out["window"] = [win.start, win.end]
+    for name, fn in (("B1_dashboard_rule", lambda: b1_dashboard_rule(window=win)),
+                     ("B0_single_prompt", lambda: b0_single_prompt(sc["alert"], window=win)),
+                     ("EvidenceTrail", lambda: investigate(sc["alert"], window=win)),
+                     ("EvidenceTrail_ADK", lambda: investigate(sc["alert"], window=win, engine="adk"))):
         try:
             r = fn()
         except Exception as e:  # recorded, never hidden
@@ -74,7 +79,7 @@ def run_one(sc: dict) -> dict:
 
 
 def report(runs: list[dict]) -> str:
-    methods = ["B1_dashboard_rule", "B0_single_prompt", "EvidenceTrail"]
+    methods = ["B1_dashboard_rule", "B0_single_prompt", "EvidenceTrail", "EvidenceTrail_ADK"]
     n = len(runs)
     lines = [f"# EvidenceTrail evaluation scorecard ({SET} set)", "",
              f"- Scenarios: **{n}** injected faults across **{len({r['truth']['fault_type'] for r in runs})}** fault types "

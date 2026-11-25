@@ -1,0 +1,271 @@
+{
+ "scenario": {
+  "id": "S01",
+  "service": "payment",
+  "kind": "error",
+  "params": {
+   "message": "PaymentGatewayError: upstream gateway rejected request (code 5003)",
+   "error_type": "PaymentGatewayError"
+  },
+  "alert": "checkout error rate above 5% for 1m (SLO burn)"
+ },
+ "truth": {
+  "service": "payment",
+  "fault_type": "code_error"
+ },
+ "injected_at": 1795096163.4232793,
+ "methods": {
+  "B1_dashboard_rule": {
+   "method": "B1_dashboard_rule",
+   "root_cause_service": "payment",
+   "fault_type": null,
+   "ranked_candidates": [
+    "payment",
+    "checkout",
+    "cart"
+   ],
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 0.0,
+   "usage": {
+    "total_tokens": 0,
+    "calls": 0
+   },
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": null,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "B0_single_prompt": {
+   "method": "B0_single_prompt",
+   "root_cause_service": "payment",
+   "fault_type": "code_error",
+   "ranked_candidates": [
+    "payment",
+    "checkout",
+    "frontend"
+   ],
+   "summary": "The payment service is consistently returning 'PaymentGatewayError: upstream gateway rejected request (code 5003)'. This failure propagates to the checkout service (HTTP 500) and subsequently to the frontend (HTTP 502), causing the checkout error rate to spike.",
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 3.1,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 14263,
+    "completion_tokens": 97,
+    "retries": 0,
+    "failures": 0,
+    "total_tokens": 14360
+   },
+   "model": "gemini-3.1-flash-lite",
+   "prompt_chars": 25880,
+   "error": null,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail": {
+   "alert": "checkout error rate above 5% for 1m (SLO burn)",
+   "model": "gemini-flash-lite-latest,gemini-3.1-flash-lite",
+   "elapsed_s": 140.5,
+   "usage": {
+    "calls": 3,
+    "prompt_tokens": 8974,
+    "completion_tokens": 257,
+    "retries": 1,
+    "failures": 4,
+    "total_tokens": 9231
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "health_evidence_id": "M-ec9565",
+     "graph_evidence_id": "T-a32279",
+     "suspects": [
+      {
+       "service": "payment",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 1.89,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 4.8,
+        "baseline_p95_ms": 24.0
+       }
+      },
+      {
+       "service": "shipping",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 0.0,
+        "error_ratio": 0.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": null,
+        "baseline_p95_ms": 71.7
+       }
+      },
+      {
+       "service": "checkout",
+       "anomalous_dependencies": [
+        "payment"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 1.89,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.029,
+        "p95_ms": 242.4,
+        "baseline_p95_ms": 437.5
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "payment",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": [
+      "L-adbff4"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "shipping",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "checkout",
+      "level": "ERROR+WARN"
+     },
+     "evidence_ids": [
+      "L-6f76b4"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "shipping"
+     },
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "evidence_ids": []
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "service": "payment",
+      "name": "error_ratio"
+     },
+     "evidence_ids": [
+      "M-d3779d"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "payment",
+    "shipping",
+    "checkout"
+   ],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "payment",
+   "fault_type": "code_error",
+   "ranked_candidates": [
+    "payment",
+    "checkout"
+   ],
+   "confidence": 0.9,
+   "summary": "The payment service is failing due to errors from an external payment gateway (code 5003). This is causing checkout failures. No recent deployments or configuration changes were found.",
+   "claims": [
+    {
+     "is_root_cause_claim": true,
+     "evidence_ids": [
+      "L-adbff4"
+     ],
+     "quote": "PaymentGatewayError: upstream gateway rejected request (code 5003)",
+     "text": "The payment service is failing because it is receiving 5003 errors from an upstream payment gateway.",
+     "evidence": [
+      {
+       "id": "L-adbff4",
+       "kind": "log",
+       "ref": "payment.log:2620",
+       "text": "PaymentGatewayError: upstream gateway rejected request (code 5003)",
+       "meta": {
+        "service": "payment",
+        "line": 2620,
+        "ts": "2026-11-19T13:50:26.381+00:00",
+        "level": "ERROR",
+        "trace_id": "be1a70772e0de89a8bd7307914b86c86",
+        "count_in_window": 116
+       }
+      }
+     ]
+    },
+    {
+     "is_root_cause_claim": false,
+     "text": "The checkout service is failing due to errors propagated from the payment service.",
+     "evidence_ids": [
+      "L-6f76b4"
+     ],
+     "quote": "upstream call to payment failed with HTTP 500",
+     "evidence": [
+      {
+       "id": "L-6f76b4",
+       "kind": "log",
+       "ref": "checkout.log:1881",
+       "text": "upstream call to payment failed with HTTP 500",
+       "meta": {
+        "service": "checkout",
+        "line": 1881,
+        "ts": "2026-11-19T13:50:26.383+00:00",
+        "level": "ERROR",
+        "trace_id": "be1a70772e0de89a8bd7307914b86c86",
+        "count_in_window": 116
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [],
+   "evidence_precision": 1.0,
+   "rejected_hypotheses": [],
+   "suggested_action": null,
+   "evidence_items": 5,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  }
+ }
+}
