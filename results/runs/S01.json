@@ -25,7 +25,7 @@
     "frontend"
    ],
    "verdict": "DIAGNOSIS",
-   "elapsed_s": 0.0,
+   "elapsed_s": 0.1,
    "usage": {
     "total_tokens": 0,
     "calls": 0
@@ -36,7 +36,8 @@
     "type_ok": null,
     "inconclusive": false,
     "failed": false
-   }
+   },
+   "rescored": "re-scored on the saved window with the up-metric rule (B1 is deterministic; no model calls)"
   },
   "B0_single_prompt": {
    "method": "B0_single_prompt",

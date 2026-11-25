@@ -14,12 +14,12 @@
  "methods": {
   "B1_dashboard_rule": {
    "method": "B1_dashboard_rule",
-   "root_cause_service": "frontend",
+   "root_cause_service": "recommendation",
    "fault_type": null,
    "ranked_candidates": [
+    "recommendation",
     "frontend",
-    "currency",
-    "inventory"
+    "currency"
    ],
    "verdict": "DIAGNOSIS",
    "elapsed_s": 0.0,
@@ -28,12 +28,13 @@
     "calls": 0
    },
    "score": {
-    "top1": false,
-    "top3": false,
+    "top1": true,
+    "top3": true,
     "type_ok": null,
     "inconclusive": false,
     "failed": false
-   }
+   },
+   "rescored": "re-scored on the saved window with the up-metric rule (B1 is deterministic; no model calls)"
   },
   "B0_single_prompt": {
    "method": "B0_single_prompt",
