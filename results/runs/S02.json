@@ -1,0 +1,1161 @@
+{
+ "scenario": {
+  "id": "S02",
+  "service": "inventory",
+  "kind": "error",
+  "params": {
+   "message": "KeyError: 'warehouse_id' while reserving stock",
+   "error_type": "KeyError",
+   "rate": "0.9"
+  },
+  "alert": "frontend 5xx ratio above 5% for 1m"
+ },
+ "truth": {
+  "service": "inventory",
+  "fault_type": "code_error"
+ },
+ "injected_at": 1795613438.7689476,
+ "methods": {
+  "B1_dashboard_rule": {
+   "method": "B1_dashboard_rule",
+   "root_cause_service": "inventory",
+   "fault_type": null,
+   "ranked_candidates": [
+    "inventory",
+    "catalog",
+    "recommendation"
+   ],
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 0.0,
+   "usage": {
+    "total_tokens": 0,
+    "calls": 0
+   },
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": null,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "B0_single_prompt": {
+   "method": "B0_single_prompt",
+   "root_cause_service": "inventory",
+   "fault_type": "code_error",
+   "ranked_candidates": [
+    "inventory",
+    "catalog",
+    "frontend"
+   ],
+   "summary": "The inventory service is throwing a 'KeyError: warehouse_id' exception, which causes the catalog service to fail with HTTP 500, subsequently triggering 502 errors in the frontend and recommendation services.",
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 19.1,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 12944,
+    "completion_tokens": 83,
+    "retries": 0,
+    "failures": 0,
+    "wait_s": 0.0,
+    "total_tokens": 13027
+   },
+   "model": "gemini-3.1-flash-lite",
+   "prompt_chars": 25643,
+   "error": null,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail": {
+   "alert": "frontend 5xx ratio above 5% for 1m",
+   "model": "gemini-flash-lite-latest,gemini-3.1-flash-lite",
+   "elapsed_s": 44.9,
+   "usage": {
+    "calls": 2,
+    "prompt_tokens": 8210,
+    "completion_tokens": 297,
+    "retries": 0,
+    "failures": 4,
+    "wait_s": 23.3,
+    "total_tokens": 8507
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "t": 0,
+     "dur": 0.46,
+     "health_evidence_id": "M-e5898e",
+     "graph_evidence_id": "T-c58a0f",
+     "suspects": [
+      {
+       "service": "inventory",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 8.29,
+        "error_ratio": 0.917,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 13.6,
+        "baseline_p95_ms": 23.9
+       }
+      },
+      {
+       "service": "checkout",
+       "anomalous_dependencies": [
+        "catalog"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 0.04,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.814,
+        "p95_ms": 97.5,
+        "baseline_p95_ms": 372.5
+       }
+      },
+      {
+       "service": "frontend",
+       "anomalous_dependencies": [
+        "checkout",
+        "catalog",
+        "recommendation"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 7.53,
+        "error_ratio": 0.998,
+        "baseline_error_ratio": 0.158,
+        "p95_ms": 176.2,
+        "baseline_p95_ms": 801.7
+       }
+      },
+      {
+       "service": "catalog",
+       "anomalous_dependencies": [
+        "inventory"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 8.11,
+        "error_ratio": 0.915,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 72.8,
+        "baseline_p95_ms": 220.1
+       }
+      },
+      {
+       "service": "recommendation",
+       "anomalous_dependencies": [
+        "catalog"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 0.64,
+        "error_ratio": 0.914,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 118.7,
+        "baseline_p95_ms": 239.6
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "inventory",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.46,
+     "dur": 0.14,
+     "evidence_ids": [
+      "L-623530"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "checkout",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.46,
+     "dur": 0.14,
+     "evidence_ids": [
+      "L-b763aa"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "frontend",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.46,
+     "dur": 0.14,
+     "evidence_ids": [
+      "L-d69925",
+      "L-0757ae",
+      "L-3d95d3"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "frontend"
+     },
+     "t": 0.46,
+     "dur": 0.14,
+     "evidence_ids": [
+      "T-215a37",
+      "T-262ae5",
+      "T-a214ac",
+      "T-e81d1c",
+      "T-64cd0c"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "t": 0.46,
+     "dur": 0.14,
+     "evidence_ids": []
+    },
+    {
+     "step": "llm",
+     "t": 0.6,
+     "dur": 23.78,
+     "tokens": 4093,
+     "model": "gemini-flash-lite-latest",
+     "requested": [
+      "get_recent_changes"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "evidence_ids": [],
+     "t": 24.39,
+     "dur": 0.0
+    },
+    {
+     "step": "llm",
+     "t": 24.39,
+     "dur": 20.56,
+     "tokens": 4414,
+     "model": "gemini-3.1-flash-lite",
+     "requested": [
+      "submit_diagnosis"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "inventory",
+    "checkout",
+    "frontend",
+    "catalog",
+    "recommendation"
+   ],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "inventory",
+   "fault_type": "code_error",
+   "ranked_candidates": [
+    "inventory",
+    "catalog",
+    "frontend"
+   ],
+   "confidence": 1.0,
+   "summary": "The inventory service is experiencing a code error (KeyError: 'warehouse_id') which is causing it to fail requests. This error propagates upstream, causing catalog and frontend services to report 502 errors. No recent deployments or configuration changes were found.",
+   "claims": [
+    {
+     "evidence_ids": [
+      "L-623530"
+     ],
+     "is_root_cause_claim": true,
+     "text": "The inventory service is failing with a KeyError when attempting to reserve stock, which is causing upstream services (catalog, frontend) to return 502 errors.",
+     "quote": "KeyError: 'warehouse_id' while reserving stock",
+     "evidence": [
+      {
+       "id": "L-623530",
+       "kind": "log",
+       "ref": "inventory.log:2456",
+       "text": "KeyError: 'warehouse_id' while reserving stock",
+       "meta": {
+        "service": "inventory",
+        "line": 2456,
+        "ts": "2026-11-25T13:31:38.740+00:00",
+        "level": "ERROR",
+        "trace_id": "8d0843b08030ea48fc02f4cb9a317a80",
+        "count_in_window": 449
+       }
+      }
+     ]
+    },
+    {
+     "evidence_ids": [
+      "T-215a37",
+      "T-262ae5",
+      "T-a214ac",
+      "T-e81d1c",
+      "T-64cd0c"
+     ],
+     "quote": "deepest failing service: inventory",
+     "text": "Tracing confirms that the failure propagates from the inventory service up to the frontend.",
+     "is_root_cause_claim": false,
+     "evidence": [
+      {
+       "id": "T-215a37",
+       "kind": "trace",
+       "ref": "trace:ac87d1e4eef74607",
+       "text": "trace ac87d1e4eef746074a90b54c3f3dccb3: failing server spans in call order: frontend(502, 74.1ms) -> catalog(502, 22.1ms) -> inventory(500, 0.9ms); deepest failing service: inventory",
+       "meta": {
+        "trace_id": "ac87d1e4eef746074a90b54c3f3dccb3",
+        "deepest": "inventory"
+       }
+      },
+      {
+       "id": "T-262ae5",
+       "kind": "trace",
+       "ref": "trace:55f82d60a3a27051",
+       "text": "trace 55f82d60a3a27051bd6816af76be1d16: failing server spans in call order: frontend(502, 42.5ms) -> catalog(502, 21.9ms) -> inventory(500, 1.2ms); deepest failing service: inventory",
+       "meta": {
+        "trace_id": "55f82d60a3a27051bd6816af76be1d16",
+        "deepest": "inventory"
+       }
+      },
+      {
+       "id": "T-a214ac",
+       "kind": "trace",
+       "ref": "trace:ae571453f45d1f81",
+       "text": "trace ae571453f45d1f814fdb01865f9f6d5b: failing server spans in call order: frontend(502, 55.7ms) -> catalog(502, 32.8ms) -> inventory(500, 1.0ms); deepest failing service: inventory",
+       "meta": {
+        "trace_id": "ae571453f45d1f814fdb01865f9f6d5b",
+        "deepest": "inventory"
+       }
+      },
+      {
+       "id": "T-e81d1c",
+       "kind": "trace",
+       "ref": "trace:81de279ddc20935b",
+       "text": "trace 81de279ddc20935b7462f3f0f6c6893c: failing server spans in call order: frontend(502, 57.7ms) -> catalog(502, 38.2ms) -> inventory(500, 0.7ms); deepest failing service: inventory",
+       "meta": {
+        "trace_id": "81de279ddc20935b7462f3f0f6c6893c",
+        "deepest": "inventory"
+       }
+      },
+      {
+       "id": "T-64cd0c",
+       "kind": "trace",
+       "ref": "trace:750610776d225fa8",
+       "text": "trace 750610776d225fa87ab3399e4ef98493: failing server spans in call order: frontend(502, 54.8ms) -> catalog(502, 22.1ms) -> inventory(500, 0.7ms); deepest failing service: inventory",
+       "meta": {
+        "trace_id": "750610776d225fa87ab3399e4ef98493",
+        "deepest": "inventory"
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [],
+   "evidence_precision": 1.0,
+   "rejected_hypotheses": [],
+   "suggested_action": null,
+   "evidence_items": 12,
+   "health": {
+    "cart": {
+     "rps": 0.09,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 24.2,
+     "baseline_p95_ms": 23.9
+    },
+    "frontend": {
+     "rps": 7.53,
+     "error_ratio": 0.998,
+     "baseline_error_ratio": 0.158,
+     "p95_ms": 176.2,
+     "baseline_p95_ms": 801.7
+    },
+    "currency": {
+     "rps": 0.69,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.8,
+     "baseline_p95_ms": 23.9
+    },
+    "catalog": {
+     "rps": 8.11,
+     "error_ratio": 0.915,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 72.8,
+     "baseline_p95_ms": 220.1
+    },
+    "payment": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.696,
+     "p95_ms": null,
+     "baseline_p95_ms": 21.7
+    },
+    "checkout": {
+     "rps": 0.04,
+     "error_ratio": 1.0,
+     "baseline_error_ratio": 0.814,
+     "p95_ms": 97.5,
+     "baseline_p95_ms": 372.5
+    },
+    "recommendation": {
+     "rps": 0.64,
+     "error_ratio": 0.914,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 118.7,
+     "baseline_p95_ms": 239.6
+    },
+    "shipping": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 84.2
+    },
+    "inventory": {
+     "rps": 8.29,
+     "error_ratio": 0.917,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 13.6,
+     "baseline_p95_ms": 23.9
+    }
+   },
+   "edges": [
+    {
+     "caller": "catalog",
+     "callee": "currency",
+     "calls": 122
+    },
+    {
+     "caller": "catalog",
+     "callee": "inventory",
+     "calls": 184
+    },
+    {
+     "caller": "checkout",
+     "callee": "cart",
+     "calls": 40
+    },
+    {
+     "caller": "checkout",
+     "callee": "catalog",
+     "calls": 40
+    },
+    {
+     "caller": "checkout",
+     "callee": "currency",
+     "calls": 38
+    },
+    {
+     "caller": "checkout",
+     "callee": "payment",
+     "calls": 38
+    },
+    {
+     "caller": "checkout",
+     "callee": "shipping",
+     "calls": 38
+    },
+    {
+     "caller": "frontend",
+     "callee": "cart",
+     "calls": 40
+    },
+    {
+     "caller": "frontend",
+     "callee": "catalog",
+     "calls": 100
+    },
+    {
+     "caller": "frontend",
+     "callee": "checkout",
+     "calls": 40
+    },
+    {
+     "caller": "frontend",
+     "callee": "recommendation",
+     "calls": 44
+    },
+    {
+     "caller": "recommendation",
+     "callee": "catalog",
+     "calls": 44
+    },
+    {
+     "caller": "shipping",
+     "callee": "currency",
+     "calls": 38
+    }
+   ],
+   "suspects": [
+    {
+     "service": "inventory",
+     "anomalous_dependencies": [],
+     "deepest": true,
+     "health": {
+      "rps": 8.29,
+      "error_ratio": 0.917,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 13.6,
+      "baseline_p95_ms": 23.9
+     }
+    },
+    {
+     "service": "checkout",
+     "anomalous_dependencies": [
+      "catalog"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 0.04,
+      "error_ratio": 1.0,
+      "baseline_error_ratio": 0.814,
+      "p95_ms": 97.5,
+      "baseline_p95_ms": 372.5
+     }
+    },
+    {
+     "service": "frontend",
+     "anomalous_dependencies": [
+      "checkout",
+      "catalog",
+      "recommendation"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 7.53,
+      "error_ratio": 0.998,
+      "baseline_error_ratio": 0.158,
+      "p95_ms": 176.2,
+      "baseline_p95_ms": 801.7
+     }
+    },
+    {
+     "service": "catalog",
+     "anomalous_dependencies": [
+      "inventory"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 8.11,
+      "error_ratio": 0.915,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 72.8,
+      "baseline_p95_ms": 220.1
+     }
+    },
+    {
+     "service": "recommendation",
+     "anomalous_dependencies": [
+      "catalog"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 0.64,
+      "error_ratio": 0.914,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 118.7,
+      "baseline_p95_ms": 239.6
+     }
+    }
+   ],
+   "engine": "native",
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail_ADK": {
+   "alert": "frontend 5xx ratio above 5% for 1m",
+   "model": "gemini-3.1-flash-lite",
+   "elapsed_s": 62.2,
+   "usage": {
+    "calls": 4,
+    "prompt_tokens": 17235,
+    "completion_tokens": 356,
+    "retries": 0,
+    "failures": 0,
+    "wait_s": 0.0,
+    "total_tokens": 17591
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "t": 0,
+     "dur": 0.4,
+     "health_evidence_id": "M-e5898e",
+     "graph_evidence_id": "T-c58a0f",
+     "suspects": [
+      {
+       "service": "inventory",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 8.29,
+        "error_ratio": 0.917,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 13.6,
+        "baseline_p95_ms": 23.9
+       }
+      },
+      {
+       "service": "checkout",
+       "anomalous_dependencies": [
+        "catalog"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 0.04,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.814,
+        "p95_ms": 97.5,
+        "baseline_p95_ms": 372.5
+       }
+      },
+      {
+       "service": "frontend",
+       "anomalous_dependencies": [
+        "checkout",
+        "catalog",
+        "recommendation"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 7.53,
+        "error_ratio": 0.998,
+        "baseline_error_ratio": 0.158,
+        "p95_ms": 176.2,
+        "baseline_p95_ms": 801.7
+       }
+      },
+      {
+       "service": "catalog",
+       "anomalous_dependencies": [
+        "inventory"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 8.11,
+        "error_ratio": 0.915,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 72.8,
+        "baseline_p95_ms": 220.1
+       }
+      },
+      {
+       "service": "recommendation",
+       "anomalous_dependencies": [
+        "catalog"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 0.64,
+        "error_ratio": 0.914,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 118.7,
+        "baseline_p95_ms": 239.6
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "inventory",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.4,
+     "dur": 0.14,
+     "evidence_ids": [
+      "L-623530"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "checkout",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.4,
+     "dur": 0.14,
+     "evidence_ids": [
+      "L-b763aa"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "frontend",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.4,
+     "dur": 0.14,
+     "evidence_ids": [
+      "L-d69925",
+      "L-0757ae",
+      "L-3d95d3"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "frontend"
+     },
+     "t": 0.4,
+     "dur": 0.14,
+     "evidence_ids": [
+      "T-215a37",
+      "T-262ae5",
+      "T-a214ac",
+      "T-e81d1c",
+      "T-64cd0c"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "t": 0.4,
+     "dur": 0.14,
+     "evidence_ids": []
+    },
+    {
+     "step": "llm",
+     "t": 7.61,
+     "dur": 0,
+     "engine": "adk",
+     "tokens": 4057,
+     "model": "gemini-3.1-flash-lite",
+     "requested": [
+      "get_recent_changes"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "evidence_ids": [],
+     "engine": "adk",
+     "t": 7.62,
+     "dur": 0.0
+    },
+    {
+     "step": "llm",
+     "t": 42.12,
+     "dur": 0,
+     "engine": "adk",
+     "tokens": 4115,
+     "model": "gemini-3.1-flash-lite",
+     "requested": [
+      "get_metric"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "service": "inventory",
+      "name": "up"
+     },
+     "evidence_ids": [
+      "M-08455d"
+     ],
+     "engine": "adk",
+     "t": 42.12,
+     "dur": 0.0
+    },
+    {
+     "step": "llm",
+     "t": 54.83,
+     "dur": 0,
+     "engine": "adk",
+     "tokens": 4418,
+     "model": "gemini-3.1-flash-lite",
+     "requested": [
+      "get_metric"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "service": "inventory",
+      "name": "error_ratio"
+     },
+     "evidence_ids": [
+      "M-594861"
+     ],
+     "engine": "adk",
+     "t": 54.83,
+     "dur": 0.01
+    },
+    {
+     "step": "llm",
+     "t": 62.16,
+     "dur": 0,
+     "engine": "adk",
+     "tokens": 5001,
+     "model": "gemini-3.1-flash-lite",
+     "requested": [
+      "submit_diagnosis"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "inventory",
+    "checkout",
+    "frontend",
+    "catalog",
+    "recommendation"
+   ],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "inventory",
+   "fault_type": "code_error",
+   "ranked_candidates": [
+    "inventory"
+   ],
+   "confidence": 1.0,
+   "summary": "The inventory service is failing with a 'KeyError: warehouse_id', causing downstream catalog and frontend services to receive HTTP 502/500 errors. No recent deployments or configuration changes were observed, pointing to an underlying code issue.",
+   "claims": [
+    {
+     "evidence_ids": [
+      "L-623530"
+     ],
+     "text": "The inventory service is throwing a KeyError, which indicates a code error during stock reservation.",
+     "quote": "KeyError: 'warehouse_id' while reserving stock",
+     "is_root_cause_claim": true,
+     "evidence": [
+      {
+       "id": "L-623530",
+       "kind": "log",
+       "ref": "inventory.log:2456",
+       "text": "KeyError: 'warehouse_id' while reserving stock",
+       "meta": {
+        "service": "inventory",
+        "line": 2456,
+        "ts": "2026-11-25T13:31:38.740+00:00",
+        "level": "ERROR",
+        "trace_id": "8d0843b08030ea48fc02f4cb9a317a80",
+        "count_in_window": 449
+       }
+      }
+     ]
+    },
+    {
+     "quote": "deepest failing service: inventory",
+     "is_root_cause_claim": false,
+     "text": "The error propagates from the inventory service up to the catalog and finally the frontend.",
+     "evidence_ids": [
+      "T-215a37",
+      "T-262ae5",
+      "T-a214ac",
+      "T-e81d1c",
+      "T-64cd0c"
+     ],
+     "evidence": [
+      {
+       "id": "T-215a37",
+       "kind": "trace",
+       "ref": "trace:ac87d1e4eef74607",
+       "text": "trace ac87d1e4eef746074a90b54c3f3dccb3: failing server spans in call order: frontend(502, 74.1ms) -> catalog(502, 22.1ms) -> inventory(500, 0.9ms); deepest failing service: inventory",
+       "meta": {
+        "trace_id": "ac87d1e4eef746074a90b54c3f3dccb3",
+        "deepest": "inventory"
+       }
+      },
+      {
+       "id": "T-262ae5",
+       "kind": "trace",
+       "ref": "trace:55f82d60a3a27051",
+       "text": "trace 55f82d60a3a27051bd6816af76be1d16: failing server spans in call order: frontend(502, 42.5ms) -> catalog(502, 21.9ms) -> inventory(500, 1.2ms); deepest failing service: inventory",
+       "meta": {
+        "trace_id": "55f82d60a3a27051bd6816af76be1d16",
+        "deepest": "inventory"
+       }
+      },
+      {
+       "id": "T-a214ac",
+       "kind": "trace",
+       "ref": "trace:ae571453f45d1f81",
+       "text": "trace ae571453f45d1f814fdb01865f9f6d5b: failing server spans in call order: frontend(502, 55.7ms) -> catalog(502, 32.8ms) -> inventory(500, 1.0ms); deepest failing service: inventory",
+       "meta": {
+        "trace_id": "ae571453f45d1f814fdb01865f9f6d5b",
+        "deepest": "inventory"
+       }
+      },
+      {
+       "id": "T-e81d1c",
+       "kind": "trace",
+       "ref": "trace:81de279ddc20935b",
+       "text": "trace 81de279ddc20935b7462f3f0f6c6893c: failing server spans in call order: frontend(502, 57.7ms) -> catalog(502, 38.2ms) -> inventory(500, 0.7ms); deepest failing service: inventory",
+       "meta": {
+        "trace_id": "81de279ddc20935b7462f3f0f6c6893c",
+        "deepest": "inventory"
+       }
+      },
+      {
+       "id": "T-64cd0c",
+       "kind": "trace",
+       "ref": "trace:750610776d225fa8",
+       "text": "trace 750610776d225fa87ab3399e4ef98493: failing server spans in call order: frontend(502, 54.8ms) -> catalog(502, 22.1ms) -> inventory(500, 0.7ms); deepest failing service: inventory",
+       "meta": {
+        "trace_id": "750610776d225fa87ab3399e4ef98493",
+        "deepest": "inventory"
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [],
+   "evidence_precision": 1.0,
+   "rejected_hypotheses": [],
+   "suggested_action": {
+    "why": "Need stack traces to debug the KeyError in the inventory service.",
+    "action": "collect_diagnostics",
+    "service": "inventory",
+    "risk": "safe",
+    "description": "Read-only: snapshot logs, metrics and traces for the service",
+    "dry_run": "GET /metrics, tail logs/inventory.log, query Jaeger for service=inventory"
+   },
+   "evidence_items": 14,
+   "health": {
+    "cart": {
+     "rps": 0.09,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 24.2,
+     "baseline_p95_ms": 23.9
+    },
+    "frontend": {
+     "rps": 7.53,
+     "error_ratio": 0.998,
+     "baseline_error_ratio": 0.158,
+     "p95_ms": 176.2,
+     "baseline_p95_ms": 801.7
+    },
+    "currency": {
+     "rps": 0.69,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.8,
+     "baseline_p95_ms": 23.9
+    },
+    "catalog": {
+     "rps": 8.11,
+     "error_ratio": 0.915,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 72.8,
+     "baseline_p95_ms": 220.1
+    },
+    "payment": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.696,
+     "p95_ms": null,
+     "baseline_p95_ms": 21.7
+    },
+    "checkout": {
+     "rps": 0.04,
+     "error_ratio": 1.0,
+     "baseline_error_ratio": 0.814,
+     "p95_ms": 97.5,
+     "baseline_p95_ms": 372.5
+    },
+    "recommendation": {
+     "rps": 0.64,
+     "error_ratio": 0.914,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 118.7,
+     "baseline_p95_ms": 239.6
+    },
+    "shipping": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 84.2
+    },
+    "inventory": {
+     "rps": 8.29,
+     "error_ratio": 0.917,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 13.6,
+     "baseline_p95_ms": 23.9
+    }
+   },
+   "edges": [
+    {
+     "caller": "catalog",
+     "callee": "currency",
+     "calls": 122
+    },
+    {
+     "caller": "catalog",
+     "callee": "inventory",
+     "calls": 184
+    },
+    {
+     "caller": "checkout",
+     "callee": "cart",
+     "calls": 40
+    },
+    {
+     "caller": "checkout",
+     "callee": "catalog",
+     "calls": 40
+    },
+    {
+     "caller": "checkout",
+     "callee": "currency",
+     "calls": 38
+    },
+    {
+     "caller": "checkout",
+     "callee": "payment",
+     "calls": 38
+    },
+    {
+     "caller": "checkout",
+     "callee": "shipping",
+     "calls": 38
+    },
+    {
+     "caller": "frontend",
+     "callee": "cart",
+     "calls": 40
+    },
+    {
+     "caller": "frontend",
+     "callee": "catalog",
+     "calls": 100
+    },
+    {
+     "caller": "frontend",
+     "callee": "checkout",
+     "calls": 40
+    },
+    {
+     "caller": "frontend",
+     "callee": "recommendation",
+     "calls": 44
+    },
+    {
+     "caller": "recommendation",
+     "callee": "catalog",
+     "calls": 44
+    },
+    {
+     "caller": "shipping",
+     "callee": "currency",
+     "calls": 38
+    }
+   ],
+   "suspects": [
+    {
+     "service": "inventory",
+     "anomalous_dependencies": [],
+     "deepest": true,
+     "health": {
+      "rps": 8.29,
+      "error_ratio": 0.917,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 13.6,
+      "baseline_p95_ms": 23.9
+     }
+    },
+    {
+     "service": "checkout",
+     "anomalous_dependencies": [
+      "catalog"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 0.04,
+      "error_ratio": 1.0,
+      "baseline_error_ratio": 0.814,
+      "p95_ms": 97.5,
+      "baseline_p95_ms": 372.5
+     }
+    },
+    {
+     "service": "frontend",
+     "anomalous_dependencies": [
+      "checkout",
+      "catalog",
+      "recommendation"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 7.53,
+      "error_ratio": 0.998,
+      "baseline_error_ratio": 0.158,
+      "p95_ms": 176.2,
+      "baseline_p95_ms": 801.7
+     }
+    },
+    {
+     "service": "catalog",
+     "anomalous_dependencies": [
+      "inventory"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 8.11,
+      "error_ratio": 0.915,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 72.8,
+      "baseline_p95_ms": 220.1
+     }
+    },
+    {
+     "service": "recommendation",
+     "anomalous_dependencies": [
+      "catalog"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 0.64,
+      "error_ratio": 0.914,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 118.7,
+      "baseline_p95_ms": 239.6
+     }
+    }
+   ],
+   "engine": "adk",
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  }
+ },
+ "window": [
+  1795613378.7691922,
+  1795613498.7691922
+ ]
+}

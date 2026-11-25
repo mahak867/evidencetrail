@@ -1,0 +1,1086 @@
+{
+ "scenario": {
+  "id": "S01",
+  "service": "payment",
+  "kind": "error",
+  "params": {
+   "message": "PaymentGatewayError: upstream gateway rejected request (code 5003)",
+   "error_type": "PaymentGatewayError"
+  },
+  "alert": "checkout error rate above 5% for 1m (SLO burn)"
+ },
+ "truth": {
+  "service": "payment",
+  "fault_type": "code_error"
+ },
+ "injected_at": 1795613179.5740173,
+ "methods": {
+  "B1_dashboard_rule": {
+   "method": "B1_dashboard_rule",
+   "root_cause_service": "checkout",
+   "fault_type": null,
+   "ranked_candidates": [
+    "checkout",
+    "payment",
+    "frontend"
+   ],
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 0.0,
+   "usage": {
+    "total_tokens": 0,
+    "calls": 0
+   },
+   "score": {
+    "top1": false,
+    "top3": true,
+    "type_ok": null,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "B0_single_prompt": {
+   "method": "B0_single_prompt",
+   "root_cause_service": "payment",
+   "fault_type": "code_error",
+   "ranked_candidates": [
+    "payment",
+    "checkout",
+    "frontend"
+   ],
+   "summary": "The payment service is consistently failing with a 'PaymentGatewayError' (code 5003) when communicating with an external upstream gateway. This error propagates to the checkout service (HTTP 500) and subsequently to the frontend (HTTP 502), causing the observed checkout error rate spike.",
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 16.7,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 14236,
+    "completion_tokens": 102,
+    "retries": 0,
+    "failures": 0,
+    "wait_s": 0.0,
+    "total_tokens": 14338
+   },
+   "model": "gemini-3.1-flash-lite",
+   "prompt_chars": 25866,
+   "error": null,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail": {
+   "alert": "checkout error rate above 5% for 1m (SLO burn)",
+   "model": "gemini-3.1-flash-lite,gemini-3-flash-preview",
+   "elapsed_s": 37.8,
+   "usage": {
+    "calls": 3,
+    "prompt_tokens": 11270,
+    "completion_tokens": 317,
+    "retries": 0,
+    "failures": 1,
+    "wait_s": 0.8,
+    "total_tokens": 11587
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "t": 0,
+     "dur": 0.94,
+     "health_evidence_id": "M-92e8ba",
+     "graph_evidence_id": "T-1c362d",
+     "suspects": [
+      {
+       "service": "payment",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 2.18,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 4.7,
+        "baseline_p95_ms": 24.0
+       }
+      },
+      {
+       "service": "checkout",
+       "anomalous_dependencies": [
+        "payment"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 2.18,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 246.2,
+        "baseline_p95_ms": 478.3
+       }
+      },
+      {
+       "service": "frontend",
+       "anomalous_dependencies": [
+        "checkout"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 8.11,
+        "error_ratio": 0.269,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 785.6,
+        "baseline_p95_ms": 887.6
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "payment",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.94,
+     "dur": 0.13,
+     "evidence_ids": [
+      "L-4db0a3"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "checkout",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.94,
+     "dur": 0.13,
+     "evidence_ids": [
+      "L-598e3c"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "frontend",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.94,
+     "dur": 0.13,
+     "evidence_ids": [
+      "L-38bf87"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "checkout"
+     },
+     "t": 0.94,
+     "dur": 0.13,
+     "evidence_ids": [
+      "T-b9ef5c",
+      "T-cb4b9d",
+      "T-4963b6",
+      "T-9349e6",
+      "T-1a085e"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "t": 0.94,
+     "dur": 0.13,
+     "evidence_ids": []
+    },
+    {
+     "step": "llm",
+     "t": 1.07,
+     "dur": 10.54,
+     "tokens": 3560,
+     "model": "gemini-3.1-flash-lite",
+     "requested": [
+      "get_metric"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "name": "error_ratio",
+      "service": "payment"
+     },
+     "evidence_ids": [
+      "M-a2ba9b"
+     ],
+     "t": 11.61,
+     "dur": 0.01
+    },
+    {
+     "step": "llm",
+     "t": 11.62,
+     "dur": 8.71,
+     "tokens": 3855,
+     "model": "gemini-3-flash-preview",
+     "requested": [
+      "get_recent_changes"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "evidence_ids": [],
+     "t": 20.33,
+     "dur": 0.0
+    },
+    {
+     "step": "llm",
+     "t": 20.33,
+     "dur": 17.42,
+     "tokens": 4172,
+     "model": "gemini-3-flash-preview",
+     "requested": [
+      "submit_diagnosis"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "payment",
+    "checkout",
+    "frontend"
+   ],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "payment",
+   "fault_type": "code_error",
+   "ranked_candidates": [
+    "payment",
+    "checkout",
+    "frontend"
+   ],
+   "confidence": 1.0,
+   "summary": "The payment service is failing due to a 5003 error from its upstream gateway. This is causing checkout and frontend failures. No recent deployments or configuration changes were found, suggesting an external issue or a code-level error in handling the gateway response.",
+   "claims": [
+    {
+     "is_root_cause_claim": true,
+     "evidence_ids": [
+      "L-4db0a3"
+     ],
+     "text": "The payment service is failing because it is receiving a 5003 error from its upstream payment gateway.",
+     "quote": "PaymentGatewayError: upstream gateway rejected request (code 5003)",
+     "evidence": [
+      {
+       "id": "L-4db0a3",
+       "kind": "log",
+       "ref": "payment.log:1271",
+       "text": "PaymentGatewayError: upstream gateway rejected request (code 5003)",
+       "meta": {
+        "service": "payment",
+        "line": 1271,
+        "ts": "2026-11-25T13:27:19.261+00:00",
+        "level": "ERROR",
+        "trace_id": "e281dd0de3ee2ccb714162842d399f6a",
+        "count_in_window": 135
+       }
+      }
+     ]
+    },
+    {
+     "text": "Tracing confirms that the payment service is the deepest failing service in the call chain.",
+     "evidence_ids": [
+      "T-b9ef5c",
+      "T-cb4b9d",
+      "T-4963b6",
+      "T-9349e6",
+      "T-1a085e"
+     ],
+     "is_root_cause_claim": false,
+     "quote": "deepest failing service: payment",
+     "evidence": [
+      {
+       "id": "T-b9ef5c",
+       "kind": "trace",
+       "ref": "trace:1eb5b74eef26cc54",
+       "text": "trace 1eb5b74eef26cc54e9d106d65b4764cd: failing server spans in call order: frontend(502, 462.7ms) -> checkout(502, 131.4ms) -> payment(500, 0.8ms); deepest failing service: payment",
+       "meta": {
+        "trace_id": "1eb5b74eef26cc54e9d106d65b4764cd",
+        "deepest": "payment"
+       }
+      },
+      {
+       "id": "T-cb4b9d",
+       "kind": "trace",
+       "ref": "trace:7144f5bb7dd1d74b",
+       "text": "trace 7144f5bb7dd1d74b0a16a62160eb9eff: failing server spans in call order: frontend(502, 509.0ms) -> checkout(502, 146.6ms) -> payment(500, 0.8ms); deepest failing service: payment",
+       "meta": {
+        "trace_id": "7144f5bb7dd1d74b0a16a62160eb9eff",
+        "deepest": "payment"
+       }
+      },
+      {
+       "id": "T-4963b6",
+       "kind": "trace",
+       "ref": "trace:a9b605694fc3567d",
+       "text": "trace a9b605694fc3567def38bbcc22544fee: failing server spans in call order: frontend(502, 476.8ms) -> checkout(502, 192.2ms) -> payment(500, 0.6ms); deepest failing service: payment",
+       "meta": {
+        "trace_id": "a9b605694fc3567def38bbcc22544fee",
+        "deepest": "payment"
+       }
+      },
+      {
+       "id": "T-9349e6",
+       "kind": "trace",
+       "ref": "trace:8432ba87bbf09b58",
+       "text": "trace 8432ba87bbf09b586b28397e5fa41a89: failing server spans in call order: frontend(502, 410.2ms) -> checkout(502, 114.6ms) -> payment(500, 1.0ms); deepest failing service: payment",
+       "meta": {
+        "trace_id": "8432ba87bbf09b586b28397e5fa41a89",
+        "deepest": "payment"
+       }
+      },
+      {
+       "id": "T-1a085e",
+       "kind": "trace",
+       "ref": "trace:1bb5c3b358a7ac5c",
+       "text": "trace 1bb5c3b358a7ac5c7d552f6f3e9dcf54: failing server spans in call order: frontend(502, 393.0ms) -> checkout(502, 159.4ms) -> payment(500, 0.9ms); deepest failing service: payment",
+       "meta": {
+        "trace_id": "1bb5c3b358a7ac5c7d552f6f3e9dcf54",
+        "deepest": "payment"
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [],
+   "evidence_precision": 1.0,
+   "rejected_hypotheses": [],
+   "suggested_action": null,
+   "evidence_items": 11,
+   "health": {
+    "cart": {
+     "rps": 10.25,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 24.0,
+     "baseline_p95_ms": 23.9
+    },
+    "frontend": {
+     "rps": 8.11,
+     "error_ratio": 0.269,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 785.6,
+     "baseline_p95_ms": 887.6
+    },
+    "currency": {
+     "rps": 18.33,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 24.0,
+     "baseline_p95_ms": 23.9
+    },
+    "catalog": {
+     "rps": 18.36,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 219.2,
+     "baseline_p95_ms": 221.9
+    },
+    "payment": {
+     "rps": 2.18,
+     "error_ratio": 1.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 4.7,
+     "baseline_p95_ms": 24.0
+    },
+    "checkout": {
+     "rps": 2.18,
+     "error_ratio": 1.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 246.2,
+     "baseline_p95_ms": 478.3
+    },
+    "recommendation": {
+     "rps": 8.05,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 240.1,
+     "baseline_p95_ms": 240.2
+    },
+    "shipping": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 87.4
+    },
+    "inventory": {
+     "rps": 18.2,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 23.9
+    }
+   },
+   "edges": [
+    {
+     "caller": "catalog",
+     "callee": "currency",
+     "calls": 261
+    },
+    {
+     "caller": "catalog",
+     "callee": "inventory",
+     "calls": 261
+    },
+    {
+     "caller": "checkout",
+     "callee": "cart",
+     "calls": 61
+    },
+    {
+     "caller": "checkout",
+     "callee": "catalog",
+     "calls": 61
+    },
+    {
+     "caller": "checkout",
+     "callee": "payment",
+     "calls": 61
+    },
+    {
+     "caller": "frontend",
+     "callee": "cart",
+     "calls": 100
+    },
+    {
+     "caller": "frontend",
+     "callee": "catalog",
+     "calls": 100
+    },
+    {
+     "caller": "frontend",
+     "callee": "checkout",
+     "calls": 61
+    },
+    {
+     "caller": "frontend",
+     "callee": "recommendation",
+     "calls": 100
+    },
+    {
+     "caller": "recommendation",
+     "callee": "catalog",
+     "calls": 100
+    }
+   ],
+   "suspects": [
+    {
+     "service": "payment",
+     "anomalous_dependencies": [],
+     "deepest": true,
+     "health": {
+      "rps": 2.18,
+      "error_ratio": 1.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 4.7,
+      "baseline_p95_ms": 24.0
+     }
+    },
+    {
+     "service": "checkout",
+     "anomalous_dependencies": [
+      "payment"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 2.18,
+      "error_ratio": 1.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 246.2,
+      "baseline_p95_ms": 478.3
+     }
+    },
+    {
+     "service": "frontend",
+     "anomalous_dependencies": [
+      "checkout"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 8.11,
+      "error_ratio": 0.269,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 785.6,
+      "baseline_p95_ms": 887.6
+     }
+    }
+   ],
+   "engine": "native",
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail_ADK": {
+   "alert": "checkout error rate above 5% for 1m (SLO burn)",
+   "model": "gemini-3-flash-preview",
+   "elapsed_s": 69.1,
+   "usage": {
+    "calls": 5,
+    "prompt_tokens": 35497,
+    "completion_tokens": 605,
+    "retries": 0,
+    "failures": 1,
+    "wait_s": 0.0,
+    "total_tokens": 36102
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "t": 0,
+     "dur": 0.83,
+     "health_evidence_id": "M-92e8ba",
+     "graph_evidence_id": "T-1c362d",
+     "suspects": [
+      {
+       "service": "payment",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 2.18,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 4.7,
+        "baseline_p95_ms": 24.0
+       }
+      },
+      {
+       "service": "checkout",
+       "anomalous_dependencies": [
+        "payment"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 2.18,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 246.2,
+        "baseline_p95_ms": 478.3
+       }
+      },
+      {
+       "service": "frontend",
+       "anomalous_dependencies": [
+        "checkout"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 8.11,
+        "error_ratio": 0.269,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 785.6,
+        "baseline_p95_ms": 887.6
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "payment",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.83,
+     "dur": 0.17,
+     "evidence_ids": [
+      "L-4db0a3"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "checkout",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.83,
+     "dur": 0.17,
+     "evidence_ids": [
+      "L-598e3c"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "frontend",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.83,
+     "dur": 0.17,
+     "evidence_ids": [
+      "L-38bf87"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "checkout"
+     },
+     "t": 0.83,
+     "dur": 0.17,
+     "evidence_ids": [
+      "T-b9ef5c",
+      "T-cb4b9d",
+      "T-4963b6",
+      "T-9349e6",
+      "T-1a085e"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "t": 0.83,
+     "dur": 0.17,
+     "evidence_ids": []
+    },
+    {
+     "step": "llm",
+     "t": 36.01,
+     "dur": 0,
+     "engine": "adk",
+     "tokens": 3592,
+     "model": "gemini-3-flash-preview",
+     "requested": [
+      "get_metric",
+      "get_metric",
+      "get_error_traces",
+      "get_logs"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "service": "payment",
+      "name": "heap_mb"
+     },
+     "evidence_ids": [
+      "M-325df7"
+     ],
+     "engine": "adk",
+     "t": 36.02,
+     "dur": 0.01
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "service": "payment",
+      "name": "db_pool_in_use"
+     },
+     "evidence_ids": [
+      "M-76ffe0"
+     ],
+     "engine": "adk",
+     "t": 36.03,
+     "dur": 0.0
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "payment"
+     },
+     "evidence_ids": [
+      "T-d697fd",
+      "T-b9ef5c",
+      "T-cb4b9d",
+      "T-4963b6",
+      "T-9349e6"
+     ],
+     "engine": "adk",
+     "t": 36.03,
+     "dur": 0.11
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "payment",
+      "level": "INFO",
+      "contains": null
+     },
+     "evidence_ids": [
+      "L-1ccd12"
+     ],
+     "engine": "adk",
+     "t": 36.14,
+     "dur": 0.01
+    },
+    {
+     "step": "llm",
+     "t": 40.4,
+     "dur": 0,
+     "engine": "adk",
+     "tokens": 6149,
+     "model": "gemini-3-flash-preview",
+     "requested": [
+      "get_metric"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "service": "payment",
+      "name": "config_version"
+     },
+     "evidence_ids": [
+      "M-1022b0"
+     ],
+     "engine": "adk",
+     "t": 40.4,
+     "dur": 0.0
+    },
+    {
+     "step": "llm",
+     "t": 47.64,
+     "dur": 0,
+     "engine": "adk",
+     "tokens": 7258,
+     "model": "gemini-3-flash-preview",
+     "requested": [
+      "get_metric"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "service": "payment",
+      "name": "dependency_errors"
+     },
+     "evidence_ids": [
+      "M-997eb1"
+     ],
+     "engine": "adk",
+     "t": 47.64,
+     "dur": 0.0
+    },
+    {
+     "step": "llm",
+     "t": 58.92,
+     "dur": 0,
+     "engine": "adk",
+     "tokens": 8659,
+     "model": "gemini-3-flash-preview",
+     "requested": [
+      "get_metric"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "service": "payment",
+      "name": "up"
+     },
+     "evidence_ids": [
+      "M-8bba5e"
+     ],
+     "engine": "adk",
+     "t": 58.92,
+     "dur": 0.0
+    },
+    {
+     "step": "llm",
+     "t": 69.14,
+     "dur": 0,
+     "engine": "adk",
+     "tokens": 10444,
+     "model": "gemini-3-flash-preview",
+     "requested": [
+      "submit_diagnosis"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "payment",
+    "checkout",
+    "frontend"
+   ],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "payment",
+   "fault_type": "code_error",
+   "ranked_candidates": [
+    "payment",
+    "checkout",
+    "frontend"
+   ],
+   "confidence": 0.9,
+   "summary": "The checkout service is failing because of a 100% error rate in the payment service. Traces show that calls from checkout to payment are failing with HTTP 500. The payment service logs reveal a 'PaymentGatewayError: upstream gateway rejected request (code 5003)'. Since no recent deployments or configuration changes were found, and resource metrics are stable, this is likely a code-level error or an unhandled failure of an external payment gateway.",
+   "claims": [
+    {
+     "evidence_ids": [
+      "M-92e8ba",
+      "T-d697fd"
+     ],
+     "is_root_cause_claim": true,
+     "quote": "deepest failing service: payment",
+     "text": "The payment service is the deepest failing service in the call chain, with a 100% error ratio.",
+     "evidence": [
+      {
+       "id": "M-92e8ba",
+       "kind": "metric",
+       "ref": "service_health_scan",
+       "text": "{\"cart\": {\"rps\": 10.25, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 24.0, \"baseline_p95_ms\": 23.9}, \"frontend\": {\"rps\": 8.11, \"error_ratio\": 0.269, \"baseline_error_ratio\": 0.0, \"p95_ms\": 785.6, \"baseline_p95_ms\": 887.6}, \"currency\": {\"rps\": 18.33, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 24.0, \"baseline_p95_ms\": 23.9}, \"catalog\": {\"rps\": 18.36, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 219.2, \"baseline_p95_ms\": 221.9}, \"payment\": {\"rps\": 2.18, \"error_ratio\": 1.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 4.7, \"baseline_p95_ms\": 24.0}, \"checkout\": {\"rps\": 2.18, \"error_ratio\": 1.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 246.2, \"baseline_p95_ms\": 478.3}, \"recommendation\": {\"rps\": 8.05, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 240.1, \"baseline_p95_ms\": 240.2}, \"shipping\": {\"rps\": 0.0, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": null, \"baseline_p95_ms\": 87.4}, \"inventory\": {\"rps\": 18.2, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 23.9, \"baseline_p95_ms\": 23.9}}",
+       "meta": {
+        "source": "prometheus"
+       }
+      },
+      {
+       "id": "T-d697fd",
+       "kind": "trace",
+       "ref": "trace:60833ddd41d9525f",
+       "text": "trace 60833ddd41d9525fbd894ee88c13962a: failing server spans in call order: frontend(502, 518.7ms) -> checkout(502, 126.4ms) -> payment(500, 0.7ms); deepest failing service: payment",
+       "meta": {
+        "trace_id": "60833ddd41d9525fbd894ee88c13962a",
+        "deepest": "payment"
+       }
+      }
+     ]
+    },
+    {
+     "text": "Logs in the payment service show it is receiving a 5003 error from its upstream gateway.",
+     "quote": "PaymentGatewayError: upstream gateway rejected request (code 5003)",
+     "evidence_ids": [
+      "L-4db0a3"
+     ],
+     "is_root_cause_claim": false,
+     "evidence": [
+      {
+       "id": "L-4db0a3",
+       "kind": "log",
+       "ref": "payment.log:1271",
+       "text": "PaymentGatewayError: upstream gateway rejected request (code 5003)",
+       "meta": {
+        "service": "payment",
+        "line": 1271,
+        "ts": "2026-11-25T13:27:19.261+00:00",
+        "level": "ERROR",
+        "trace_id": "e281dd0de3ee2ccb714162842d399f6a",
+        "count_in_window": 135
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [
+    {
+     "is_root_cause_claim": false,
+     "evidence_ids": [
+      "M-1022b0",
+      "M-325df7",
+      "M-76ffe0"
+     ],
+     "text": "No recent configuration changes or resource exhaustion (heap/DB pool) were detected for the payment service.",
+     "quote": "config_version is stable at 41.0",
+     "rejected_because": [
+      "quoted text not found in cited evidence"
+     ]
+    }
+   ],
+   "evidence_precision": 0.667,
+   "rejected_hypotheses": [],
+   "suggested_action": {
+    "service": "payment",
+    "action": "collect_diagnostics",
+    "why": "To investigate the cause of the PaymentGatewayError (code 5003) and determine if it is an external dependency issue or a service logic problem.",
+    "risk": "safe",
+    "description": "Read-only: snapshot logs, metrics and traces for the service",
+    "dry_run": "GET /metrics, tail logs/payment.log, query Jaeger for service=payment"
+   },
+   "evidence_items": 17,
+   "health": {
+    "cart": {
+     "rps": 10.25,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 24.0,
+     "baseline_p95_ms": 23.9
+    },
+    "frontend": {
+     "rps": 8.11,
+     "error_ratio": 0.269,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 785.6,
+     "baseline_p95_ms": 887.6
+    },
+    "currency": {
+     "rps": 18.33,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 24.0,
+     "baseline_p95_ms": 23.9
+    },
+    "catalog": {
+     "rps": 18.36,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 219.2,
+     "baseline_p95_ms": 221.9
+    },
+    "payment": {
+     "rps": 2.18,
+     "error_ratio": 1.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 4.7,
+     "baseline_p95_ms": 24.0
+    },
+    "checkout": {
+     "rps": 2.18,
+     "error_ratio": 1.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 246.2,
+     "baseline_p95_ms": 478.3
+    },
+    "recommendation": {
+     "rps": 8.05,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 240.1,
+     "baseline_p95_ms": 240.2
+    },
+    "shipping": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 87.4
+    },
+    "inventory": {
+     "rps": 18.2,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 23.9
+    }
+   },
+   "edges": [
+    {
+     "caller": "catalog",
+     "callee": "currency",
+     "calls": 261
+    },
+    {
+     "caller": "catalog",
+     "callee": "inventory",
+     "calls": 261
+    },
+    {
+     "caller": "checkout",
+     "callee": "cart",
+     "calls": 61
+    },
+    {
+     "caller": "checkout",
+     "callee": "catalog",
+     "calls": 61
+    },
+    {
+     "caller": "checkout",
+     "callee": "payment",
+     "calls": 61
+    },
+    {
+     "caller": "frontend",
+     "callee": "cart",
+     "calls": 100
+    },
+    {
+     "caller": "frontend",
+     "callee": "catalog",
+     "calls": 100
+    },
+    {
+     "caller": "frontend",
+     "callee": "checkout",
+     "calls": 61
+    },
+    {
+     "caller": "frontend",
+     "callee": "recommendation",
+     "calls": 100
+    },
+    {
+     "caller": "recommendation",
+     "callee": "catalog",
+     "calls": 100
+    }
+   ],
+   "suspects": [
+    {
+     "service": "payment",
+     "anomalous_dependencies": [],
+     "deepest": true,
+     "health": {
+      "rps": 2.18,
+      "error_ratio": 1.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 4.7,
+      "baseline_p95_ms": 24.0
+     }
+    },
+    {
+     "service": "checkout",
+     "anomalous_dependencies": [
+      "payment"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 2.18,
+      "error_ratio": 1.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 246.2,
+      "baseline_p95_ms": 478.3
+     }
+    },
+    {
+     "service": "frontend",
+     "anomalous_dependencies": [
+      "checkout"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 8.11,
+      "error_ratio": 0.269,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 785.6,
+      "baseline_p95_ms": 887.6
+     }
+    }
+   ],
+   "engine": "adk",
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  }
+ },
+ "window": [
+  1795613119.5741832,
+  1795613239.5741832
+ ]
+}
