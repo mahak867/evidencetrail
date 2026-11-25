@@ -1,0 +1,783 @@
+{
+ "scenario": {
+  "id": "S06",
+  "service": "recommendation",
+  "kind": "crash",
+  "params": {},
+  "alert": "frontend 5xx ratio above 5% for 1m"
+ },
+ "truth": {
+  "service": "recommendation",
+  "fault_type": "crash_or_unreachable"
+ },
+ "injected_at": 1795615449.5999544,
+ "methods": {
+  "B1_dashboard_rule": {
+   "method": "B1_dashboard_rule",
+   "root_cause_service": "frontend",
+   "fault_type": null,
+   "ranked_candidates": [
+    "frontend",
+    "currency",
+    "inventory"
+   ],
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 0.0,
+   "usage": {
+    "total_tokens": 0,
+    "calls": 0
+   },
+   "score": {
+    "top1": false,
+    "top3": false,
+    "type_ok": null,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "B0_single_prompt": {
+   "method": "B0_single_prompt",
+   "root_cause_service": "recommendation",
+   "fault_type": "crash_or_unreachable",
+   "ranked_candidates": [
+    "recommendation",
+    "frontend",
+    "cart"
+   ],
+   "summary": "The frontend service is logging 'connection refused' errors when attempting to reach the recommendation service on port 8000, indicating that the recommendation service is down or unreachable.",
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 14.1,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 11133,
+    "completion_tokens": 79,
+    "retries": 0,
+    "failures": 0,
+    "wait_s": 0.0,
+    "total_tokens": 11212
+   },
+   "model": "gemini-3.1-flash-lite",
+   "prompt_chars": 20283,
+   "error": null,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail": {
+   "alert": "frontend 5xx ratio above 5% for 1m",
+   "model": "gemini-3.1-flash-lite",
+   "elapsed_s": 27.1,
+   "usage": {
+    "calls": 2,
+    "prompt_tokens": 6012,
+    "completion_tokens": 285,
+    "retries": 0,
+    "failures": 0,
+    "wait_s": 0.0,
+    "total_tokens": 6297
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "t": 0,
+     "dur": 0.49,
+     "health_evidence_id": "M-7108be",
+     "graph_evidence_id": "T-dea35d",
+     "suspects": [
+      {
+       "service": "frontend",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 8.0,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.788,
+        "p95_ms": 241.4,
+        "baseline_p95_ms": 587.5
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "frontend",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.49,
+     "dur": 0.14,
+     "evidence_ids": [
+      "L-a21a56"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "frontend"
+     },
+     "t": 0.49,
+     "dur": 0.14,
+     "evidence_ids": [
+      "T-71d40e",
+      "T-2dea7c",
+      "T-fbbf59",
+      "T-05c055",
+      "T-aaf07e"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "t": 0.49,
+     "dur": 0.14,
+     "evidence_ids": []
+    },
+    {
+     "step": "llm",
+     "t": 0.63,
+     "dur": 0.94,
+     "tokens": 2877,
+     "model": "gemini-3.1-flash-lite",
+     "requested": [
+      "get_metric"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "name": "up",
+      "service": "recommendation"
+     },
+     "evidence_ids": [
+      "M-f34a5a"
+     ],
+     "t": 1.57,
+     "dur": 0.0
+    },
+    {
+     "step": "llm",
+     "t": 1.58,
+     "dur": 25.55,
+     "tokens": 3420,
+     "model": "gemini-3.1-flash-lite",
+     "requested": [
+      "submit_diagnosis"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "frontend"
+   ],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "recommendation",
+   "fault_type": "crash_or_unreachable",
+   "ranked_candidates": [
+    "recommendation",
+    "frontend"
+   ],
+   "confidence": 1.0,
+   "summary": "The recommendation service has crashed or is unreachable, causing the frontend to fail with connection refused errors. The service 'up' metric for recommendation dropped to 0.",
+   "claims": [
+    {
+     "quote": "connection refused: recommendation:8000 (dial tcp: connect: connection refused)",
+     "is_root_cause_claim": true,
+     "evidence_ids": [
+      "L-a21a56"
+     ],
+     "text": "The frontend service is failing because it cannot connect to the recommendation service.",
+     "evidence": [
+      {
+       "id": "L-a21a56",
+       "kind": "log",
+       "ref": "frontend.log:9167",
+       "text": "connection refused: recommendation:8000 (dial tcp: connect: connection refused)",
+       "meta": {
+        "service": "frontend",
+        "line": 9167,
+        "ts": "2026-11-25T14:05:09.285+00:00",
+        "level": "ERROR",
+        "trace_id": "f038d93dbd1deb6ce23bf87ae01ce435",
+        "count_in_window": 484
+       }
+      }
+     ]
+    },
+    {
+     "evidence_ids": [
+      "M-f34a5a"
+     ],
+     "quote": "[1795615449, 0.0]",
+     "is_root_cause_claim": true,
+     "text": "The recommendation service is down (up metric is 0).",
+     "evidence": [
+      {
+       "id": "M-f34a5a",
+       "kind": "metric",
+       "ref": "recommendation.up",
+       "text": "[{\"labels\": {\"instance_service\": \"recommendation\"}, \"points\": [[1795615389, 1.0], [1795615399, 1.0], [1795615409, 1.0], [1795615419, 1.0], [1795615429, 1.0], [1795615439, 1.0], [1795615449, 0.0], [1795615459, 0.0], [1795615469, 0.0], [1795615479, 0.0], [1795615489, 0.0], [1795615499, 0.0], [1795615509, 0.0]]}]",
+       "meta": {
+        "service": "recommendation",
+        "metric": "up",
+        "query": "up{instance_service=\"recommendation\"}",
+        "window": [
+         1795615389,
+         1795615509
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [],
+   "evidence_precision": 1.0,
+   "rejected_hypotheses": [],
+   "suggested_action": {
+    "action": "start_service",
+    "service": "recommendation",
+    "why": "The recommendation service is currently down, causing connection refused errors in the frontend.",
+    "risk": "risky",
+    "description": "Starts a stopped service container",
+    "dry_run": "docker compose start recommendation"
+   },
+   "evidence_items": 9,
+   "health": {
+    "cart": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 23.8
+    },
+    "frontend": {
+     "rps": 8.0,
+     "error_ratio": 1.0,
+     "baseline_error_ratio": 0.788,
+     "p95_ms": 241.4,
+     "baseline_p95_ms": 587.5
+    },
+    "currency": {
+     "rps": 8.07,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 23.9
+    },
+    "catalog": {
+     "rps": 8.09,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 177.4,
+     "baseline_p95_ms": 221.3
+    },
+    "payment": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 23.9
+    },
+    "checkout": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 478.4
+    },
+    "shipping": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 52.5
+    },
+    "inventory": {
+     "rps": 8.02,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 23.9
+    },
+    "recommendation": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 240.1
+    }
+   },
+   "edges": [
+    {
+     "caller": "catalog",
+     "callee": "currency",
+     "calls": 180
+    },
+    {
+     "caller": "catalog",
+     "callee": "inventory",
+     "calls": 180
+    },
+    {
+     "caller": "checkout",
+     "callee": "cart",
+     "calls": 40
+    },
+    {
+     "caller": "checkout",
+     "callee": "catalog",
+     "calls": 40
+    },
+    {
+     "caller": "checkout",
+     "callee": "currency",
+     "calls": 40
+    },
+    {
+     "caller": "checkout",
+     "callee": "payment",
+     "calls": 40
+    },
+    {
+     "caller": "checkout",
+     "callee": "shipping",
+     "calls": 40
+    },
+    {
+     "caller": "frontend",
+     "callee": "cart",
+     "calls": 40
+    },
+    {
+     "caller": "frontend",
+     "callee": "catalog",
+     "calls": 100
+    },
+    {
+     "caller": "frontend",
+     "callee": "checkout",
+     "calls": 40
+    },
+    {
+     "caller": "frontend",
+     "callee": "recommendation",
+     "calls": 40
+    },
+    {
+     "caller": "recommendation",
+     "callee": "catalog",
+     "calls": 40
+    },
+    {
+     "caller": "shipping",
+     "callee": "currency",
+     "calls": 40
+    }
+   ],
+   "suspects": [
+    {
+     "service": "frontend",
+     "anomalous_dependencies": [],
+     "deepest": true,
+     "health": {
+      "rps": 8.0,
+      "error_ratio": 1.0,
+      "baseline_error_ratio": 0.788,
+      "p95_ms": 241.4,
+      "baseline_p95_ms": 587.5
+     }
+    }
+   ],
+   "engine": "native",
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail_ADK": {
+   "alert": "frontend 5xx ratio above 5% for 1m",
+   "model": "gemini-3.1-flash-lite",
+   "elapsed_s": 91.6,
+   "usage": {
+    "calls": 4,
+    "prompt_tokens": 12580,
+    "completion_tokens": 309,
+    "retries": 0,
+    "failures": 0,
+    "wait_s": 0.0,
+    "total_tokens": 12889
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "t": 0,
+     "dur": 0.66,
+     "health_evidence_id": "M-7108be",
+     "graph_evidence_id": "T-dea35d",
+     "suspects": [
+      {
+       "service": "frontend",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 8.0,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.788,
+        "p95_ms": 241.4,
+        "baseline_p95_ms": 587.5
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "frontend",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.66,
+     "dur": 0.17,
+     "evidence_ids": [
+      "L-a21a56"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "frontend"
+     },
+     "t": 0.66,
+     "dur": 0.17,
+     "evidence_ids": [
+      "T-71d40e",
+      "T-2dea7c",
+      "T-fbbf59",
+      "T-05c055",
+      "T-aaf07e"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "t": 0.66,
+     "dur": 0.17,
+     "evidence_ids": []
+    },
+    {
+     "step": "llm",
+     "t": 34.05,
+     "dur": 0,
+     "engine": "adk",
+     "tokens": 2841,
+     "model": "gemini-3.1-flash-lite",
+     "requested": [
+      "get_metric"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "service": "recommendation",
+      "name": "up"
+     },
+     "evidence_ids": [
+      "M-f34a5a"
+     ],
+     "engine": "adk",
+     "t": 34.05,
+     "dur": 0.0
+    },
+    {
+     "step": "llm",
+     "t": 35.4,
+     "dur": 0,
+     "engine": "adk",
+     "tokens": 3145,
+     "model": "gemini-3.1-flash-lite",
+     "requested": [
+      "get_logs"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "recommendation",
+      "level": "ERROR",
+      "contains": null
+     },
+     "evidence_ids": [],
+     "engine": "adk",
+     "t": 35.4,
+     "dur": 0.0
+    },
+    {
+     "step": "llm",
+     "t": 89.66,
+     "dur": 0,
+     "engine": "adk",
+     "tokens": 3203,
+     "model": "gemini-3.1-flash-lite",
+     "requested": [
+      "get_metric"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "service": "recommendation",
+      "name": "request_rate"
+     },
+     "evidence_ids": [
+      "M-fcea75"
+     ],
+     "engine": "adk",
+     "t": 89.66,
+     "dur": 0.0
+    },
+    {
+     "step": "llm",
+     "t": 91.55,
+     "dur": 0,
+     "engine": "adk",
+     "tokens": 3700,
+     "model": "gemini-3.1-flash-lite",
+     "requested": [
+      "submit_diagnosis"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "frontend"
+   ],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "recommendation",
+   "fault_type": "crash_or_unreachable",
+   "ranked_candidates": [
+    "recommendation"
+   ],
+   "confidence": 1.0,
+   "summary": "The recommendation service has crashed or become unreachable, leading to connection refused errors in the frontend service which depends on it. No recent deployments or config changes were identified.",
+   "claims": [
+    {
+     "is_root_cause_claim": true,
+     "quote": "connection refused: recommendation:8000 (dial tcp: connect: connection refused)",
+     "evidence_ids": [
+      "L-a21a56"
+     ],
+     "evidence": [
+      {
+       "id": "L-a21a56",
+       "kind": "log",
+       "ref": "frontend.log:9167",
+       "text": "connection refused: recommendation:8000 (dial tcp: connect: connection refused)",
+       "meta": {
+        "service": "frontend",
+        "line": 9167,
+        "ts": "2026-11-25T14:05:09.285+00:00",
+        "level": "ERROR",
+        "trace_id": "f038d93dbd1deb6ce23bf87ae01ce435",
+        "count_in_window": 484
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [
+    {
+     "evidence_ids": [
+      "M-f34a5a"
+     ],
+     "quote": "[1795615449, 0.0] ... [1795615509, 0.0]",
+     "is_root_cause_claim": true,
+     "rejected_because": [
+      "quoted text not found in cited evidence"
+     ]
+    }
+   ],
+   "evidence_precision": 0.5,
+   "rejected_hypotheses": [],
+   "suggested_action": {
+    "why": "Service is down and unreachable causing connection refused errors in the frontend.",
+    "action": "restart_service",
+    "service": "recommendation",
+    "risk": "risky",
+    "description": "Restarts the service container; in-flight requests fail",
+    "dry_run": "docker compose restart recommendation"
+   },
+   "evidence_items": 10,
+   "health": {
+    "cart": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 23.8
+    },
+    "frontend": {
+     "rps": 8.0,
+     "error_ratio": 1.0,
+     "baseline_error_ratio": 0.788,
+     "p95_ms": 241.4,
+     "baseline_p95_ms": 587.5
+    },
+    "currency": {
+     "rps": 8.07,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 23.9
+    },
+    "catalog": {
+     "rps": 8.09,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 177.4,
+     "baseline_p95_ms": 221.3
+    },
+    "payment": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 23.9
+    },
+    "checkout": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 478.4
+    },
+    "shipping": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 52.5
+    },
+    "inventory": {
+     "rps": 8.02,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 23.9
+    },
+    "recommendation": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 240.1
+    }
+   },
+   "edges": [
+    {
+     "caller": "catalog",
+     "callee": "currency",
+     "calls": 180
+    },
+    {
+     "caller": "catalog",
+     "callee": "inventory",
+     "calls": 180
+    },
+    {
+     "caller": "checkout",
+     "callee": "cart",
+     "calls": 40
+    },
+    {
+     "caller": "checkout",
+     "callee": "catalog",
+     "calls": 40
+    },
+    {
+     "caller": "checkout",
+     "callee": "currency",
+     "calls": 40
+    },
+    {
+     "caller": "checkout",
+     "callee": "payment",
+     "calls": 40
+    },
+    {
+     "caller": "checkout",
+     "callee": "shipping",
+     "calls": 40
+    },
+    {
+     "caller": "frontend",
+     "callee": "cart",
+     "calls": 40
+    },
+    {
+     "caller": "frontend",
+     "callee": "catalog",
+     "calls": 100
+    },
+    {
+     "caller": "frontend",
+     "callee": "checkout",
+     "calls": 40
+    },
+    {
+     "caller": "frontend",
+     "callee": "recommendation",
+     "calls": 40
+    },
+    {
+     "caller": "recommendation",
+     "callee": "catalog",
+     "calls": 40
+    },
+    {
+     "caller": "shipping",
+     "callee": "currency",
+     "calls": 40
+    }
+   ],
+   "suspects": [
+    {
+     "service": "frontend",
+     "anomalous_dependencies": [],
+     "deepest": true,
+     "health": {
+      "rps": 8.0,
+      "error_ratio": 1.0,
+      "baseline_error_ratio": 0.788,
+      "p95_ms": 241.4,
+      "baseline_p95_ms": 587.5
+     }
+    }
+   ],
+   "engine": "adk",
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  }
+ },
+ "window": [
+  1795615389.6001623,
+  1795615509.6001623
+ ]
+}

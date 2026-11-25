@@ -1,0 +1,840 @@
+{
+ "scenario": {
+  "id": "S10",
+  "service": "shipping",
+  "kind": "bad_config",
+  "params": {},
+  "alert": "checkout error rate above 5% for 1m (SLO burn)"
+ },
+ "truth": {
+  "service": "shipping",
+  "fault_type": "bad_config"
+ },
+ "injected_at": 1795616706.8217432,
+ "methods": {
+  "B1_dashboard_rule": {
+   "method": "B1_dashboard_rule",
+   "root_cause_service": "checkout",
+   "fault_type": null,
+   "ranked_candidates": [
+    "checkout",
+    "shipping",
+    "payment"
+   ],
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 0.1,
+   "usage": {
+    "total_tokens": 0,
+    "calls": 0
+   },
+   "score": {
+    "top1": false,
+    "top3": true,
+    "type_ok": null,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "B0_single_prompt": {
+   "method": "B0_single_prompt",
+   "root_cause_service": "shipping",
+   "fault_type": "bad_config",
+   "ranked_candidates": [
+    "shipping",
+    "checkout",
+    "frontend"
+   ],
+   "summary": "The shipping service is throwing a configuration error stating that FX_RATE_SOURCE is empty, which prevents it from loading exchange rates. This causes upstream calls from checkout to fail with HTTP 500, subsequently leading to frontend errors.",
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 4.6,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 16013,
+    "completion_tokens": 101,
+    "retries": 0,
+    "failures": 4,
+    "wait_s": 3.0,
+    "total_tokens": 16114
+   },
+   "model": "gemini-flash-lite-latest",
+   "prompt_chars": 29621,
+   "error": null,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail": {
+   "alert": "checkout error rate above 5% for 1m (SLO burn)",
+   "model": "gemini-flash-lite-latest",
+   "elapsed_s": 5.2,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 3359,
+    "completion_tokens": 323,
+    "retries": 0,
+    "failures": 4,
+    "wait_s": 2.8,
+    "total_tokens": 3682
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "t": 0,
+     "dur": 0.79,
+     "health_evidence_id": "M-b84ee6",
+     "graph_evidence_id": "T-466f7b",
+     "suspects": [
+      {
+       "service": "shipping",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 1.99,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 4.9,
+        "baseline_p95_ms": 86.2
+       }
+      },
+      {
+       "service": "checkout",
+       "anomalous_dependencies": [
+        "shipping"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 2.0,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 303.6,
+        "baseline_p95_ms": 482.1
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "shipping",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.79,
+     "dur": 0.19,
+     "evidence_ids": [
+      "L-a6a0d5"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "checkout",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.79,
+     "dur": 0.19,
+     "evidence_ids": [
+      "L-d3530c"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "checkout"
+     },
+     "t": 0.79,
+     "dur": 0.19,
+     "evidence_ids": [
+      "T-8ed1e8",
+      "T-ad8d1a",
+      "T-af8fc3",
+      "T-d5bb70",
+      "T-0271b0"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "t": 0.79,
+     "dur": 0.19,
+     "evidence_ids": [
+      "C-545c1b"
+     ]
+    },
+    {
+     "step": "llm",
+     "t": 0.97,
+     "dur": 4.23,
+     "tokens": 3682,
+     "model": "gemini-flash-lite-latest",
+     "requested": [
+      "submit_diagnosis"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "shipping",
+    "checkout"
+   ],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "shipping",
+   "fault_type": "bad_config",
+   "ranked_candidates": [
+    "shipping",
+    "checkout",
+    "frontend"
+   ],
+   "confidence": 1.0,
+   "summary": "The shipping service is throwing configuration errors because FX_RATE_SOURCE was set to an empty string in version 42. This causes checkout and frontend requests to fail when calling shipping.",
+   "claims": [
+    {
+     "is_root_cause_claim": true,
+     "evidence_ids": [
+      "L-a6a0d5"
+     ],
+     "quote": "config error: FX_RATE_SOURCE is empty; cannot load exchange rates",
+     "text": "The shipping service fails due to an invalid configuration where FX_RATE_SOURCE is empty.",
+     "evidence": [
+      {
+       "id": "L-a6a0d5",
+       "kind": "log",
+       "ref": "shipping.log:1755",
+       "text": "config error: FX_RATE_SOURCE is empty; cannot load exchange rates",
+       "meta": {
+        "service": "shipping",
+        "line": 1755,
+        "ts": "2026-11-25T14:26:06.435+00:00",
+        "level": "ERROR",
+        "trace_id": "d73894975aaa4ccdbf26da78278745ec",
+        "count_in_window": 117
+       }
+      }
+     ]
+    },
+    {
+     "text": "A configuration change was recently applied to shipping setting FX_RATE_SOURCE to an empty string.",
+     "quote": "{\"FX_RATE_SOURCE\": \"\"}",
+     "evidence_ids": [
+      "C-545c1b"
+     ],
+     "is_root_cause_claim": true,
+     "evidence": [
+      {
+       "id": "C-545c1b",
+       "kind": "change",
+       "ref": "events.log:1",
+       "text": "{\"ts\": \"2026-11-25T14:25:06.820+00:00\", \"service\": \"shipping\", \"kind\": \"ConfigUpdated\", \"version\": 42, \"changed\": {\"FX_RATE_SOURCE\": \"\"}, \"author\": \"deploy-bot\"}",
+       "meta": {
+        "ts": "2026-11-25T14:25:06.820+00:00",
+        "service": "shipping",
+        "kind": "ConfigUpdated",
+        "version": 42,
+        "changed": {
+         "FX_RATE_SOURCE": ""
+        },
+        "author": "deploy-bot"
+       }
+      }
+     ]
+    },
+    {
+     "quote": "upstream call to shipping failed with HTTP 500",
+     "text": "Checkout calls shipping and fails as a result of shipping's configuration error.",
+     "evidence_ids": [
+      "L-d3530c"
+     ],
+     "is_root_cause_claim": false,
+     "evidence": [
+      {
+       "id": "L-d3530c",
+       "kind": "log",
+       "ref": "checkout.log:1127",
+       "text": "upstream call to shipping failed with HTTP 500",
+       "meta": {
+        "service": "checkout",
+        "line": 1127,
+        "ts": "2026-11-25T14:26:06.438+00:00",
+        "level": "ERROR",
+        "trace_id": "d73894975aaa4ccdbf26da78278745ec",
+        "count_in_window": 117
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [],
+   "evidence_precision": 1.0,
+   "rejected_hypotheses": [],
+   "suggested_action": {
+    "why": "Roll back the configuration change that emptied FX_RATE_SOURCE.",
+    "action": "rollback_config",
+    "service": "shipping",
+    "risk": "risky",
+    "description": "Restores the previous configuration version",
+    "dry_run": "DELETE http://localhost:8106/admin/fault  (test env: restore config v41)"
+   },
+   "evidence_items": 10,
+   "health": {
+    "cart": {
+     "rps": 10.47,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 24.0
+    },
+    "frontend": {
+     "rps": 8.24,
+     "error_ratio": 0.241,
+     "baseline_error_ratio": 0.807,
+     "p95_ms": 823.0,
+     "baseline_p95_ms": 470.1
+    },
+    "currency": {
+     "rps": 18.69,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.599,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 22.3
+    },
+    "catalog": {
+     "rps": 18.73,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.633,
+     "p95_ms": 216.8,
+     "baseline_p95_ms": 187.9
+    },
+    "payment": {
+     "rps": 2.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 24.1,
+     "baseline_p95_ms": 23.8
+    },
+    "checkout": {
+     "rps": 2.0,
+     "error_ratio": 1.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 303.6,
+     "baseline_p95_ms": 482.1
+    },
+    "recommendation": {
+     "rps": 8.4,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 241.5,
+     "baseline_p95_ms": 241.6
+    },
+    "shipping": {
+     "rps": 1.99,
+     "error_ratio": 1.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 4.9,
+     "baseline_p95_ms": 86.2
+    },
+    "inventory": {
+     "rps": 18.89,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 24.0
+    }
+   },
+   "edges": [
+    {
+     "caller": "catalog",
+     "callee": "currency",
+     "calls": 249
+    },
+    {
+     "caller": "catalog",
+     "callee": "inventory",
+     "calls": 249
+    },
+    {
+     "caller": "checkout",
+     "callee": "cart",
+     "calls": 49
+    },
+    {
+     "caller": "checkout",
+     "callee": "catalog",
+     "calls": 49
+    },
+    {
+     "caller": "checkout",
+     "callee": "payment",
+     "calls": 49
+    },
+    {
+     "caller": "checkout",
+     "callee": "shipping",
+     "calls": 49
+    },
+    {
+     "caller": "frontend",
+     "callee": "cart",
+     "calls": 100
+    },
+    {
+     "caller": "frontend",
+     "callee": "catalog",
+     "calls": 100
+    },
+    {
+     "caller": "frontend",
+     "callee": "checkout",
+     "calls": 49
+    },
+    {
+     "caller": "frontend",
+     "callee": "recommendation",
+     "calls": 100
+    },
+    {
+     "caller": "recommendation",
+     "callee": "catalog",
+     "calls": 100
+    }
+   ],
+   "suspects": [
+    {
+     "service": "shipping",
+     "anomalous_dependencies": [],
+     "deepest": true,
+     "health": {
+      "rps": 1.99,
+      "error_ratio": 1.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 4.9,
+      "baseline_p95_ms": 86.2
+     }
+    },
+    {
+     "service": "checkout",
+     "anomalous_dependencies": [
+      "shipping"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 2.0,
+      "error_ratio": 1.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 303.6,
+      "baseline_p95_ms": 482.1
+     }
+    }
+   ],
+   "engine": "native",
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail_ADK": {
+   "alert": "checkout error rate above 5% for 1m (SLO burn)",
+   "model": "gemini-3.5-flash",
+   "elapsed_s": 24.8,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 3323,
+    "completion_tokens": 419,
+    "retries": 0,
+    "failures": 2,
+    "wait_s": 0.0,
+    "total_tokens": 3742
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "t": 0,
+     "dur": 0.85,
+     "health_evidence_id": "M-b84ee6",
+     "graph_evidence_id": "T-466f7b",
+     "suspects": [
+      {
+       "service": "shipping",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 1.99,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 4.9,
+        "baseline_p95_ms": 86.2
+       }
+      },
+      {
+       "service": "checkout",
+       "anomalous_dependencies": [
+        "shipping"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 2.0,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 303.6,
+        "baseline_p95_ms": 482.1
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "shipping",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.85,
+     "dur": 0.25,
+     "evidence_ids": [
+      "L-a6a0d5"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "checkout",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.85,
+     "dur": 0.25,
+     "evidence_ids": [
+      "L-d3530c"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "checkout"
+     },
+     "t": 0.85,
+     "dur": 0.25,
+     "evidence_ids": [
+      "T-8ed1e8",
+      "T-ad8d1a",
+      "T-af8fc3",
+      "T-d5bb70",
+      "T-0271b0"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "t": 0.85,
+     "dur": 0.25,
+     "evidence_ids": [
+      "C-545c1b"
+     ]
+    },
+    {
+     "step": "llm",
+     "t": 24.81,
+     "dur": 0,
+     "engine": "adk",
+     "tokens": 3742,
+     "model": "gemini-3.5-flash",
+     "requested": [
+      "submit_diagnosis"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "shipping",
+    "checkout"
+   ],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "shipping",
+   "fault_type": "bad_config",
+   "ranked_candidates": [
+    "shipping",
+    "checkout",
+    "frontend"
+   ],
+   "confidence": 0.98,
+   "summary": "The shipping service started failing with HTTP 500 errors after a recent configuration change (C-545c1b) cleared FX_RATE_SOURCE. This propagated upstream errors to checkout and frontend services.",
+   "claims": [
+    {
+     "evidence_ids": [
+      "C-545c1b",
+      "L-a6a0d5"
+     ],
+     "text": "The shipping service experienced errors due to an invalid configuration change that cleared FX_RATE_SOURCE.",
+     "quote": "config error: FX_RATE_SOURCE is empty; cannot load exchange rates",
+     "is_root_cause_claim": true,
+     "evidence": [
+      {
+       "id": "C-545c1b",
+       "kind": "change",
+       "ref": "events.log:1",
+       "text": "{\"ts\": \"2026-11-25T14:25:06.820+00:00\", \"service\": \"shipping\", \"kind\": \"ConfigUpdated\", \"version\": 42, \"changed\": {\"FX_RATE_SOURCE\": \"\"}, \"author\": \"deploy-bot\"}",
+       "meta": {
+        "ts": "2026-11-25T14:25:06.820+00:00",
+        "service": "shipping",
+        "kind": "ConfigUpdated",
+        "version": 42,
+        "changed": {
+         "FX_RATE_SOURCE": ""
+        },
+        "author": "deploy-bot"
+       }
+      },
+      {
+       "id": "L-a6a0d5",
+       "kind": "log",
+       "ref": "shipping.log:1755",
+       "text": "config error: FX_RATE_SOURCE is empty; cannot load exchange rates",
+       "meta": {
+        "service": "shipping",
+        "line": 1755,
+        "ts": "2026-11-25T14:26:06.435+00:00",
+        "level": "ERROR",
+        "trace_id": "d73894975aaa4ccdbf26da78278745ec",
+        "count_in_window": 117
+       }
+      }
+     ]
+    },
+    {
+     "text": "Checkout failed as a direct consequence of shipping failing with HTTP 500.",
+     "evidence_ids": [
+      "L-d3530c",
+      "T-8ed1e8"
+     ],
+     "is_root_cause_claim": false,
+     "quote": "upstream call to shipping failed with HTTP 500",
+     "evidence": [
+      {
+       "id": "L-d3530c",
+       "kind": "log",
+       "ref": "checkout.log:1127",
+       "text": "upstream call to shipping failed with HTTP 500",
+       "meta": {
+        "service": "checkout",
+        "line": 1127,
+        "ts": "2026-11-25T14:26:06.438+00:00",
+        "level": "ERROR",
+        "trace_id": "d73894975aaa4ccdbf26da78278745ec",
+        "count_in_window": 117
+       }
+      },
+      {
+       "id": "T-8ed1e8",
+       "kind": "trace",
+       "ref": "trace:0edd538905885463",
+       "text": "trace 0edd538905885463dc809e7924c5ca58: failing server spans in call order: frontend(502, 539.9ms) -> checkout(502, 185.1ms) -> shipping(500, 0.7ms); deepest failing service: shipping",
+       "meta": {
+        "trace_id": "0edd538905885463dc809e7924c5ca58",
+        "deepest": "shipping"
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [],
+   "evidence_precision": 1.0,
+   "rejected_hypotheses": [
+    {
+     "hypothesis": "Checkout code error or resource exhaustion",
+     "evidence_ids": [
+      "L-d3530c",
+      "T-8ed1e8"
+     ],
+     "reason": "Checkout errors are upstream failures caused by shipping returning HTTP 500."
+    },
+    {
+     "evidence_ids": [
+      "C-545c1b"
+     ],
+     "reason": "The incident was triggered by a ConfigUpdated change (FX_RATE_SOURCE=\"\"), not a new deployment.",
+     "hypothesis": "Shipping bad deployment"
+    }
+   ],
+   "suggested_action": {
+    "why": "Roll back the configuration change C-545c1b that set FX_RATE_SOURCE to an empty string.",
+    "service": "shipping",
+    "action": "rollback_config",
+    "risk": "risky",
+    "description": "Restores the previous configuration version",
+    "dry_run": "DELETE http://localhost:8106/admin/fault  (test env: restore config v41)"
+   },
+   "evidence_items": 10,
+   "health": {
+    "cart": {
+     "rps": 10.47,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 24.0
+    },
+    "frontend": {
+     "rps": 8.24,
+     "error_ratio": 0.241,
+     "baseline_error_ratio": 0.807,
+     "p95_ms": 823.0,
+     "baseline_p95_ms": 470.1
+    },
+    "currency": {
+     "rps": 18.69,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.599,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 22.3
+    },
+    "catalog": {
+     "rps": 18.73,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.633,
+     "p95_ms": 216.8,
+     "baseline_p95_ms": 187.9
+    },
+    "payment": {
+     "rps": 2.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 24.1,
+     "baseline_p95_ms": 23.8
+    },
+    "checkout": {
+     "rps": 2.0,
+     "error_ratio": 1.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 303.6,
+     "baseline_p95_ms": 482.1
+    },
+    "recommendation": {
+     "rps": 8.4,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 241.5,
+     "baseline_p95_ms": 241.6
+    },
+    "shipping": {
+     "rps": 1.99,
+     "error_ratio": 1.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 4.9,
+     "baseline_p95_ms": 86.2
+    },
+    "inventory": {
+     "rps": 18.89,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 24.0
+    }
+   },
+   "edges": [
+    {
+     "caller": "catalog",
+     "callee": "currency",
+     "calls": 249
+    },
+    {
+     "caller": "catalog",
+     "callee": "inventory",
+     "calls": 249
+    },
+    {
+     "caller": "checkout",
+     "callee": "cart",
+     "calls": 49
+    },
+    {
+     "caller": "checkout",
+     "callee": "catalog",
+     "calls": 49
+    },
+    {
+     "caller": "checkout",
+     "callee": "payment",
+     "calls": 49
+    },
+    {
+     "caller": "checkout",
+     "callee": "shipping",
+     "calls": 49
+    },
+    {
+     "caller": "frontend",
+     "callee": "cart",
+     "calls": 100
+    },
+    {
+     "caller": "frontend",
+     "callee": "catalog",
+     "calls": 100
+    },
+    {
+     "caller": "frontend",
+     "callee": "checkout",
+     "calls": 49
+    },
+    {
+     "caller": "frontend",
+     "callee": "recommendation",
+     "calls": 100
+    },
+    {
+     "caller": "recommendation",
+     "callee": "catalog",
+     "calls": 100
+    }
+   ],
+   "suspects": [
+    {
+     "service": "shipping",
+     "anomalous_dependencies": [],
+     "deepest": true,
+     "health": {
+      "rps": 1.99,
+      "error_ratio": 1.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 4.9,
+      "baseline_p95_ms": 86.2
+     }
+    },
+    {
+     "service": "checkout",
+     "anomalous_dependencies": [
+      "shipping"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 2.0,
+      "error_ratio": 1.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 303.6,
+      "baseline_p95_ms": 482.1
+     }
+    }
+   ],
+   "engine": "adk",
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  }
+ },
+ "window": [
+  1795616646.8219166,
+  1795616766.8219166
+ ]
+}

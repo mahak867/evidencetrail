@@ -17,7 +17,7 @@ import os
 import time
 import uuid
 
-from .gemini import BASE, FALLBACKS, MODEL
+from .gemini import BASE, FALLBACKS, MODEL, PASS_WAIT_S
 
 # ADK logs a cancellation when we stop the run right after submit_diagnosis; that is expected.
 for _name in ("google_adk", "google.adk", "LiteLLM", "litellm"):
@@ -79,9 +79,15 @@ def run_adk(inv, context: dict) -> tuple[dict | None, str | None]:
     key = os.environ.get("GEMINI_API_KEY")
     if not key:
         return None, "GEMINI_API_KEY is not set"
-    models = [inv.llm.model or MODEL] + [m for m in FALLBACKS if m != (inv.llm.model or MODEL)]
+    chain = [inv.llm.model or MODEL] + [m for m in FALLBACKS if m != (inv.llm.model or MODEL)]
+    # same policy as the native client: try every model, then wait and try the whole chain once more
+    models = chain + chain
     last_err = None
-    for model in models:
+    for i, model in enumerate(models):
+        if i == len(chain):
+            inv.llm.usage.retries += 1
+            inv.llm.usage.wait_s += PASS_WAIT_S
+            time.sleep(PASS_WAIT_S)
         result.clear()
         agent = LlmAgent(
             name="evidencetrail_investigator",

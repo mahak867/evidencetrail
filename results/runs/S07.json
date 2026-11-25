@@ -1,0 +1,831 @@
+{
+ "scenario": {
+  "id": "S07",
+  "service": "recommendation",
+  "kind": "memory_leak",
+  "params": {
+   "bytes_per_req": "6000000"
+  },
+  "alert": "frontend p95 latency above 1s and rising"
+ },
+ "truth": {
+  "service": "recommendation",
+  "fault_type": "resource_exhaustion"
+ },
+ "injected_at": 1795615718.0977464,
+ "methods": {
+  "B1_dashboard_rule": {
+   "method": "B1_dashboard_rule",
+   "root_cause_service": "recommendation",
+   "fault_type": null,
+   "ranked_candidates": [
+    "recommendation",
+    "shipping",
+    "catalog"
+   ],
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 0.0,
+   "usage": {
+    "total_tokens": 0,
+    "calls": 0
+   },
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": null,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "B0_single_prompt": {
+   "method": "B0_single_prompt",
+   "root_cause_service": "recommendation",
+   "fault_type": "resource_exhaustion",
+   "ranked_candidates": [
+    "recommendation",
+    "frontend",
+    "cart"
+   ],
+   "summary": "The recommendation service is experiencing repeated Java heap space OutOfMemoryErrors and frequent long GC pauses, causing upstream HTTP 500 errors in the frontend and increasing overall latency.",
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 1.4,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 13770,
+    "completion_tokens": 77,
+    "retries": 0,
+    "failures": 0,
+    "wait_s": 0.0,
+    "total_tokens": 13847
+   },
+   "model": "gemini-3.1-flash-lite",
+   "prompt_chars": 24120,
+   "error": null,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail": {
+   "alert": "frontend p95 latency above 1s and rising",
+   "model": "gemini-3.1-flash-lite,gemini-3-flash-preview,gemini-3.5-flash",
+   "elapsed_s": 16.6,
+   "usage": {
+    "calls": 3,
+    "prompt_tokens": 11000,
+    "completion_tokens": 445,
+    "retries": 0,
+    "failures": 3,
+    "wait_s": 12.3,
+    "total_tokens": 11445
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "t": 0,
+     "dur": 0.59,
+     "health_evidence_id": "M-4a04b9",
+     "graph_evidence_id": "T-608490",
+     "suspects": [
+      {
+       "service": "recommendation",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 7.75,
+        "error_ratio": 0.486,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 1947.6,
+        "baseline_p95_ms": 239.9
+       }
+      },
+      {
+       "service": "frontend",
+       "anomalous_dependencies": [
+        "recommendation"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 7.95,
+        "error_ratio": 0.51,
+        "baseline_error_ratio": 0.741,
+        "p95_ms": 1954.1,
+        "baseline_p95_ms": 558.7
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "recommendation",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.59,
+     "dur": 0.15,
+     "evidence_ids": [
+      "L-ebbde1",
+      "L-48655d"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "frontend",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.59,
+     "dur": 0.15,
+     "evidence_ids": [
+      "L-830c2b"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "frontend"
+     },
+     "t": 0.59,
+     "dur": 0.15,
+     "evidence_ids": [
+      "T-8c8225",
+      "T-4165b5",
+      "T-6e8c05",
+      "T-960974",
+      "T-d2049e"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "t": 0.59,
+     "dur": 0.15,
+     "evidence_ids": []
+    },
+    {
+     "step": "llm",
+     "t": 0.75,
+     "dur": 0.68,
+     "tokens": 3453,
+     "model": "gemini-3.1-flash-lite",
+     "requested": [
+      "get_metric"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "name": "heap_mb",
+      "service": "recommendation"
+     },
+     "evidence_ids": [
+      "M-9d3766"
+     ],
+     "t": 1.43,
+     "dur": 0.0
+    },
+    {
+     "step": "llm",
+     "t": 1.43,
+     "dur": 8.53,
+     "tokens": 3774,
+     "model": "gemini-3-flash-preview",
+     "requested": [
+      "get_recent_changes"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "evidence_ids": [],
+     "t": 9.97,
+     "dur": 0.0
+    },
+    {
+     "step": "llm",
+     "t": 9.97,
+     "dur": 6.66,
+     "tokens": 4218,
+     "model": "gemini-3.5-flash",
+     "requested": [
+      "submit_diagnosis"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "recommendation",
+    "frontend"
+   ],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "recommendation",
+   "fault_type": "resource_exhaustion",
+   "ranked_candidates": [
+    "recommendation",
+    "frontend"
+   ],
+   "confidence": 0.95,
+   "summary": "The recommendation service failed due to Java heap space memory exhaustion (OutOfMemoryError) and severe GC pauses, causing latency spikes and HTTP 500 errors that propagated upstream to the frontend service. Restarting the recommendation service is recommended to clear heap usage and restore service health.",
+   "claims": [
+    {
+     "is_root_cause_claim": true,
+     "quote": "java.lang.OutOfMemoryError: Java heap space (simulated)",
+     "evidence_ids": [
+      "L-ebbde1",
+      "L-48655d",
+      "M-9d3766"
+     ],
+     "text": "The recommendation service experienced an OutOfMemoryError and high GC pauses due to heap usage spiking to 330MB against a 256MB limit.",
+     "evidence": [
+      {
+       "id": "L-ebbde1",
+       "kind": "log",
+       "ref": "recommendation.log:2026",
+       "text": "java.lang.OutOfMemoryError: Java heap space (simulated)",
+       "meta": {
+        "service": "recommendation",
+        "line": 2026,
+        "ts": "2026-11-25T14:09:37.685+00:00",
+        "level": "ERROR",
+        "trace_id": "03efa71bab776143c76a2bee2ab03ec9",
+        "count_in_window": 225
+       }
+      },
+      {
+       "id": "L-48655d",
+       "kind": "log",
+       "ref": "recommendation.log:2031",
+       "text": "GC pause 1.1s, heap 300MB of 256MB limit",
+       "meta": {
+        "service": "recommendation",
+        "line": 2031,
+        "ts": "2026-11-25T14:09:38.007+00:00",
+        "level": "WARN",
+        "trace_id": "3aeda38f3a6bb54a16074d20f8303736",
+        "count_in_window": 454
+       }
+      },
+      {
+       "id": "M-9d3766",
+       "kind": "metric",
+       "ref": "recommendation.heap_mb",
+       "text": "[{\"labels\": {\"instance_service\": \"recommendation\", \"service\": \"recommendation\"}, \"points\": [[1795615658, 30.0], [1795615668, 30.0], [1795615678, 30.0], [1795615688, 30.0], [1795615698, 30.0], [1795615708, 30.0], [1795615718, 30.0], [1795615728, 270.0], [1795615738, 330.0], [1795615748, 330.0], [1795615758, 330.0], [1795615768, 330.0], [1795615778, 330.0]]}]",
+       "meta": {
+        "service": "recommendation",
+        "metric": "heap_mb",
+        "query": "shop_heap_bytes{service=\"recommendation\"} / 1e6",
+        "window": [
+         1795615658,
+         1795615778
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "quote": "upstream call to recommendation failed with HTTP 500",
+     "text": "Frontend latency and errors propagated upstream from HTTP 500 errors returned by the recommendation service.",
+     "evidence_ids": [
+      "L-830c2b",
+      "T-8c8225"
+     ],
+     "is_root_cause_claim": false,
+     "evidence": [
+      {
+       "id": "L-830c2b",
+       "kind": "log",
+       "ref": "frontend.log:10489",
+       "text": "upstream call to recommendation failed with HTTP 500",
+       "meta": {
+        "service": "frontend",
+        "line": 10489,
+        "ts": "2026-11-25T14:09:37.687+00:00",
+        "level": "ERROR",
+        "trace_id": "03efa71bab776143c76a2bee2ab03ec9",
+        "count_in_window": 225
+       }
+      },
+      {
+       "id": "T-8c8225",
+       "kind": "trace",
+       "ref": "trace:10f6385251b11884",
+       "text": "trace 10f6385251b11884fd434ac423bbf921: failing server spans in call order: frontend(502, 1391.0ms) -> recommendation(500, 1303.3ms); deepest failing service: recommendation",
+       "meta": {
+        "trace_id": "10f6385251b11884fd434ac423bbf921",
+        "deepest": "recommendation"
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [],
+   "evidence_precision": 1.0,
+   "rejected_hypotheses": [
+    {
+     "evidence_ids": [
+      "L-830c2b",
+      "T-8c8225"
+     ],
+     "hypothesis": "Frontend microservice code failure or bad deployment",
+     "why_rejected": "Frontend errors and latency are propagated upstream failures from recommendation service returning HTTP 500s."
+    }
+   ],
+   "suggested_action": {
+    "why": "Restarting the recommendation service will clear the exhausted Java heap space and temporarily restore service functionality.",
+    "service": "recommendation",
+    "action": "restart_service",
+    "risk": "risky",
+    "description": "Restarts the service container; in-flight requests fail",
+    "dry_run": "docker compose restart recommendation"
+   },
+   "evidence_items": 11,
+   "health": {
+    "cart": {
+     "rps": 4.91,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 24.0,
+     "baseline_p95_ms": 23.9
+    },
+    "frontend": {
+     "rps": 7.95,
+     "error_ratio": 0.51,
+     "baseline_error_ratio": 0.741,
+     "p95_ms": 1954.1,
+     "baseline_p95_ms": 558.7
+    },
+    "currency": {
+     "rps": 14.78,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 23.8
+    },
+    "catalog": {
+     "rps": 12.84,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 196.9,
+     "baseline_p95_ms": 189.8
+    },
+    "payment": {
+     "rps": 0.96,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.7,
+     "baseline_p95_ms": 23.9
+    },
+    "checkout": {
+     "rps": 0.96,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 461.0,
+     "baseline_p95_ms": 477.9
+    },
+    "recommendation": {
+     "rps": 7.75,
+     "error_ratio": 0.486,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 1947.6,
+     "baseline_p95_ms": 239.9
+    },
+    "shipping": {
+     "rps": 0.98,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 73.0,
+     "baseline_p95_ms": 48.7
+    },
+    "inventory": {
+     "rps": 12.95,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 23.9
+    }
+   },
+   "edges": [
+    {
+     "caller": "catalog",
+     "callee": "currency",
+     "calls": 206
+    },
+    {
+     "caller": "catalog",
+     "callee": "inventory",
+     "calls": 208
+    },
+    {
+     "caller": "checkout",
+     "callee": "cart",
+     "calls": 44
+    },
+    {
+     "caller": "checkout",
+     "callee": "catalog",
+     "calls": 44
+    },
+    {
+     "caller": "checkout",
+     "callee": "currency",
+     "calls": 44
+    },
+    {
+     "caller": "checkout",
+     "callee": "payment",
+     "calls": 44
+    },
+    {
+     "caller": "checkout",
+     "callee": "shipping",
+     "calls": 44
+    },
+    {
+     "caller": "frontend",
+     "callee": "cart",
+     "calls": 62
+    },
+    {
+     "caller": "frontend",
+     "callee": "catalog",
+     "calls": 100
+    },
+    {
+     "caller": "frontend",
+     "callee": "checkout",
+     "calls": 44
+    },
+    {
+     "caller": "frontend",
+     "callee": "recommendation",
+     "calls": 91
+    },
+    {
+     "caller": "recommendation",
+     "callee": "catalog",
+     "calls": 63
+    },
+    {
+     "caller": "shipping",
+     "callee": "currency",
+     "calls": 44
+    }
+   ],
+   "suspects": [
+    {
+     "service": "recommendation",
+     "anomalous_dependencies": [],
+     "deepest": true,
+     "health": {
+      "rps": 7.75,
+      "error_ratio": 0.486,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 1947.6,
+      "baseline_p95_ms": 239.9
+     }
+    },
+    {
+     "service": "frontend",
+     "anomalous_dependencies": [
+      "recommendation"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 7.95,
+      "error_ratio": 0.51,
+      "baseline_error_ratio": 0.741,
+      "p95_ms": 1954.1,
+      "baseline_p95_ms": 558.7
+     }
+    }
+   ],
+   "engine": "native",
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail_ADK": {
+   "alert": "frontend p95 latency above 1s and rising",
+   "model": "gemini-3.1-flash-lite",
+   "elapsed_s": 384.9,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 3392,
+    "completion_tokens": 25,
+    "retries": 0,
+    "failures": 5,
+    "wait_s": 0.0,
+    "total_tokens": 3417
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "t": 0,
+     "dur": 0.81,
+     "health_evidence_id": "M-4a04b9",
+     "graph_evidence_id": "T-a52ba9",
+     "suspects": [
+      {
+       "service": "recommendation",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 7.75,
+        "error_ratio": 0.486,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 1947.6,
+        "baseline_p95_ms": 239.9
+       }
+      },
+      {
+       "service": "frontend",
+       "anomalous_dependencies": [
+        "recommendation"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 7.95,
+        "error_ratio": 0.51,
+        "baseline_error_ratio": 0.741,
+        "p95_ms": 1954.1,
+        "baseline_p95_ms": 558.7
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "recommendation",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.81,
+     "dur": 0.19,
+     "evidence_ids": [
+      "L-ebbde1",
+      "L-48655d"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "frontend",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.81,
+     "dur": 0.19,
+     "evidence_ids": [
+      "L-830c2b"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "frontend"
+     },
+     "t": 0.81,
+     "dur": 0.19,
+     "evidence_ids": [
+      "T-8c8225",
+      "T-4165b5",
+      "T-6e8c05",
+      "T-960974",
+      "T-d2049e"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "t": 0.81,
+     "dur": 0.19,
+     "evidence_ids": []
+    },
+    {
+     "step": "llm",
+     "t": 370.55,
+     "dur": 0,
+     "engine": "adk",
+     "tokens": 3417,
+     "model": "gemini-flash-lite-latest",
+     "requested": [
+      "get_metric"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "service": "recommendation",
+      "name": "heap_mb"
+     },
+     "evidence_ids": [
+      "M-9d3766"
+     ],
+     "engine": "adk",
+     "t": 370.55,
+     "dur": 0.0
+    }
+   ],
+   "topology_suspects": [
+    "recommendation",
+    "frontend"
+   ],
+   "verdict": "FAILED",
+   "error": "ServiceUnavailableError: litellm.ServiceUnavailableError: ServiceUnavailableError: OpenAIException - Error code: 503",
+   "root_cause_service": null,
+   "fault_type": null,
+   "ranked_candidates": [
+    "recommendation",
+    "frontend"
+   ],
+   "health": {
+    "cart": {
+     "rps": 4.91,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 24.0,
+     "baseline_p95_ms": 23.9
+    },
+    "frontend": {
+     "rps": 7.95,
+     "error_ratio": 0.51,
+     "baseline_error_ratio": 0.741,
+     "p95_ms": 1954.1,
+     "baseline_p95_ms": 558.7
+    },
+    "currency": {
+     "rps": 14.78,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 23.8
+    },
+    "catalog": {
+     "rps": 12.84,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 196.9,
+     "baseline_p95_ms": 189.8
+    },
+    "payment": {
+     "rps": 0.96,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.7,
+     "baseline_p95_ms": 23.9
+    },
+    "checkout": {
+     "rps": 0.96,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 461.0,
+     "baseline_p95_ms": 477.9
+    },
+    "recommendation": {
+     "rps": 7.75,
+     "error_ratio": 0.486,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 1947.6,
+     "baseline_p95_ms": 239.9
+    },
+    "shipping": {
+     "rps": 0.98,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 73.0,
+     "baseline_p95_ms": 48.7
+    },
+    "inventory": {
+     "rps": 12.95,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 23.9
+    }
+   },
+   "edges": [
+    {
+     "caller": "catalog",
+     "callee": "currency",
+     "calls": 213
+    },
+    {
+     "caller": "catalog",
+     "callee": "inventory",
+     "calls": 213
+    },
+    {
+     "caller": "checkout",
+     "callee": "cart",
+     "calls": 46
+    },
+    {
+     "caller": "checkout",
+     "callee": "catalog",
+     "calls": 46
+    },
+    {
+     "caller": "checkout",
+     "callee": "currency",
+     "calls": 46
+    },
+    {
+     "caller": "checkout",
+     "callee": "payment",
+     "calls": 46
+    },
+    {
+     "caller": "checkout",
+     "callee": "shipping",
+     "calls": 46
+    },
+    {
+     "caller": "frontend",
+     "callee": "cart",
+     "calls": 67
+    },
+    {
+     "caller": "frontend",
+     "callee": "catalog",
+     "calls": 100
+    },
+    {
+     "caller": "frontend",
+     "callee": "checkout",
+     "calls": 46
+    },
+    {
+     "caller": "frontend",
+     "callee": "recommendation",
+     "calls": 100
+    },
+    {
+     "caller": "recommendation",
+     "callee": "catalog",
+     "calls": 67
+    },
+    {
+     "caller": "shipping",
+     "callee": "currency",
+     "calls": 46
+    }
+   ],
+   "suspects": [
+    {
+     "service": "recommendation",
+     "anomalous_dependencies": [],
+     "deepest": true,
+     "health": {
+      "rps": 7.75,
+      "error_ratio": 0.486,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 1947.6,
+      "baseline_p95_ms": 239.9
+     }
+    },
+    {
+     "service": "frontend",
+     "anomalous_dependencies": [
+      "recommendation"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 7.95,
+      "error_ratio": 0.51,
+      "baseline_error_ratio": 0.741,
+      "p95_ms": 1954.1,
+      "baseline_p95_ms": 558.7
+     }
+    }
+   ],
+   "engine": "adk",
+   "score": {
+    "top1": false,
+    "top3": true,
+    "type_ok": false,
+    "inconclusive": false,
+    "failed": true
+   }
+  }
+ },
+ "window": [
+  1795615658.0978737,
+  1795615778.0978737
+ ]
+}

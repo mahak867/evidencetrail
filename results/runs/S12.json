@@ -1,0 +1,948 @@
+{
+ "scenario": {
+  "id": "S12",
+  "service": "cart",
+  "kind": "bad_deploy",
+  "params": {
+   "rate": "0.8"
+  },
+  "alert": "frontend 5xx ratio above 5% for 1m"
+ },
+ "truth": {
+  "service": "cart",
+  "fault_type": "bad_deploy"
+ },
+ "injected_at": 1795617085.8883486,
+ "methods": {
+  "B1_dashboard_rule": {
+   "method": "B1_dashboard_rule",
+   "root_cause_service": "cart",
+   "fault_type": null,
+   "ranked_candidates": [
+    "cart",
+    "frontend",
+    "checkout"
+   ],
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 0.0,
+   "usage": {
+    "total_tokens": 0,
+    "calls": 0
+   },
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": null,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "B0_single_prompt": {
+   "method": "B0_single_prompt",
+   "root_cause_service": "cart",
+   "fault_type": "code_error",
+   "ranked_candidates": [
+    "cart",
+    "checkout",
+    "frontend"
+   ],
+   "summary": "The cart service (v2.7.0-rc1) is throwing an unhandled runtime exception ('TypeError: cannot read property 'amount' of undefined'), causing HTTP 500 errors to propagate to checkout and frontend.",
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 4.6,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 14058,
+    "completion_tokens": 111,
+    "retries": 0,
+    "failures": 2,
+    "wait_s": 0.7,
+    "total_tokens": 14169
+   },
+   "model": "gemini-3.5-flash",
+   "prompt_chars": 25388,
+   "error": null,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": false,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail": {
+   "alert": "frontend 5xx ratio above 5% for 1m",
+   "model": "gemini-flash-lite-latest",
+   "elapsed_s": 8.1,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 3802,
+    "completion_tokens": 386,
+    "retries": 0,
+    "failures": 4,
+    "wait_s": 5.2,
+    "total_tokens": 4188
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "t": 0,
+     "dur": 0.68,
+     "health_evidence_id": "M-eb3b97",
+     "graph_evidence_id": "T-92ee11",
+     "suspects": [
+      {
+       "service": "cart",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 8.49,
+        "error_ratio": 0.784,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 19.5,
+        "baseline_p95_ms": 23.9
+       }
+      },
+      {
+       "service": "frontend",
+       "anomalous_dependencies": [
+        "checkout",
+        "cart"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 8.15,
+        "error_ratio": 0.817,
+        "baseline_error_ratio": 0.144,
+        "p95_ms": 490.2,
+        "baseline_p95_ms": 823.8
+       }
+      },
+      {
+       "service": "checkout",
+       "anomalous_dependencies": [
+        "cart"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 0.33,
+        "error_ratio": 0.722,
+        "baseline_error_ratio": 0.561,
+        "p95_ms": 387.5,
+        "baseline_p95_ms": 454.0
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "cart",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.68,
+     "dur": 0.35,
+     "evidence_ids": [
+      "L-8d38be"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "frontend",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.68,
+     "dur": 0.35,
+     "evidence_ids": [
+      "L-e4f5f7",
+      "L-d13ae9"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "checkout",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.68,
+     "dur": 0.35,
+     "evidence_ids": [
+      "L-45d57f"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "frontend"
+     },
+     "t": 0.68,
+     "dur": 0.35,
+     "evidence_ids": [
+      "T-8141cc",
+      "T-e0fb45",
+      "T-d9ecf6",
+      "T-b153f9",
+      "T-d3ead0"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "t": 0.68,
+     "dur": 0.35,
+     "evidence_ids": [
+      "C-f67674"
+     ]
+    },
+    {
+     "step": "llm",
+     "t": 1.03,
+     "dur": 7.06,
+     "tokens": 4188,
+     "model": "gemini-flash-lite-latest",
+     "requested": [
+      "submit_diagnosis"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "cart",
+    "frontend",
+    "checkout"
+   ],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "cart",
+   "fault_type": "bad_deploy",
+   "ranked_candidates": [
+    "cart",
+    "frontend",
+    "checkout"
+   ],
+   "confidence": 1.0,
+   "summary": "The cart service experienced a bad deployment (v2.7.0-rc1) that introduced a TypeError causing 500 errors across the service and its callers (frontend and checkout). Rolling back the cart deployment will resolve the issue.",
+   "claims": [
+    {
+     "text": "A new deployment of cart service was rolled out right before the error spike.",
+     "evidence_ids": [
+      "C-f67674"
+     ],
+     "quote": "shopsim/cart:v2.7.0-rc1",
+     "is_root_cause_claim": true,
+     "evidence": [
+      {
+       "id": "C-f67674",
+       "kind": "change",
+       "ref": "events.log:1",
+       "text": "{\"ts\": \"2026-11-25T14:31:25.882+00:00\", \"service\": \"cart\", \"kind\": \"DeploymentRolledOut\", \"image\": \"shopsim/cart:v2.7.0-rc1\", \"previous\": \"shopsim/cart:v2.6.3\", \"author\": \"ci-pipeline\"}",
+       "meta": {
+        "ts": "2026-11-25T14:31:25.882+00:00",
+        "service": "cart",
+        "kind": "DeploymentRolledOut",
+        "image": "shopsim/cart:v2.7.0-rc1",
+        "previous": "shopsim/cart:v2.6.3",
+        "author": "ci-pipeline"
+       }
+      }
+     ]
+    },
+    {
+     "evidence_ids": [
+      "L-8d38be"
+     ],
+     "is_root_cause_claim": true,
+     "text": "The cart service is throwing an unhandled TypeError exception due to code introduced in version v2.7.0-rc1.",
+     "quote": "TypeError: cannot read property 'amount' of undefined (v2.7.0-rc1)",
+     "evidence": [
+      {
+       "id": "L-8d38be",
+       "kind": "log",
+       "ref": "cart.log:1926",
+       "text": "TypeError: cannot read property 'amount' of undefined (v2.7.0-rc1)",
+       "meta": {
+        "service": "cart",
+        "line": 1926,
+        "ts": "2026-11-25T14:32:25.888+00:00",
+        "level": "ERROR",
+        "trace_id": "40aca7e3fa48f343dfed1706d4ca28ce",
+        "count_in_window": 406
+       }
+      }
+     ]
+    },
+    {
+     "text": "Callers of cart (frontend and checkout) are failing due to cart's errors.",
+     "is_root_cause_claim": false,
+     "evidence_ids": [
+      "L-e4f5f7",
+      "L-45d57f"
+     ],
+     "quote": "upstream call to cart failed with HTTP 500",
+     "evidence": [
+      {
+       "id": "L-e4f5f7",
+       "kind": "log",
+       "ref": "frontend.log:15659",
+       "text": "upstream call to cart failed with HTTP 500",
+       "meta": {
+        "service": "frontend",
+        "line": 15659,
+        "ts": "2026-11-25T14:32:25.543+00:00",
+        "level": "ERROR",
+        "trace_id": "f966d4f0265c336744bb542ea8760835",
+        "count_in_window": 390
+       }
+      },
+      {
+       "id": "L-45d57f",
+       "kind": "log",
+       "ref": "checkout.log:1463",
+       "text": "upstream call to cart failed with HTTP 500",
+       "meta": {
+        "service": "checkout",
+        "line": 1463,
+        "ts": "2026-11-25T14:32:20.686+00:00",
+        "level": "ERROR",
+        "trace_id": "a18f22157cfdf5542ca3e36198f3c6c5",
+        "count_in_window": 15
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [],
+   "evidence_precision": 1.0,
+   "rejected_hypotheses": [],
+   "suggested_action": {
+    "why": "Rollback cart to the previous stable version (v2.6.3) to resolve the unhandled TypeError introduced in v2.7.0-rc1.",
+    "action": "rollback_deploy",
+    "service": "cart",
+    "risk": "risky",
+    "description": "Rolls the service back to its previous image",
+    "dry_run": "DELETE http://localhost:8104/admin/fault  (test env: roll back to v2.6.3)"
+   },
+   "evidence_items": 12,
+   "health": {
+    "cart": {
+     "rps": 8.49,
+     "error_ratio": 0.784,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 19.5,
+     "baseline_p95_ms": 23.9
+    },
+    "frontend": {
+     "rps": 8.15,
+     "error_ratio": 0.817,
+     "baseline_error_ratio": 0.144,
+     "p95_ms": 490.2,
+     "baseline_p95_ms": 823.8
+    },
+    "currency": {
+     "rps": 16.51,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 23.9
+    },
+    "catalog": {
+     "rps": 16.24,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 210.4,
+     "baseline_p95_ms": 217.1
+    },
+    "payment": {
+     "rps": 0.09,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.561,
+     "p95_ms": 23.8,
+     "baseline_p95_ms": 22.4
+    },
+    "checkout": {
+     "rps": 0.33,
+     "error_ratio": 0.722,
+     "baseline_error_ratio": 0.561,
+     "p95_ms": 387.5,
+     "baseline_p95_ms": 454.0
+    },
+    "recommendation": {
+     "rps": 8.05,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 238.3,
+     "baseline_p95_ms": 241.5
+    },
+    "shipping": {
+     "rps": 0.09,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 93.8,
+     "baseline_p95_ms": 53.3
+    },
+    "inventory": {
+     "rps": 16.4,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 23.9
+    }
+   },
+   "edges": [
+    {
+     "caller": "catalog",
+     "callee": "currency",
+     "calls": 226
+    },
+    {
+     "caller": "catalog",
+     "callee": "inventory",
+     "calls": 226
+    },
+    {
+     "caller": "checkout",
+     "callee": "cart",
+     "calls": 42
+    },
+    {
+     "caller": "checkout",
+     "callee": "catalog",
+     "calls": 26
+    },
+    {
+     "caller": "checkout",
+     "callee": "currency",
+     "calls": 26
+    },
+    {
+     "caller": "checkout",
+     "callee": "payment",
+     "calls": 26
+    },
+    {
+     "caller": "checkout",
+     "callee": "shipping",
+     "calls": 26
+    },
+    {
+     "caller": "frontend",
+     "callee": "cart",
+     "calls": 100
+    },
+    {
+     "caller": "frontend",
+     "callee": "catalog",
+     "calls": 100
+    },
+    {
+     "caller": "frontend",
+     "callee": "checkout",
+     "calls": 42
+    },
+    {
+     "caller": "frontend",
+     "callee": "recommendation",
+     "calls": 100
+    },
+    {
+     "caller": "recommendation",
+     "callee": "catalog",
+     "calls": 100
+    },
+    {
+     "caller": "shipping",
+     "callee": "currency",
+     "calls": 26
+    }
+   ],
+   "suspects": [
+    {
+     "service": "cart",
+     "anomalous_dependencies": [],
+     "deepest": true,
+     "health": {
+      "rps": 8.49,
+      "error_ratio": 0.784,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 19.5,
+      "baseline_p95_ms": 23.9
+     }
+    },
+    {
+     "service": "frontend",
+     "anomalous_dependencies": [
+      "checkout",
+      "cart"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 8.15,
+      "error_ratio": 0.817,
+      "baseline_error_ratio": 0.144,
+      "p95_ms": 490.2,
+      "baseline_p95_ms": 823.8
+     }
+    },
+    {
+     "service": "checkout",
+     "anomalous_dependencies": [
+      "cart"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 0.33,
+      "error_ratio": 0.722,
+      "baseline_error_ratio": 0.561,
+      "p95_ms": 387.5,
+      "baseline_p95_ms": 454.0
+     }
+    }
+   ],
+   "engine": "native",
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail_ADK": {
+   "alert": "frontend 5xx ratio above 5% for 1m",
+   "model": "gemini-flash-lite-latest",
+   "elapsed_s": 17.6,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 3766,
+    "completion_tokens": 355,
+    "retries": 0,
+    "failures": 4,
+    "wait_s": 0.0,
+    "total_tokens": 4121
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "t": 0,
+     "dur": 0.84,
+     "health_evidence_id": "M-eb3b97",
+     "graph_evidence_id": "T-92ee11",
+     "suspects": [
+      {
+       "service": "cart",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 8.49,
+        "error_ratio": 0.784,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 19.5,
+        "baseline_p95_ms": 23.9
+       }
+      },
+      {
+       "service": "frontend",
+       "anomalous_dependencies": [
+        "checkout",
+        "cart"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 8.15,
+        "error_ratio": 0.817,
+        "baseline_error_ratio": 0.144,
+        "p95_ms": 490.2,
+        "baseline_p95_ms": 823.8
+       }
+      },
+      {
+       "service": "checkout",
+       "anomalous_dependencies": [
+        "cart"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 0.33,
+        "error_ratio": 0.722,
+        "baseline_error_ratio": 0.561,
+        "p95_ms": 387.5,
+        "baseline_p95_ms": 454.0
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "cart",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.84,
+     "dur": 0.4,
+     "evidence_ids": [
+      "L-8d38be"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "frontend",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.84,
+     "dur": 0.4,
+     "evidence_ids": [
+      "L-e4f5f7",
+      "L-d13ae9"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "checkout",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.84,
+     "dur": 0.4,
+     "evidence_ids": [
+      "L-45d57f"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "frontend"
+     },
+     "t": 0.84,
+     "dur": 0.4,
+     "evidence_ids": [
+      "T-8141cc",
+      "T-e0fb45",
+      "T-d9ecf6",
+      "T-b153f9",
+      "T-d3ead0"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "t": 0.84,
+     "dur": 0.4,
+     "evidence_ids": [
+      "C-f67674"
+     ]
+    },
+    {
+     "step": "llm",
+     "t": 17.61,
+     "dur": 0,
+     "engine": "adk",
+     "tokens": 4121,
+     "model": "gemini-flash-lite-latest",
+     "requested": [
+      "submit_diagnosis"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "cart",
+    "frontend",
+    "checkout"
+   ],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "cart",
+   "fault_type": "bad_deploy",
+   "ranked_candidates": [
+    "cart",
+    "frontend",
+    "checkout"
+   ],
+   "confidence": 1.0,
+   "summary": "The cart service rolled out version v2.7.0-rc1, introducing a code error (TypeError: cannot read property 'amount' of undefined) that causes 500 errors across dependent services like frontend and checkout.",
+   "claims": [
+    {
+     "evidence_ids": [
+      "L-8d38be"
+     ],
+     "quote": "TypeError: cannot read property 'amount' of undefined (v2.7.0-rc1)",
+     "is_root_cause_claim": true,
+     "text": "cart service throws TypeError in v2.7.0-rc1 deployment",
+     "evidence": [
+      {
+       "id": "L-8d38be",
+       "kind": "log",
+       "ref": "cart.log:1926",
+       "text": "TypeError: cannot read property 'amount' of undefined (v2.7.0-rc1)",
+       "meta": {
+        "service": "cart",
+        "line": 1926,
+        "ts": "2026-11-25T14:32:25.888+00:00",
+        "level": "ERROR",
+        "trace_id": "40aca7e3fa48f343dfed1706d4ca28ce",
+        "count_in_window": 406
+       }
+      }
+     ]
+    },
+    {
+     "evidence_ids": [
+      "L-e4f5f7",
+      "L-45d57f"
+     ],
+     "quote": "upstream call to cart failed with HTTP 500",
+     "text": "Frontend and checkout services fail because of downstream errors in cart",
+     "is_root_cause_claim": false,
+     "evidence": [
+      {
+       "id": "L-e4f5f7",
+       "kind": "log",
+       "ref": "frontend.log:15659",
+       "text": "upstream call to cart failed with HTTP 500",
+       "meta": {
+        "service": "frontend",
+        "line": 15659,
+        "ts": "2026-11-25T14:32:25.543+00:00",
+        "level": "ERROR",
+        "trace_id": "f966d4f0265c336744bb542ea8760835",
+        "count_in_window": 390
+       }
+      },
+      {
+       "id": "L-45d57f",
+       "kind": "log",
+       "ref": "checkout.log:1463",
+       "text": "upstream call to cart failed with HTTP 500",
+       "meta": {
+        "service": "checkout",
+        "line": 1463,
+        "ts": "2026-11-25T14:32:20.686+00:00",
+        "level": "ERROR",
+        "trace_id": "a18f22157cfdf5542ca3e36198f3c6c5",
+        "count_in_window": 15
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [
+    {
+     "is_root_cause_claim": true,
+     "text": "A bad deployment rolled out to the cart service right before errors started",
+     "quote": "DeploymentRolledOut for cart: shopsim/cart:v2.7.0-rc1",
+     "evidence_ids": [
+      "C-f67674"
+     ],
+     "rejected_because": [
+      "quoted text not found in cited evidence"
+     ]
+    }
+   ],
+   "evidence_precision": 0.667,
+   "rejected_hypotheses": [],
+   "suggested_action": {
+    "why": "Rollback cart to previous stable version v2.6.3 to resolve the TypeError.",
+    "service": "cart",
+    "action": "rollback_deploy",
+    "risk": "risky",
+    "description": "Rolls the service back to its previous image",
+    "dry_run": "DELETE http://localhost:8104/admin/fault  (test env: roll back to v2.6.3)"
+   },
+   "evidence_items": 12,
+   "health": {
+    "cart": {
+     "rps": 8.49,
+     "error_ratio": 0.784,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 19.5,
+     "baseline_p95_ms": 23.9
+    },
+    "frontend": {
+     "rps": 8.15,
+     "error_ratio": 0.817,
+     "baseline_error_ratio": 0.144,
+     "p95_ms": 490.2,
+     "baseline_p95_ms": 823.8
+    },
+    "currency": {
+     "rps": 16.51,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 23.9
+    },
+    "catalog": {
+     "rps": 16.24,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 210.4,
+     "baseline_p95_ms": 217.1
+    },
+    "payment": {
+     "rps": 0.09,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.561,
+     "p95_ms": 23.8,
+     "baseline_p95_ms": 22.4
+    },
+    "checkout": {
+     "rps": 0.33,
+     "error_ratio": 0.722,
+     "baseline_error_ratio": 0.561,
+     "p95_ms": 387.5,
+     "baseline_p95_ms": 454.0
+    },
+    "recommendation": {
+     "rps": 8.05,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 238.3,
+     "baseline_p95_ms": 241.5
+    },
+    "shipping": {
+     "rps": 0.09,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 93.8,
+     "baseline_p95_ms": 53.3
+    },
+    "inventory": {
+     "rps": 16.4,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 23.9
+    }
+   },
+   "edges": [
+    {
+     "caller": "catalog",
+     "callee": "currency",
+     "calls": 226
+    },
+    {
+     "caller": "catalog",
+     "callee": "inventory",
+     "calls": 226
+    },
+    {
+     "caller": "checkout",
+     "callee": "cart",
+     "calls": 42
+    },
+    {
+     "caller": "checkout",
+     "callee": "catalog",
+     "calls": 26
+    },
+    {
+     "caller": "checkout",
+     "callee": "currency",
+     "calls": 26
+    },
+    {
+     "caller": "checkout",
+     "callee": "payment",
+     "calls": 26
+    },
+    {
+     "caller": "checkout",
+     "callee": "shipping",
+     "calls": 26
+    },
+    {
+     "caller": "frontend",
+     "callee": "cart",
+     "calls": 100
+    },
+    {
+     "caller": "frontend",
+     "callee": "catalog",
+     "calls": 100
+    },
+    {
+     "caller": "frontend",
+     "callee": "checkout",
+     "calls": 42
+    },
+    {
+     "caller": "frontend",
+     "callee": "recommendation",
+     "calls": 100
+    },
+    {
+     "caller": "recommendation",
+     "callee": "catalog",
+     "calls": 100
+    },
+    {
+     "caller": "shipping",
+     "callee": "currency",
+     "calls": 26
+    }
+   ],
+   "suspects": [
+    {
+     "service": "cart",
+     "anomalous_dependencies": [],
+     "deepest": true,
+     "health": {
+      "rps": 8.49,
+      "error_ratio": 0.784,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 19.5,
+      "baseline_p95_ms": 23.9
+     }
+    },
+    {
+     "service": "frontend",
+     "anomalous_dependencies": [
+      "checkout",
+      "cart"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 8.15,
+      "error_ratio": 0.817,
+      "baseline_error_ratio": 0.144,
+      "p95_ms": 490.2,
+      "baseline_p95_ms": 823.8
+     }
+    },
+    {
+     "service": "checkout",
+     "anomalous_dependencies": [
+      "cart"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 0.33,
+      "error_ratio": 0.722,
+      "baseline_error_ratio": 0.561,
+      "p95_ms": 387.5,
+      "baseline_p95_ms": 454.0
+     }
+    }
+   ],
+   "engine": "adk",
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  }
+ },
+ "window": [
+  1795617025.8885014,
+  1795617145.8885014
+ ]
+}
