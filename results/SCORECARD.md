@@ -6,7 +6,7 @@
 
 | Method | Top-1 service | Top-3 service | Fault type correct | Inconclusive | Failed | Median time (s) | Median tokens |
 |---|---|---|---|---|---|---|---|
-| B1_dashboard_rule | 8/12 = 67% [39%–86%] | 10/12 = 83% [55%–95%] | n/a (no type) | 0 | 0 | 0 | 0 |
+| B1_dashboard_rule | 10/12 = 83% [55%–95%] | 12/12 = 100% [76%–100%] | n/a (no type) | 0 | 0 | 0 | 0 |
 | B0_single_prompt | 12/12 = 100% [76%–100%] | 12/12 = 100% [76%–100%] | 10/12 = 83% [55%–95%] | 0 | 0 | 14.1 | 13847 |
 | EvidenceTrail | 12/12 = 100% [76%–100%] | 12/12 = 100% [76%–100%] | 12/12 = 100% [76%–100%] | 0 | 0 | 30.6 | 8282 |
 | EvidenceTrail_ADK | 10/12 = 83% [55%–95%] | 12/12 = 100% [76%–100%] | 10/12 = 83% [55%–95%] | 0 | 2 | 69.1 | 12090 |
@@ -25,8 +25,8 @@
 | S02 | inventory/code_error | ✅ inventory/- | ✅ inventory/code_error | ✅ inventory/code_error | DIAGNOSIS | 1.0 | 44.9 |
 | S03 | currency/latency | ✅ currency/- | ✅ currency/latency | ✅ currency/latency | DIAGNOSIS | 0.9 | 30.6 |
 | S04 | shipping/latency | ✅ shipping/- | ✅ shipping/latency | ✅ shipping/latency | DIAGNOSIS | 0.95 | 352.3 |
-| S05 | cart/crash_or_unreachable | ❌ frontend/- | ✅ cart/crash_or_unreachable | ✅ cart/crash_or_unreachable | DIAGNOSIS | 0.95 | 77.3 |
-| S06 | recommendation/crash_or_unreachable | ❌ frontend/- | ✅ recommendation/crash_or_unreachable | ✅ recommendation/crash_or_unreachable | DIAGNOSIS | 1.0 | 27.1 |
+| S05 | cart/crash_or_unreachable | ✅ cart/- | ✅ cart/crash_or_unreachable | ✅ cart/crash_or_unreachable | DIAGNOSIS | 0.95 | 77.3 |
+| S06 | recommendation/crash_or_unreachable | ✅ recommendation/- | ✅ recommendation/crash_or_unreachable | ✅ recommendation/crash_or_unreachable | DIAGNOSIS | 1.0 | 27.1 |
 | S07 | recommendation/resource_exhaustion | ✅ recommendation/- | ✅ recommendation/resource_exhaustion | ✅ recommendation/resource_exhaustion | DIAGNOSIS | 0.95 | 16.6 |
 | S08 | inventory/resource_exhaustion | ✅ inventory/- | ✅ inventory/resource_exhaustion | ✅ inventory/resource_exhaustion | DIAGNOSIS | 1.0 | 92.9 |
 | S09 | currency/bad_config | ✅ currency/- | ✅ currency/bad_config | ✅ currency/bad_config | DIAGNOSIS | 1.0 | 6.3 |

@@ -16,7 +16,7 @@
   "service": "inventory",
   "fault_type": "resource_exhaustion"
  },
- "injected_at": 1795618353.5860295,
+ "injected_at": 1795620080.751466,
  "methods": {
   "B1_dashboard_rule": {
    "method": "B1_dashboard_rule",
@@ -39,7 +39,8 @@
     "type_ok": null,
     "inconclusive": false,
     "failed": false
-   }
+   },
+   "rescored": "re-scored on the saved window with the up-metric rule (B1 is deterministic; no model calls)"
   },
   "B0_single_prompt": {
    "method": "B0_single_prompt",
@@ -50,20 +51,20 @@
     "catalog",
     "frontend"
    ],
-   "summary": "The inventory service experienced database connection pool exhaustion (timeout acquiring DB connection after 2000ms, pool 20/20 in use). This caused upstream catalog calls to fail with HTTP 503, which in turn caused frontend to fail with HTTP 502 errors and elevated 5xx ratios.",
+   "summary": "The inventory service experienced database connection pool exhaustion (timeout acquiring DB connection after 2000ms, pool 20/20 in use), which caused downstream failures (HTTP 503) in the catalog service, leading to HTTP 502 errors and subsequent 5xx surges in the frontend service.",
    "verdict": "DIAGNOSIS",
-   "elapsed_s": 3.1,
+   "elapsed_s": 4.2,
    "usage": {
     "calls": 1,
-    "prompt_tokens": 14817,
+    "prompt_tokens": 14488,
     "completion_tokens": 131,
     "retries": 0,
     "failures": 4,
-    "wait_s": 1.7,
-    "total_tokens": 14948
+    "wait_s": 2.1,
+    "total_tokens": 14619
    },
    "model": "gemini-flash-lite-latest",
-   "prompt_chars": 30634,
+   "prompt_chars": 30019,
    "error": null,
    "score": {
     "top1": true,
@@ -76,462 +77,22 @@
   "EvidenceTrail": {
    "alert": "frontend 5xx ratio above 5% for 1m",
    "model": "gemini-flash-lite-latest",
-   "elapsed_s": 52.4,
-   "usage": {
-    "calls": 1,
-    "prompt_tokens": 5772,
-    "completion_tokens": 28,
-    "retries": 1,
-    "failures": 14,
-    "wait_s": 50.9,
-    "total_tokens": 5800
-   },
-   "trail": [
-    {
-     "step": "scan",
-     "t": 0,
-     "dur": 0.57,
-     "health_evidence_id": "M-b7e66b",
-     "graph_evidence_id": "T-ce8071",
-     "suspects": [
-      {
-       "service": "inventory",
-       "anomalous_dependencies": [],
-       "deepest": true,
-       "health": {
-        "rps": 8.36,
-        "error_ratio": 1.0,
-        "baseline_error_ratio": 0.0,
-        "p95_ms": 4850.0,
-        "baseline_p95_ms": 24.0,
-        "up": 1.0
-       }
-      },
-      {
-       "service": "catalog",
-       "anomalous_dependencies": [
-        "inventory"
-       ],
-       "deepest": false,
-       "health": {
-        "rps": 8.62,
-        "error_ratio": 1.0,
-        "baseline_error_ratio": 0.0,
-        "p95_ms": 4850.0,
-        "baseline_p95_ms": 214.4,
-        "up": 1.0
-       }
-      },
-      {
-       "service": "frontend",
-       "anomalous_dependencies": [
-        "catalog",
-        "checkout",
-        "recommendation"
-       ],
-       "deepest": false,
-       "health": {
-        "rps": 8.55,
-        "error_ratio": 1.0,
-        "baseline_error_ratio": 0.01,
-        "p95_ms": 4850.0,
-        "baseline_p95_ms": 892.3,
-        "up": 1.0
-       }
-      },
-      {
-       "service": "recommendation",
-       "anomalous_dependencies": [
-        "catalog"
-       ],
-       "deepest": false,
-       "health": {
-        "rps": 0.07,
-        "error_ratio": 0.5,
-        "baseline_error_ratio": 0.0,
-        "p95_ms": 4700.0,
-        "baseline_p95_ms": 242.1,
-        "up": 1.0
-       }
-      },
-      {
-       "service": "checkout",
-       "anomalous_dependencies": [
-        "catalog"
-       ],
-       "deepest": false,
-       "health": {
-        "rps": 0.05,
-        "error_ratio": 0.333,
-        "baseline_error_ratio": 0.082,
-        "p95_ms": 4550.0,
-        "baseline_p95_ms": 469.4,
-        "up": 1.0
-       }
-      }
-     ]
-    },
-    {
-     "step": "tool",
-     "tool": "get_logs",
-     "args": {
-      "service": "inventory",
-      "level": "ERROR+WARN"
-     },
-     "t": 0.57,
-     "dur": 0.32,
-     "evidence_ids": [
-      "L-1584a9"
-     ]
-    },
-    {
-     "step": "tool",
-     "tool": "get_logs",
-     "args": {
-      "service": "catalog",
-      "level": "ERROR+WARN"
-     },
-     "t": 0.57,
-     "dur": 0.32,
-     "evidence_ids": [
-      "L-7f7cab",
-      "L-df6d9b",
-      "L-57c0f2",
-      "L-3c83e7",
-      "L-3da1be",
-      "L-aa93d4"
-     ]
-    },
-    {
-     "step": "tool",
-     "tool": "get_logs",
-     "args": {
-      "service": "frontend",
-      "level": "ERROR+WARN"
-     },
-     "t": 0.57,
-     "dur": 0.32,
-     "evidence_ids": [
-      "L-86f43e",
-      "L-a674bd",
-      "L-c9ce4c",
-      "L-a3fff2",
-      "L-11668b",
-      "L-832c61",
-      "L-10b52c",
-      "L-580b42"
-     ]
-    },
-    {
-     "step": "tool",
-     "tool": "get_error_traces",
-     "args": {
-      "service": "frontend"
-     },
-     "t": 0.57,
-     "dur": 0.32,
-     "evidence_ids": [
-      "T-c5b7a0",
-      "T-937d82",
-      "T-7b2f6b",
-      "T-f48c6a",
-      "T-61f3e1"
-     ]
-    },
-    {
-     "step": "tool",
-     "tool": "get_recent_changes",
-     "args": {},
-     "t": 0.57,
-     "dur": 0.32,
-     "evidence_ids": []
-    },
-    {
-     "step": "llm",
-     "t": 0.89,
-     "dur": 6.84,
-     "tokens": 5800,
-     "model": "gemini-flash-lite-latest",
-     "requested": [
-      "get_metric"
-     ]
-    },
-    {
-     "step": "tool",
-     "tool": "get_metric",
-     "args": {
-      "service": "inventory",
-      "name": "db_pool_in_use"
-     },
-     "evidence_ids": [
-      "M-a1248d"
-     ],
-     "t": 7.74,
-     "dur": 0.0
-    }
-   ],
-   "topology_suspects": [
-    "inventory",
-    "catalog",
-    "frontend",
-    "recommendation",
-    "checkout"
-   ],
-   "verdict": "FAILED",
-   "error": "Gemini gemini-flash-lite-latest unavailable after 1 attempt(s) (last: 503 [{\n  \"error\": {\n    \"code\": 503,\n    \"message\": \"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\",\n    \"status\": \"UNAVAILABLE\"\n  }\n}\n])",
-   "root_cause_service": null,
-   "fault_type": null,
-   "ranked_candidates": [
-    "inventory",
-    "catalog",
-    "frontend"
-   ],
-   "health": {
-    "cart": {
-     "rps": 0.0,
-     "error_ratio": 0.0,
-     "baseline_error_ratio": 0.0,
-     "p95_ms": null,
-     "baseline_p95_ms": 23.9,
-     "up": 1.0
-    },
-    "frontend": {
-     "rps": 8.55,
-     "error_ratio": 1.0,
-     "baseline_error_ratio": 0.01,
-     "p95_ms": 4850.0,
-     "baseline_p95_ms": 892.3,
-     "up": 1.0
-    },
-    "currency": {
-     "rps": 0.0,
-     "error_ratio": 0.0,
-     "baseline_error_ratio": 0.0,
-     "p95_ms": null,
-     "baseline_p95_ms": 23.9,
-     "up": 1.0
-    },
-    "catalog": {
-     "rps": 8.62,
-     "error_ratio": 1.0,
-     "baseline_error_ratio": 0.0,
-     "p95_ms": 4850.0,
-     "baseline_p95_ms": 214.4,
-     "up": 1.0
-    },
-    "payment": {
-     "rps": 0.04,
-     "error_ratio": 0.0,
-     "baseline_error_ratio": 0.082,
-     "p95_ms": 24.2,
-     "baseline_p95_ms": 23.9,
-     "up": 1.0
-    },
-    "checkout": {
-     "rps": 0.05,
-     "error_ratio": 0.333,
-     "baseline_error_ratio": 0.082,
-     "p95_ms": 4550.0,
-     "baseline_p95_ms": 469.4,
-     "up": 1.0
-    },
-    "recommendation": {
-     "rps": 0.07,
-     "error_ratio": 0.5,
-     "baseline_error_ratio": 0.0,
-     "p95_ms": 4700.0,
-     "baseline_p95_ms": 242.1,
-     "up": 1.0
-    },
-    "shipping": {
-     "rps": 0.02,
-     "error_ratio": 0.0,
-     "baseline_error_ratio": 0.0,
-     "p95_ms": 48.8,
-     "baseline_p95_ms": 83.7,
-     "up": 1.0
-    },
-    "inventory": {
-     "rps": 8.36,
-     "error_ratio": 1.0,
-     "baseline_error_ratio": 0.0,
-     "p95_ms": 4850.0,
-     "baseline_p95_ms": 24.0,
-     "up": 1.0
-    }
-   },
-   "edges": [
-    {
-     "caller": "catalog",
-     "callee": "currency",
-     "calls": 119
-    },
-    {
-     "caller": "catalog",
-     "callee": "inventory",
-     "calls": 180
-    },
-    {
-     "caller": "checkout",
-     "callee": "cart",
-     "calls": 40
-    },
-    {
-     "caller": "checkout",
-     "callee": "catalog",
-     "calls": 40
-    },
-    {
-     "caller": "checkout",
-     "callee": "currency",
-     "calls": 39
-    },
-    {
-     "caller": "checkout",
-     "callee": "payment",
-     "calls": 39
-    },
-    {
-     "caller": "checkout",
-     "callee": "shipping",
-     "calls": 39
-    },
-    {
-     "caller": "frontend",
-     "callee": "cart",
-     "calls": 40
-    },
-    {
-     "caller": "frontend",
-     "callee": "catalog",
-     "calls": 100
-    },
-    {
-     "caller": "frontend",
-     "callee": "checkout",
-     "calls": 40
-    },
-    {
-     "caller": "frontend",
-     "callee": "recommendation",
-     "calls": 40
-    },
-    {
-     "caller": "recommendation",
-     "callee": "catalog",
-     "calls": 40
-    },
-    {
-     "caller": "shipping",
-     "callee": "currency",
-     "calls": 39
-    }
-   ],
-   "suspects": [
-    {
-     "service": "inventory",
-     "anomalous_dependencies": [],
-     "deepest": true,
-     "health": {
-      "rps": 8.36,
-      "error_ratio": 1.0,
-      "baseline_error_ratio": 0.0,
-      "p95_ms": 4850.0,
-      "baseline_p95_ms": 24.0,
-      "up": 1.0
-     }
-    },
-    {
-     "service": "catalog",
-     "anomalous_dependencies": [
-      "inventory"
-     ],
-     "deepest": false,
-     "health": {
-      "rps": 8.62,
-      "error_ratio": 1.0,
-      "baseline_error_ratio": 0.0,
-      "p95_ms": 4850.0,
-      "baseline_p95_ms": 214.4,
-      "up": 1.0
-     }
-    },
-    {
-     "service": "frontend",
-     "anomalous_dependencies": [
-      "catalog",
-      "checkout",
-      "recommendation"
-     ],
-     "deepest": false,
-     "health": {
-      "rps": 8.55,
-      "error_ratio": 1.0,
-      "baseline_error_ratio": 0.01,
-      "p95_ms": 4850.0,
-      "baseline_p95_ms": 892.3,
-      "up": 1.0
-     }
-    },
-    {
-     "service": "recommendation",
-     "anomalous_dependencies": [
-      "catalog"
-     ],
-     "deepest": false,
-     "health": {
-      "rps": 0.07,
-      "error_ratio": 0.5,
-      "baseline_error_ratio": 0.0,
-      "p95_ms": 4700.0,
-      "baseline_p95_ms": 242.1,
-      "up": 1.0
-     }
-    },
-    {
-     "service": "checkout",
-     "anomalous_dependencies": [
-      "catalog"
-     ],
-     "deepest": false,
-     "health": {
-      "rps": 0.05,
-      "error_ratio": 0.333,
-      "baseline_error_ratio": 0.082,
-      "p95_ms": 4550.0,
-      "baseline_p95_ms": 469.4,
-      "up": 1.0
-     }
-    }
-   ],
-   "engine": "native",
-   "score": {
-    "top1": false,
-    "top3": true,
-    "type_ok": false,
-    "inconclusive": false,
-    "failed": true
-   }
-  },
-  "EvidenceTrail_ADK": {
-   "alert": "frontend 5xx ratio above 5% for 1m",
-   "model": "gemini-flash-lite-latest",
-   "elapsed_s": 60.3,
+   "elapsed_s": 49.3,
    "usage": {
     "calls": 2,
-    "prompt_tokens": 11797,
-    "completion_tokens": 568,
+    "prompt_tokens": 11449,
+    "completion_tokens": 439,
     "retries": 0,
-    "failures": 4,
-    "wait_s": 0.0,
-    "total_tokens": 12365
+    "failures": 8,
+    "wait_s": 46.0,
+    "total_tokens": 11888
    },
    "trail": [
     {
      "step": "scan",
      "t": 0,
-     "dur": 0.6,
-     "health_evidence_id": "M-b7e66b",
+     "dur": 0.41,
+     "health_evidence_id": "M-eb55f7",
      "graph_evidence_id": "T-ce8071",
      "suspects": [
       {
@@ -539,11 +100,11 @@
        "anomalous_dependencies": [],
        "deepest": true,
        "health": {
-        "rps": 8.36,
+        "rps": 7.33,
         "error_ratio": 1.0,
         "baseline_error_ratio": 0.0,
         "p95_ms": 4850.0,
-        "baseline_p95_ms": 24.0,
+        "baseline_p95_ms": 23.9,
         "up": 1.0
        }
       },
@@ -554,58 +115,26 @@
        ],
        "deepest": false,
        "health": {
-        "rps": 8.62,
+        "rps": 7.09,
         "error_ratio": 1.0,
         "baseline_error_ratio": 0.0,
         "p95_ms": 4850.0,
-        "baseline_p95_ms": 214.4,
+        "baseline_p95_ms": 237.0,
         "up": 1.0
        }
       },
       {
        "service": "frontend",
        "anomalous_dependencies": [
-        "catalog",
-        "checkout",
-        "recommendation"
+        "catalog"
        ],
        "deepest": false,
        "health": {
-        "rps": 8.55,
+        "rps": 7.1,
         "error_ratio": 1.0,
-        "baseline_error_ratio": 0.01,
-        "p95_ms": 4850.0,
-        "baseline_p95_ms": 892.3,
-        "up": 1.0
-       }
-      },
-      {
-       "service": "recommendation",
-       "anomalous_dependencies": [
-        "catalog"
-       ],
-       "deepest": false,
-       "health": {
-        "rps": 0.07,
-        "error_ratio": 0.5,
         "baseline_error_ratio": 0.0,
-        "p95_ms": 4700.0,
-        "baseline_p95_ms": 242.1,
-        "up": 1.0
-       }
-      },
-      {
-       "service": "checkout",
-       "anomalous_dependencies": [
-        "catalog"
-       ],
-       "deepest": false,
-       "health": {
-        "rps": 0.05,
-        "error_ratio": 0.333,
-        "baseline_error_ratio": 0.082,
-        "p95_ms": 4550.0,
-        "baseline_p95_ms": 469.4,
+        "p95_ms": 4850.0,
+        "baseline_p95_ms": 2110.9,
         "up": 1.0
        }
       }
@@ -618,10 +147,10 @@
       "service": "inventory",
       "level": "ERROR+WARN"
      },
-     "t": 0.6,
-     "dur": 0.46,
+     "t": 0.41,
+     "dur": 0.53,
      "evidence_ids": [
-      "L-1584a9"
+      "L-6ea9ea"
      ]
     },
     {
@@ -631,15 +160,15 @@
       "service": "catalog",
       "level": "ERROR+WARN"
      },
-     "t": 0.6,
-     "dur": 0.46,
+     "t": 0.41,
+     "dur": 0.53,
      "evidence_ids": [
-      "L-7f7cab",
-      "L-df6d9b",
-      "L-57c0f2",
-      "L-3c83e7",
-      "L-3da1be",
-      "L-aa93d4"
+      "L-3b8310",
+      "L-95fcef",
+      "L-4ffe67",
+      "L-b2a022",
+      "L-acf2ff",
+      "L-bd175e"
      ]
     },
     {
@@ -649,17 +178,17 @@
       "service": "frontend",
       "level": "ERROR+WARN"
      },
-     "t": 0.6,
-     "dur": 0.46,
+     "t": 0.41,
+     "dur": 0.53,
      "evidence_ids": [
-      "L-86f43e",
-      "L-a674bd",
-      "L-c9ce4c",
-      "L-a3fff2",
-      "L-11668b",
-      "L-832c61",
-      "L-10b52c",
-      "L-580b42"
+      "L-f2a204",
+      "L-74933f",
+      "L-ea8e13",
+      "L-34b86e",
+      "L-224706",
+      "L-932ee2",
+      "L-ad6a93",
+      "L-47b848"
      ]
     },
     {
@@ -668,30 +197,29 @@
      "args": {
       "service": "frontend"
      },
-     "t": 0.6,
-     "dur": 0.46,
+     "t": 0.41,
+     "dur": 0.53,
      "evidence_ids": [
-      "T-c5b7a0",
-      "T-937d82",
-      "T-7b2f6b",
-      "T-f48c6a",
-      "T-61f3e1"
+      "T-eed001",
+      "T-315723",
+      "T-4ddae4",
+      "T-62d756",
+      "T-914e71"
      ]
     },
     {
      "step": "tool",
      "tool": "get_recent_changes",
      "args": {},
-     "t": 0.6,
-     "dur": 0.46,
+     "t": 0.41,
+     "dur": 0.53,
      "evidence_ids": []
     },
     {
      "step": "llm",
-     "t": 58.38,
-     "dur": 0,
-     "engine": "adk",
-     "tokens": 5764,
+     "t": 0.94,
+     "dur": 1.32,
+     "tokens": 5590,
      "model": "gemini-flash-lite-latest",
      "requested": [
       "get_metric"
@@ -701,22 +229,20 @@
      "step": "tool",
      "tool": "get_metric",
      "args": {
-      "service": "inventory",
-      "name": "db_pool_in_use"
+      "name": "db_pool_in_use",
+      "service": "inventory"
      },
      "evidence_ids": [
-      "M-a1248d"
+      "M-98831b"
      ],
-     "engine": "adk",
-     "t": 58.38,
+     "t": 2.27,
      "dur": 0.0
     },
     {
      "step": "llm",
-     "t": 60.28,
-     "dur": 0,
-     "engine": "adk",
-     "tokens": 6601,
+     "t": 2.27,
+     "dur": 47.03,
+     "tokens": 6298,
      "model": "gemini-flash-lite-latest",
      "requested": [
       "submit_diagnosis"
@@ -726,9 +252,7 @@
    "topology_suspects": [
     "inventory",
     "catalog",
-    "frontend",
-    "recommendation",
-    "checkout"
+    "frontend"
    ],
    "verdict": "DIAGNOSIS",
    "root_cause_service": "inventory",
@@ -739,72 +263,72 @@
     "frontend"
    ],
    "confidence": 1.0,
-   "summary": "The incident was caused by resource exhaustion in the inventory service, specifically database connection pool exhaustion (20/20 connections in use), which caused timeouts and HTTP 503 errors that propagated upstream to catalog, frontend, and other dependent services.",
+   "summary": "The inventory service suffered a resource exhaustion incident due to database connection pool saturation (20/20 connections in use), causing connection acquisition timeouts. This failure propagated upstream, resulting in HTTP 503 errors in inventory and cascading 502/503 errors in catalog and frontend.",
    "claims": [
     {
-     "evidence_ids": [
-      "L-1584a9"
-     ],
+     "text": "The inventory service experienced database connection pool exhaustion, leading to connection timeouts and 503 errors.",
      "quote": "timeout acquiring DB connection after 2000ms (pool 20/20 in use)",
-     "text": "inventory service suffered database connection pool exhaustion, leading to connection timeouts.",
      "is_root_cause_claim": true,
+     "evidence_ids": [
+      "L-6ea9ea"
+     ],
      "evidence": [
       {
-       "id": "L-1584a9",
+       "id": "L-6ea9ea",
        "kind": "log",
-       "ref": "inventory.log:9198",
+       "ref": "inventory.log:11805",
        "text": "timeout acquiring DB connection after 2000ms (pool 20/20 in use)",
        "meta": {
         "service": "inventory",
-        "line": 9198,
-        "ts": "2026-11-25T14:53:33.395+00:00",
+        "line": 11805,
+        "ts": "2026-11-25T15:22:20.546+00:00",
         "level": "ERROR",
-        "trace_id": "7be60353ebc6f48ba6d1c31469162e4c",
-        "count_in_window": 504
+        "trace_id": "f610a12cd5a2eb07b24a439e6382ce72",
+        "count_in_window": 454
        }
       }
      ]
     },
     {
      "text": "Errors propagated upstream from inventory through catalog to frontend.",
-     "quote": "trace 466ac730ec76f7205151f9363b123686: failing server spans in call order: frontend(502, 2065.8ms) -> catalog(502, 2033.1ms) -> inventory(503, 2001.7ms); deepest failing service: inventory",
-     "evidence_ids": [
-      "T-c5b7a0"
-     ],
      "is_root_cause_claim": false,
+     "quote": "deepest failing service: inventory",
+     "evidence_ids": [
+      "T-eed001"
+     ],
      "evidence": [
       {
-       "id": "T-c5b7a0",
+       "id": "T-eed001",
        "kind": "trace",
-       "ref": "trace:466ac730ec76f720",
-       "text": "trace 466ac730ec76f7205151f9363b123686: failing server spans in call order: frontend(502, 2065.8ms) -> catalog(502, 2033.1ms) -> inventory(503, 2001.7ms); deepest failing service: inventory",
+       "ref": "trace:33f46197557a1f38",
+       "text": "trace 33f46197557a1f382044520aacd35fe8: failing server spans in call order: frontend(502, 2073.4ms) -> catalog(502, 2034.5ms) -> inventory(503, 2002.4ms); deepest failing service: inventory",
        "meta": {
-        "trace_id": "466ac730ec76f7205151f9363b123686",
+        "trace_id": "33f46197557a1f382044520aacd35fe8",
         "deepest": "inventory"
        }
       }
      ]
     },
     {
-     "quote": "{\"labels\": {\"instance_service\": \"inventory\", \"service\": \"inventory\"}, \"points\": [[1795618363, 20.0], [1795618373, 20.0], [1795618383, 20.0], [1795618393, 20.0], [1795618403, 20.0], [1795618413, 20.0]]}",
+     "text": "Metric confirmation shows the inventory database pool usage reached its maximum capacity of 20/20.",
+     "quote": "[1795620090, 20.0]",
      "evidence_ids": [
-      "M-a1248d"
+      "M-98831b"
      ],
-     "text": "Database pool in use metric for inventory reached its maximum of 20/20 connections.",
-     "is_root_cause_claim": true,
+     "is_root_cause_claim": false,
      "evidence": [
       {
-       "id": "M-a1248d",
+       "id": "M-98831b",
        "kind": "metric",
        "ref": "inventory.db_pool_in_use",
-       "text": "[{\"labels\": {\"instance_service\": \"inventory\", \"service\": \"inventory\"}, \"points\": [[1795618293, 0.0], [1795618303, 0.0], [1795618313, 0.0], [1795618323, 0.0], [1795618333, 0.0], [1795618343, 0.0], [1795618353, 0.0], [1795618363, 20.0], [1795618373, 20.0], [1795618383, 20.0], [1795618393, 20.0], [1795618403, 20.0], [1795618413, 20.0]]}]",
+       "text": "[{\"labels\": {\"instance_service\": \"inventory\", \"service\": \"inventory\"}, \"points\": [[1795620020, 0.0], [1795620030, 0.0], [1795620040, 0.0], [1795620050, 0.0], [1795620060, 0.0], [1795620070, 0.0], [1795620080, 0.0], [1795620090, 20.0], [1795620100, 20.0], [1795620110, 20.0], [1795620120, 20.0], [1795620130, 20.0], [1795620140, 20.0]]}]",
        "meta": {
         "service": "inventory",
         "metric": "db_pool_in_use",
         "query": "shop_db_pool_in_use{service=\"inventory\"}",
         "window": [
-         1795618293,
-         1795618413
+         1795620020,
+         1795620140
         ]
        }
       }
@@ -813,10 +337,18 @@
    ],
    "dropped_claims": [],
    "evidence_precision": 1.0,
-   "rejected_hypotheses": [],
+   "rejected_hypotheses": [
+    {
+     "why_rejected": "There were no recent deployments or configuration changes in the last 15 minutes.",
+     "hypothesis": "Bad deployment or config change caused the incident",
+     "evidence_ids": [
+      "recent_changes"
+     ]
+    }
+   ],
    "suggested_action": {
+    "why": "Increase the database connection pool limit or scale up the database/service to handle connection demand.",
     "service": "inventory",
-    "why": "Increase database connection pool size or scale up inventory service database capacity to resolve connection exhaustion.",
     "action": "scale_up",
     "risk": "blocked",
     "description": "Not supported in the Compose test environment; always blocked",
@@ -824,20 +356,12 @@
    },
    "evidence_items": 23,
    "health": {
-    "cart": {
-     "rps": 0.0,
-     "error_ratio": 0.0,
-     "baseline_error_ratio": 0.0,
-     "p95_ms": null,
-     "baseline_p95_ms": 23.9,
-     "up": 1.0
-    },
     "frontend": {
-     "rps": 8.55,
+     "rps": 7.1,
      "error_ratio": 1.0,
-     "baseline_error_ratio": 0.01,
+     "baseline_error_ratio": 0.0,
      "p95_ms": 4850.0,
-     "baseline_p95_ms": 892.3,
+     "baseline_p95_ms": 2110.9,
      "up": 1.0
     },
     "currency": {
@@ -849,51 +373,59 @@
      "up": 1.0
     },
     "catalog": {
-     "rps": 8.62,
+     "rps": 7.09,
      "error_ratio": 1.0,
      "baseline_error_ratio": 0.0,
      "p95_ms": 4850.0,
-     "baseline_p95_ms": 214.4,
+     "baseline_p95_ms": 237.0,
      "up": 1.0
     },
     "payment": {
-     "rps": 0.04,
+     "rps": 0.0,
      "error_ratio": 0.0,
-     "baseline_error_ratio": 0.082,
-     "p95_ms": 24.2,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
      "baseline_p95_ms": 23.9,
      "up": 1.0
     },
     "checkout": {
-     "rps": 0.05,
-     "error_ratio": 0.333,
-     "baseline_error_ratio": 0.082,
-     "p95_ms": 4550.0,
-     "baseline_p95_ms": 469.4,
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 4850.0,
+     "baseline_p95_ms": 3200.0,
      "up": 1.0
     },
     "recommendation": {
-     "rps": 0.07,
-     "error_ratio": 0.5,
+     "rps": 0.0,
+     "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
-     "p95_ms": 4700.0,
-     "baseline_p95_ms": 242.1,
+     "p95_ms": null,
+     "baseline_p95_ms": 321.4,
      "up": 1.0
     },
     "shipping": {
-     "rps": 0.02,
+     "rps": 0.0,
      "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
-     "p95_ms": 48.8,
-     "baseline_p95_ms": 83.7,
+     "p95_ms": null,
+     "baseline_p95_ms": 1770.8,
      "up": 1.0
     },
     "inventory": {
-     "rps": 8.36,
+     "rps": 7.33,
      "error_ratio": 1.0,
      "baseline_error_ratio": 0.0,
      "p95_ms": 4850.0,
-     "baseline_p95_ms": 24.0,
+     "baseline_p95_ms": 23.9,
+     "up": 1.0
+    },
+    "cart": {
+     "rps": 0.09,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.8,
+     "baseline_p95_ms": 23.9,
      "up": 1.0
     }
    },
@@ -970,11 +502,11 @@
      "anomalous_dependencies": [],
      "deepest": true,
      "health": {
-      "rps": 8.36,
+      "rps": 7.33,
       "error_ratio": 1.0,
       "baseline_error_ratio": 0.0,
       "p95_ms": 4850.0,
-      "baseline_p95_ms": 24.0,
+      "baseline_p95_ms": 23.9,
       "up": 1.0
      }
     },
@@ -985,58 +517,521 @@
      ],
      "deepest": false,
      "health": {
-      "rps": 8.62,
+      "rps": 7.09,
       "error_ratio": 1.0,
       "baseline_error_ratio": 0.0,
       "p95_ms": 4850.0,
-      "baseline_p95_ms": 214.4,
+      "baseline_p95_ms": 237.0,
       "up": 1.0
      }
     },
     {
      "service": "frontend",
      "anomalous_dependencies": [
-      "catalog",
-      "checkout",
-      "recommendation"
+      "catalog"
      ],
      "deepest": false,
      "health": {
-      "rps": 8.55,
+      "rps": 7.1,
       "error_ratio": 1.0,
-      "baseline_error_ratio": 0.01,
-      "p95_ms": 4850.0,
-      "baseline_p95_ms": 892.3,
-      "up": 1.0
-     }
-    },
-    {
-     "service": "recommendation",
-     "anomalous_dependencies": [
-      "catalog"
-     ],
-     "deepest": false,
-     "health": {
-      "rps": 0.07,
-      "error_ratio": 0.5,
       "baseline_error_ratio": 0.0,
-      "p95_ms": 4700.0,
-      "baseline_p95_ms": 242.1,
+      "p95_ms": 4850.0,
+      "baseline_p95_ms": 2110.9,
+      "up": 1.0
+     }
+    }
+   ],
+   "engine": "native",
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail_ADK": {
+   "alert": "frontend 5xx ratio above 5% for 1m",
+   "model": "gemini-flash-lite-latest",
+   "elapsed_s": 67.9,
+   "usage": {
+    "calls": 3,
+    "prompt_tokens": 16903,
+    "completion_tokens": 488,
+    "retries": 1,
+    "failures": 9,
+    "wait_s": 30.0,
+    "total_tokens": 17391
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "t": 0,
+     "dur": 0.61,
+     "health_evidence_id": "M-eb55f7",
+     "graph_evidence_id": "T-ce8071",
+     "suspects": [
+      {
+       "service": "inventory",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 7.33,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 4850.0,
+        "baseline_p95_ms": 23.9,
+        "up": 1.0
+       }
+      },
+      {
+       "service": "catalog",
+       "anomalous_dependencies": [
+        "inventory"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 7.09,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 4850.0,
+        "baseline_p95_ms": 237.0,
+        "up": 1.0
+       }
+      },
+      {
+       "service": "frontend",
+       "anomalous_dependencies": [
+        "catalog"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 7.1,
+        "error_ratio": 1.0,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 4850.0,
+        "baseline_p95_ms": 2110.9,
+        "up": 1.0
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "inventory",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.61,
+     "dur": 0.55,
+     "evidence_ids": [
+      "L-6ea9ea"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "catalog",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.61,
+     "dur": 0.55,
+     "evidence_ids": [
+      "L-3b8310",
+      "L-95fcef",
+      "L-4ffe67",
+      "L-b2a022",
+      "L-acf2ff",
+      "L-bd175e"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "frontend",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.61,
+     "dur": 0.55,
+     "evidence_ids": [
+      "L-f2a204",
+      "L-74933f",
+      "L-ea8e13",
+      "L-34b86e",
+      "L-224706",
+      "L-932ee2",
+      "L-ad6a93",
+      "L-47b848"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "frontend"
+     },
+     "t": 0.61,
+     "dur": 0.55,
+     "evidence_ids": [
+      "T-eed001",
+      "T-315723",
+      "T-4ddae4",
+      "T-62d756",
+      "T-914e71"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "t": 0.61,
+     "dur": 0.55,
+     "evidence_ids": []
+    },
+    {
+     "step": "llm",
+     "t": 10.56,
+     "dur": 0,
+     "engine": "adk",
+     "tokens": 5554,
+     "model": "gemini-flash-lite-latest",
+     "requested": [
+      "get_metric"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "service": "inventory",
+      "name": "db_pool_in_use"
+     },
+     "evidence_ids": [
+      "M-98831b"
+     ],
+     "engine": "adk",
+     "t": 10.57,
+     "dur": 0.0
+    },
+    {
+     "step": "llm",
+     "t": 65.95,
+     "dur": 0,
+     "engine": "adk",
+     "tokens": 5554,
+     "model": "gemini-flash-lite-latest",
+     "requested": [
+      "get_metric"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_metric",
+     "args": {
+      "service": "inventory",
+      "name": "db_pool_in_use"
+     },
+     "evidence_ids": [
+      "M-98831b"
+     ],
+     "engine": "adk",
+     "t": 65.95,
+     "dur": 0.0
+    },
+    {
+     "step": "llm",
+     "t": 67.89,
+     "dur": 0,
+     "engine": "adk",
+     "tokens": 6283,
+     "model": "gemini-flash-lite-latest",
+     "requested": [
+      "submit_diagnosis"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "inventory",
+    "catalog",
+    "frontend"
+   ],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "inventory",
+   "fault_type": "resource_exhaustion",
+   "ranked_candidates": [
+    "inventory",
+    "catalog",
+    "frontend"
+   ],
+   "confidence": 1.0,
+   "summary": "The incident was caused by resource exhaustion (database connection pool exhaustion) in the inventory service, which resulted in timeout errors when acquiring DB connections. This failure propagated upstream to catalog and frontend, causing 5xx errors across the application.",
+   "claims": [
+    {
+     "text": "Inventory service experienced DB connection pool exhaustion (20/20 in use), causing timeouts on database queries.",
+     "quote": "timeout acquiring DB connection after 2000ms (pool 20/20 in use)",
+     "evidence_ids": [
+      "L-6ea9ea"
+     ],
+     "is_root_cause_claim": true,
+     "evidence": [
+      {
+       "id": "L-6ea9ea",
+       "kind": "log",
+       "ref": "inventory.log:11805",
+       "text": "timeout acquiring DB connection after 2000ms (pool 20/20 in use)",
+       "meta": {
+        "service": "inventory",
+        "line": 11805,
+        "ts": "2026-11-25T15:22:20.546+00:00",
+        "level": "ERROR",
+        "trace_id": "f610a12cd5a2eb07b24a439e6382ce72",
+        "count_in_window": 454
+       }
+      }
+     ]
+    },
+    {
+     "is_root_cause_claim": false,
+     "evidence_ids": [
+      "L-3b8310"
+     ],
+     "quote": "upstream call to inventory failed with HTTP 503",
+     "text": "Catalog service failed because its upstream call to inventory returned HTTP 503 errors.",
+     "evidence": [
+      {
+       "id": "L-3b8310",
+       "kind": "log",
+       "ref": "catalog.log:23387",
+       "text": "upstream call to inventory failed with HTTP 503",
+       "meta": {
+        "service": "catalog",
+        "line": 23387,
+        "ts": "2026-11-25T15:22:20.642+00:00",
+        "level": "ERROR",
+        "trace_id": "d399d30770c1257910ae7e2c7a42a8da",
+        "count_in_window": 439
+       }
+      }
+     ]
+    },
+    {
+     "evidence_ids": [
+      "T-eed001"
+     ],
+     "is_root_cause_claim": false,
+     "text": "Error traces confirm inventory as the deepest failing service causing upstream 5xx errors on catalog and frontend.",
+     "quote": "trace 33f46197557a1f382044520aacd35fe8: failing server spans in call order: frontend(502, 2073.4ms) -> catalog(502, 2034.5ms) -> inventory(503, 2002.4ms); deepest failing service: inventory",
+     "evidence": [
+      {
+       "id": "T-eed001",
+       "kind": "trace",
+       "ref": "trace:33f46197557a1f38",
+       "text": "trace 33f46197557a1f382044520aacd35fe8: failing server spans in call order: frontend(502, 2073.4ms) -> catalog(502, 2034.5ms) -> inventory(503, 2002.4ms); deepest failing service: inventory",
+       "meta": {
+        "trace_id": "33f46197557a1f382044520aacd35fe8",
+        "deepest": "inventory"
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [],
+   "evidence_precision": 1.0,
+   "rejected_hypotheses": [],
+   "suggested_action": {
+    "action": "scale_up",
+    "why": "Scale up the inventory service or increase its database connection pool size to handle the request load.",
+    "service": "inventory",
+    "risk": "blocked",
+    "description": "Not supported in the Compose test environment; always blocked",
+    "dry_run": "(blocked)"
+   },
+   "evidence_items": 23,
+   "health": {
+    "frontend": {
+     "rps": 7.1,
+     "error_ratio": 1.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 4850.0,
+     "baseline_p95_ms": 2110.9,
+     "up": 1.0
+    },
+    "currency": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 23.9,
+     "up": 1.0
+    },
+    "catalog": {
+     "rps": 7.09,
+     "error_ratio": 1.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 4850.0,
+     "baseline_p95_ms": 237.0,
+     "up": 1.0
+    },
+    "payment": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 23.9,
+     "up": 1.0
+    },
+    "checkout": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 4850.0,
+     "baseline_p95_ms": 3200.0,
+     "up": 1.0
+    },
+    "recommendation": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 321.4,
+     "up": 1.0
+    },
+    "shipping": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 1770.8,
+     "up": 1.0
+    },
+    "inventory": {
+     "rps": 7.33,
+     "error_ratio": 1.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 4850.0,
+     "baseline_p95_ms": 23.9,
+     "up": 1.0
+    },
+    "cart": {
+     "rps": 0.09,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.8,
+     "baseline_p95_ms": 23.9,
+     "up": 1.0
+    }
+   },
+   "edges": [
+    {
+     "caller": "catalog",
+     "callee": "currency",
+     "calls": 119
+    },
+    {
+     "caller": "catalog",
+     "callee": "inventory",
+     "calls": 180
+    },
+    {
+     "caller": "checkout",
+     "callee": "cart",
+     "calls": 40
+    },
+    {
+     "caller": "checkout",
+     "callee": "catalog",
+     "calls": 40
+    },
+    {
+     "caller": "checkout",
+     "callee": "currency",
+     "calls": 39
+    },
+    {
+     "caller": "checkout",
+     "callee": "payment",
+     "calls": 39
+    },
+    {
+     "caller": "checkout",
+     "callee": "shipping",
+     "calls": 39
+    },
+    {
+     "caller": "frontend",
+     "callee": "cart",
+     "calls": 40
+    },
+    {
+     "caller": "frontend",
+     "callee": "catalog",
+     "calls": 100
+    },
+    {
+     "caller": "frontend",
+     "callee": "checkout",
+     "calls": 40
+    },
+    {
+     "caller": "frontend",
+     "callee": "recommendation",
+     "calls": 40
+    },
+    {
+     "caller": "recommendation",
+     "callee": "catalog",
+     "calls": 40
+    },
+    {
+     "caller": "shipping",
+     "callee": "currency",
+     "calls": 39
+    }
+   ],
+   "suspects": [
+    {
+     "service": "inventory",
+     "anomalous_dependencies": [],
+     "deepest": true,
+     "health": {
+      "rps": 7.33,
+      "error_ratio": 1.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 4850.0,
+      "baseline_p95_ms": 23.9,
       "up": 1.0
      }
     },
     {
-     "service": "checkout",
+     "service": "catalog",
+     "anomalous_dependencies": [
+      "inventory"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 7.09,
+      "error_ratio": 1.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 4850.0,
+      "baseline_p95_ms": 237.0,
+      "up": 1.0
+     }
+    },
+    {
+     "service": "frontend",
      "anomalous_dependencies": [
       "catalog"
      ],
      "deepest": false,
      "health": {
-      "rps": 0.05,
-      "error_ratio": 0.333,
-      "baseline_error_ratio": 0.082,
-      "p95_ms": 4550.0,
-      "baseline_p95_ms": 469.4,
+      "rps": 7.1,
+      "error_ratio": 1.0,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 4850.0,
+      "baseline_p95_ms": 2110.9,
       "up": 1.0
      }
     }
@@ -1052,7 +1047,8 @@
   }
  },
  "window": [
-  1795618293.5862007,
-  1795618413.5862007
- ]
+  1795620020.751699,
+  1795620140.751699
+ ],
+ "rerun_note": "Re-run on 25 Nov: the first attempt hit Google Gemini HTTP 503 'high demand' on every model for at least one method (kept in results/runs_hard_attempt1/)."
 }

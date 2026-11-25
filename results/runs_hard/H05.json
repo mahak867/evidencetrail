@@ -15,7 +15,7 @@
   "service": "currency",
   "fault_type": "bad_config"
  },
- "injected_at": 1795618634.9370534,
+ "injected_at": 1795620367.7317975,
  "methods": {
   "B1_dashboard_rule": {
    "method": "B1_dashboard_rule",
@@ -38,7 +38,8 @@
     "type_ok": null,
     "inconclusive": false,
     "failed": false
-   }
+   },
+   "rescored": "re-scored on the saved window with the up-metric rule (B1 is deterministic; no model calls)"
   },
   "B0_single_prompt": {
    "method": "B0_single_prompt",
@@ -47,22 +48,22 @@
    "ranked_candidates": [
     "currency",
     "catalog",
-    "frontend"
+    "checkout"
    ],
-   "summary": "The currency service is experiencing configuration errors due to an empty FX_RATE_SOURCE environment variable, causing HTTP 500 errors. This cascades to the catalog service, which fails to call currency, and subsequently to the frontend service with 502 errors.",
+   "summary": "The currency service threw a configuration error ('FX_RATE_SOURCE is empty; cannot load exchange rates'), which caused upstream failures in the catalog and checkout services due to dependent HTTP 500/502 errors.",
    "verdict": "DIAGNOSIS",
-   "elapsed_s": 11.4,
+   "elapsed_s": 3.8,
    "usage": {
     "calls": 1,
-    "prompt_tokens": 14822,
-    "completion_tokens": 107,
+    "prompt_tokens": 14941,
+    "completion_tokens": 109,
     "retries": 0,
     "failures": 4,
-    "wait_s": 4.8,
-    "total_tokens": 14929
+    "wait_s": 1.7,
+    "total_tokens": 15050
    },
    "model": "gemini-flash-lite-latest",
-   "prompt_chars": 30401,
+   "prompt_chars": 30727,
    "error": null,
    "score": {
     "top1": true,
@@ -74,35 +75,35 @@
   },
   "EvidenceTrail": {
    "alert": "checkout error rate above 5% for 1m (SLO burn)",
-   "model": "gemini-3.1-flash-lite",
-   "elapsed_s": 47.9,
+   "model": "gemini-flash-lite-latest",
+   "elapsed_s": 64.5,
    "usage": {
-    "calls": 0,
-    "prompt_tokens": 0,
-    "completion_tokens": 0,
+    "calls": 1,
+    "prompt_tokens": 4442,
+    "completion_tokens": 359,
     "retries": 1,
-    "failures": 10,
-    "wait_s": 46.9,
-    "total_tokens": 0
+    "failures": 9,
+    "wait_s": 61.4,
+    "total_tokens": 4801
    },
    "trail": [
     {
      "step": "scan",
      "t": 0,
-     "dur": 0.59,
-     "health_evidence_id": "M-3a2a00",
-     "graph_evidence_id": "T-dea35d",
+     "dur": 0.58,
+     "health_evidence_id": "M-110d9f",
+     "graph_evidence_id": "T-466085",
      "suspects": [
       {
        "service": "currency",
        "anomalous_dependencies": [],
        "deepest": true,
        "health": {
-        "rps": 8.4,
+        "rps": 7.91,
         "error_ratio": 1.0,
         "baseline_error_ratio": 0.0,
         "p95_ms": 4.8,
-        "baseline_p95_ms": 23.9,
+        "baseline_p95_ms": 23.8,
         "up": 1.0
        }
       },
@@ -113,11 +114,11 @@
        ],
        "deepest": false,
        "health": {
-        "rps": 8.36,
+        "rps": 7.93,
         "error_ratio": 1.0,
-        "baseline_error_ratio": 0.11,
-        "p95_ms": 97.5,
-        "baseline_p95_ms": 3642.2,
+        "baseline_error_ratio": 0.145,
+        "p95_ms": 98.5,
+        "baseline_p95_ms": 3969.0,
         "up": 1.0
        }
       },
@@ -128,11 +129,11 @@
        ],
        "deepest": false,
        "health": {
-        "rps": 8.4,
+        "rps": 7.82,
         "error_ratio": 1.0,
-        "baseline_error_ratio": 0.229,
-        "p95_ms": 218.8,
-        "baseline_p95_ms": 4343.6,
+        "baseline_error_ratio": 0.214,
+        "p95_ms": 222.7,
+        "baseline_p95_ms": 4300.5,
         "up": 1.0
        }
       }
@@ -145,10 +146,10 @@
       "service": "currency",
       "level": "ERROR+WARN"
      },
-     "t": 0.59,
-     "dur": 0.41,
+     "t": 0.58,
+     "dur": 0.54,
      "evidence_ids": [
-      "L-30a103"
+      "L-5493a1"
      ]
     },
     {
@@ -158,10 +159,10 @@
       "service": "catalog",
       "level": "ERROR+WARN"
      },
-     "t": 0.59,
-     "dur": 0.41,
+     "t": 0.58,
+     "dur": 0.54,
      "evidence_ids": [
-      "L-0122b8"
+      "L-e90d16"
      ]
     },
     {
@@ -171,15 +172,17 @@
       "service": "frontend",
       "level": "ERROR+WARN"
      },
-     "t": 0.59,
-     "dur": 0.41,
+     "t": 0.58,
+     "dur": 0.54,
      "evidence_ids": [
-      "L-9c8c20",
-      "L-64dc86",
-      "L-1deb6e",
-      "L-d39448",
-      "L-11e2e3",
-      "L-0df043"
+      "L-78f105",
+      "L-b0b330",
+      "L-701b2b",
+      "L-f047f8",
+      "L-5f8e0b",
+      "L-ccaea0",
+      "L-2b236a",
+      "L-48c5a4"
      ]
     },
     {
@@ -188,18 +191,30 @@
      "args": {
       "service": "checkout"
      },
-     "t": 0.59,
-     "dur": 0.41,
-     "evidence_ids": []
+     "t": 0.58,
+     "dur": 0.54,
+     "evidence_ids": [
+      "T-497b89"
+     ]
     },
     {
      "step": "tool",
      "tool": "get_recent_changes",
      "args": {},
-     "t": 0.59,
-     "dur": 0.41,
+     "t": 0.58,
+     "dur": 0.54,
      "evidence_ids": [
-      "C-66d365"
+      "C-42df3e"
+     ]
+    },
+    {
+     "step": "llm",
+     "t": 1.12,
+     "dur": 63.4,
+     "tokens": 4801,
+     "model": "gemini-flash-lite-latest",
+     "requested": [
+      "submit_diagnosis"
      ]
     }
    ],
@@ -208,46 +223,128 @@
     "catalog",
     "frontend"
    ],
-   "verdict": "FAILED",
-   "error": "Gemini gemini-flash-lite-latest unavailable after 1 attempt(s) (last: 503 [{\n  \"error\": {\n    \"code\": 503,\n    \"message\": \"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\",\n    \"status\": \"UNAVAILABLE\"\n  }\n}\n])",
-   "root_cause_service": null,
-   "fault_type": null,
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "currency",
+   "fault_type": "bad_config",
    "ranked_candidates": [
     "currency",
     "catalog",
     "frontend"
    ],
-   "health": {
-    "cart": {
-     "rps": 0.0,
-     "error_ratio": 0.0,
-     "baseline_error_ratio": 0.0,
-     "p95_ms": null,
-     "baseline_p95_ms": 23.9,
-     "up": 1.0
+   "confidence": 1.0,
+   "summary": "The currency service experienced an outage due to a bad configuration update that emptied FX_RATE_SOURCE. This caused cascading 500 and 502 errors across dependent services like catalog, checkout, and frontend.",
+   "claims": [
+    {
+     "text": "The currency service is misconfigured with an empty FX_RATE_SOURCE environment variable, causing all exchange rate lookups to fail with HTTP 500.",
+     "is_root_cause_claim": true,
+     "evidence_ids": [
+      "L-5493a1"
+     ],
+     "quote": "config error: FX_RATE_SOURCE is empty; cannot load exchange rates",
+     "evidence": [
+      {
+       "id": "L-5493a1",
+       "kind": "log",
+       "ref": "currency.log:16298",
+       "text": "config error: FX_RATE_SOURCE is empty; cannot load exchange rates",
+       "meta": {
+        "service": "currency",
+        "line": 16298,
+        "ts": "2026-11-25T15:27:07.486+00:00",
+        "level": "ERROR",
+        "trace_id": "6a18ffba0c408f3497b4fa75e8d23cb3",
+        "count_in_window": 469
+       }
+      }
+     ]
     },
+    {
+     "evidence_ids": [
+      "L-e90d16",
+      "L-78f105"
+     ],
+     "quote": "upstream call to currency failed with HTTP 500",
+     "is_root_cause_claim": false,
+     "text": "Upstream services such as catalog and frontend fail due to downstream dependency errors in currency.",
+     "evidence": [
+      {
+       "id": "L-e90d16",
+       "kind": "log",
+       "ref": "catalog.log:25521",
+       "text": "upstream call to currency failed with HTTP 500",
+       "meta": {
+        "service": "catalog",
+        "line": 25521,
+        "ts": "2026-11-25T15:27:07.488+00:00",
+        "level": "ERROR",
+        "trace_id": "6a18ffba0c408f3497b4fa75e8d23cb3",
+        "count_in_window": 468
+       }
+      },
+      {
+       "id": "L-78f105",
+       "kind": "log",
+       "ref": "frontend.log:36947",
+       "text": "upstream call to catalog failed with HTTP 502",
+       "meta": {
+        "service": "frontend",
+        "line": 36947,
+        "ts": "2026-11-25T15:27:07.490+00:00",
+        "level": "ERROR",
+        "trace_id": "6a18ffba0c408f3497b4fa75e8d23cb3",
+        "count_in_window": 467
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [
+    {
+     "evidence_ids": [
+      "C-42df3e"
+     ],
+     "is_root_cause_claim": false,
+     "quote": "FX_RATE_SOURCE: \"\"",
+     "text": "A configuration update set FX_RATE_SOURCE to empty version 42 just before errors started.",
+     "rejected_because": [
+      "quoted text not found in cited evidence"
+     ]
+    }
+   ],
+   "evidence_precision": 0.667,
+   "rejected_hypotheses": [],
+   "suggested_action": {
+    "action": "rollback_config",
+    "service": "currency",
+    "why": "Rollback configuration version for currency to restore FX_RATE_SOURCE value.",
+    "risk": "risky",
+    "description": "Restores the previous configuration version",
+    "dry_run": "DELETE http://localhost:8107/admin/fault  (test env: restore config v41)"
+   },
+   "evidence_items": 14,
+   "health": {
     "frontend": {
-     "rps": 8.4,
+     "rps": 7.82,
      "error_ratio": 1.0,
-     "baseline_error_ratio": 0.229,
-     "p95_ms": 218.8,
-     "baseline_p95_ms": 4343.6,
+     "baseline_error_ratio": 0.214,
+     "p95_ms": 222.7,
+     "baseline_p95_ms": 4300.5,
      "up": 1.0
     },
     "currency": {
-     "rps": 8.4,
+     "rps": 7.91,
      "error_ratio": 1.0,
      "baseline_error_ratio": 0.0,
      "p95_ms": 4.8,
-     "baseline_p95_ms": 23.9,
+     "baseline_p95_ms": 23.8,
      "up": 1.0
     },
     "catalog": {
-     "rps": 8.36,
+     "rps": 7.93,
      "error_ratio": 1.0,
-     "baseline_error_ratio": 0.11,
-     "p95_ms": 97.5,
-     "baseline_p95_ms": 3642.2,
+     "baseline_error_ratio": 0.145,
+     "p95_ms": 98.5,
+     "baseline_p95_ms": 3969.0,
      "up": 1.0
     },
     "payment": {
@@ -263,7 +360,7 @@
      "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
      "p95_ms": null,
-     "baseline_p95_ms": 475.9,
+     "baseline_p95_ms": 477.0,
      "up": 1.0
     },
     "recommendation": {
@@ -271,7 +368,7 @@
      "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
      "p95_ms": null,
-     "baseline_p95_ms": 241.1,
+     "baseline_p95_ms": 239.9,
      "up": 1.0
     },
     "shipping": {
@@ -279,15 +376,23 @@
      "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
      "p95_ms": null,
-     "baseline_p95_ms": 81.6,
+     "baseline_p95_ms": 74.4,
      "up": 1.0
     },
     "inventory": {
-     "rps": 8.27,
+     "rps": 7.84,
      "error_ratio": 0.0,
-     "baseline_error_ratio": 0.136,
+     "baseline_error_ratio": 0.131,
      "p95_ms": 23.9,
-     "baseline_p95_ms": 3900.4,
+     "baseline_p95_ms": 3858.2,
+     "up": 1.0
+    },
+    "cart": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 23.8,
      "up": 1.0
     }
    },
@@ -315,7 +420,7 @@
     {
      "caller": "checkout",
      "callee": "currency",
-     "calls": 40
+     "calls": 39
     },
     {
      "caller": "checkout",
@@ -364,11 +469,11 @@
      "anomalous_dependencies": [],
      "deepest": true,
      "health": {
-      "rps": 8.4,
+      "rps": 7.91,
       "error_ratio": 1.0,
       "baseline_error_ratio": 0.0,
       "p95_ms": 4.8,
-      "baseline_p95_ms": 23.9,
+      "baseline_p95_ms": 23.8,
       "up": 1.0
      }
     },
@@ -379,11 +484,11 @@
      ],
      "deepest": false,
      "health": {
-      "rps": 8.36,
+      "rps": 7.93,
       "error_ratio": 1.0,
-      "baseline_error_ratio": 0.11,
-      "p95_ms": 97.5,
-      "baseline_p95_ms": 3642.2,
+      "baseline_error_ratio": 0.145,
+      "p95_ms": 98.5,
+      "baseline_p95_ms": 3969.0,
       "up": 1.0
      }
     },
@@ -394,55 +499,55 @@
      ],
      "deepest": false,
      "health": {
-      "rps": 8.4,
+      "rps": 7.82,
       "error_ratio": 1.0,
-      "baseline_error_ratio": 0.229,
-      "p95_ms": 218.8,
-      "baseline_p95_ms": 4343.6,
+      "baseline_error_ratio": 0.214,
+      "p95_ms": 222.7,
+      "baseline_p95_ms": 4300.5,
       "up": 1.0
      }
     }
    ],
    "engine": "native",
    "score": {
-    "top1": false,
+    "top1": true,
     "top3": true,
-    "type_ok": false,
+    "type_ok": true,
     "inconclusive": false,
-    "failed": true
+    "failed": false
    }
   },
   "EvidenceTrail_ADK": {
    "alert": "checkout error rate above 5% for 1m (SLO burn)",
    "model": "gemini-flash-lite-latest",
-   "elapsed_s": 12.5,
+   "elapsed_s": 14.7,
    "usage": {
     "calls": 1,
-    "prompt_tokens": 3972,
-    "completion_tokens": 277,
+    "prompt_tokens": 4406,
+    "completion_tokens": 270,
     "retries": 0,
     "failures": 4,
     "wait_s": 0.0,
-    "total_tokens": 4249
+    "total_tokens": 4676
    },
    "trail": [
     {
      "step": "scan",
      "t": 0,
-     "dur": 0.73,
-     "health_evidence_id": "M-3a2a00",
-     "graph_evidence_id": "T-dea35d",
+     "dur": 0.42,
+     "health_evidence_id": "M-110d9f",
+     "graph_evidence_id": "T-466085",
      "suspects": [
       {
        "service": "currency",
        "anomalous_dependencies": [],
        "deepest": true,
        "health": {
-        "rps": 8.4,
+        "rps": 7.91,
         "error_ratio": 1.0,
         "baseline_error_ratio": 0.0,
         "p95_ms": 4.8,
-        "baseline_p95_ms": 23.9,
+        "baseline_p95_ms": 23.8,
         "up": 1.0
        }
       },
@@ -453,11 +558,11 @@
        ],
        "deepest": false,
        "health": {
-        "rps": 8.36,
+        "rps": 7.93,
         "error_ratio": 1.0,
-        "baseline_error_ratio": 0.11,
-        "p95_ms": 97.5,
-        "baseline_p95_ms": 3642.2,
+        "baseline_error_ratio": 0.145,
+        "p95_ms": 98.5,
+        "baseline_p95_ms": 3969.0,
         "up": 1.0
        }
       },
@@ -468,11 +573,11 @@
        ],
        "deepest": false,
        "health": {
-        "rps": 8.4,
+        "rps": 7.82,
         "error_ratio": 1.0,
-        "baseline_error_ratio": 0.229,
-        "p95_ms": 218.8,
-        "baseline_p95_ms": 4343.6,
+        "baseline_error_ratio": 0.214,
+        "p95_ms": 222.7,
+        "baseline_p95_ms": 4300.5,
         "up": 1.0
        }
       }
@@ -485,10 +590,10 @@
       "service": "currency",
       "level": "ERROR+WARN"
      },
-     "t": 0.73,
-     "dur": 0.45,
+     "t": 0.42,
+     "dur": 0.58,
      "evidence_ids": [
-      "L-30a103"
+      "L-5493a1"
      ]
     },
     {
@@ -498,10 +603,10 @@
       "service": "catalog",
       "level": "ERROR+WARN"
      },
-     "t": 0.73,
-     "dur": 0.45,
+     "t": 0.42,
+     "dur": 0.58,
      "evidence_ids": [
-      "L-0122b8"
+      "L-e90d16"
      ]
     },
     {
@@ -511,15 +616,17 @@
       "service": "frontend",
       "level": "ERROR+WARN"
      },
-     "t": 0.73,
-     "dur": 0.45,
+     "t": 0.42,
+     "dur": 0.58,
      "evidence_ids": [
-      "L-9c8c20",
-      "L-64dc86",
-      "L-1deb6e",
-      "L-d39448",
-      "L-11e2e3",
-      "L-0df043"
+      "L-78f105",
+      "L-b0b330",
+      "L-701b2b",
+      "L-f047f8",
+      "L-5f8e0b",
+      "L-ccaea0",
+      "L-2b236a",
+      "L-48c5a4"
      ]
     },
     {
@@ -528,26 +635,28 @@
      "args": {
       "service": "checkout"
      },
-     "t": 0.73,
-     "dur": 0.45,
-     "evidence_ids": []
+     "t": 0.42,
+     "dur": 0.58,
+     "evidence_ids": [
+      "T-497b89"
+     ]
     },
     {
      "step": "tool",
      "tool": "get_recent_changes",
      "args": {},
-     "t": 0.73,
-     "dur": 0.45,
+     "t": 0.42,
+     "dur": 0.58,
      "evidence_ids": [
-      "C-66d365"
+      "C-42df3e"
      ]
     },
     {
      "step": "llm",
-     "t": 12.5,
+     "t": 14.71,
      "dur": 0,
      "engine": "adk",
-     "tokens": 4249,
+     "tokens": 4676,
      "model": "gemini-flash-lite-latest",
      "requested": [
       "submit_diagnosis"
@@ -566,102 +675,80 @@
     "currency"
    ],
    "confidence": 1.0,
-   "summary": "The incident is caused by a bad configuration change in the currency service (FX_RATE_SOURCE was set to empty), leading to exchange rate loading failures and cascading 500/502 errors across upstream services like catalog and frontend.",
+   "summary": "An incident caused by a bad configuration update on the currency service where FX_RATE_SOURCE was set to an empty string, causing exchange rate loading to fail and returning 500 errors to callers like catalog, checkout, and frontend.",
    "claims": [
     {
-     "text": "Currency service is failing due to a bad configuration where FX_RATE_SOURCE is set to an empty string.",
-     "is_root_cause_claim": true,
      "evidence_ids": [
-      "L-30a103"
+      "L-5493a1"
      ],
+     "is_root_cause_claim": true,
      "quote": "config error: FX_RATE_SOURCE is empty; cannot load exchange rates",
+     "text": "The currency service failed due to an empty FX_RATE_SOURCE configuration value.",
      "evidence": [
       {
-       "id": "L-30a103",
+       "id": "L-5493a1",
        "kind": "log",
-       "ref": "currency.log:13424",
+       "ref": "currency.log:16298",
        "text": "config error: FX_RATE_SOURCE is empty; cannot load exchange rates",
        "meta": {
         "service": "currency",
-        "line": 13424,
-        "ts": "2026-11-25T14:58:14.846+00:00",
+        "line": 16298,
+        "ts": "2026-11-25T15:27:07.486+00:00",
         "level": "ERROR",
-        "trace_id": "904b4126792546b3c3d83fa799e447f6",
-        "count_in_window": 496
-       }
-      }
-     ]
-    },
-    {
-     "is_root_cause_claim": true,
-     "evidence_ids": [
-      "C-66d365"
-     ],
-     "quote": "{\"FX_RATE_SOURCE\": \"\"}",
-     "text": "A configuration change was made right before the incident by deploy-bot setting FX_RATE_SOURCE to empty.",
-     "evidence": [
-      {
-       "id": "C-66d365",
-       "kind": "change",
-       "ref": "events.log:1",
-       "text": "{\"ts\": \"2026-11-25T14:57:14.935+00:00\", \"service\": \"currency\", \"kind\": \"ConfigUpdated\", \"version\": 42, \"changed\": {\"FX_RATE_SOURCE\": \"\"}, \"author\": \"deploy-bot\"}",
-       "meta": {
-        "ts": "2026-11-25T14:57:14.935+00:00",
-        "service": "currency",
-        "kind": "ConfigUpdated",
-        "version": 42,
-        "changed": {
-         "FX_RATE_SOURCE": ""
-        },
-        "author": "deploy-bot"
+        "trace_id": "6a18ffba0c408f3497b4fa75e8d23cb3",
+        "count_in_window": 469
        }
       }
      ]
     }
    ],
-   "dropped_claims": [],
-   "evidence_precision": 1.0,
+   "dropped_claims": [
+    {
+     "is_root_cause_claim": true,
+     "quote": "ConfigUpdated ... currency ... FX_RATE_SOURCE: \"\"",
+     "evidence_ids": [
+      "C-42df3e"
+     ],
+     "text": "A configuration change was deployed to the currency service setting FX_RATE_SOURCE to an empty string.",
+     "rejected_because": [
+      "quoted text not found in cited evidence"
+     ]
+    }
+   ],
+   "evidence_precision": 0.5,
    "rejected_hypotheses": [],
    "suggested_action": {
-    "why": "Rollback the configuration change for FX_RATE_SOURCE to restore exchange rates loading.",
     "action": "rollback_config",
     "service": "currency",
+    "why": "Rollback the currency service configuration to restore the FX_RATE_SOURCE value.",
     "risk": "risky",
     "description": "Restores the previous configuration version",
     "dry_run": "DELETE http://localhost:8107/admin/fault  (test env: restore config v41)"
    },
-   "evidence_items": 11,
+   "evidence_items": 14,
    "health": {
-    "cart": {
-     "rps": 0.0,
-     "error_ratio": 0.0,
-     "baseline_error_ratio": 0.0,
-     "p95_ms": null,
-     "baseline_p95_ms": 23.9,
-     "up": 1.0
-    },
     "frontend": {
-     "rps": 8.4,
+     "rps": 7.82,
      "error_ratio": 1.0,
-     "baseline_error_ratio": 0.229,
-     "p95_ms": 218.8,
-     "baseline_p95_ms": 4343.6,
+     "baseline_error_ratio": 0.214,
+     "p95_ms": 222.7,
+     "baseline_p95_ms": 4300.5,
      "up": 1.0
     },
     "currency": {
-     "rps": 8.4,
+     "rps": 7.91,
      "error_ratio": 1.0,
      "baseline_error_ratio": 0.0,
      "p95_ms": 4.8,
-     "baseline_p95_ms": 23.9,
+     "baseline_p95_ms": 23.8,
      "up": 1.0
     },
     "catalog": {
-     "rps": 8.36,
+     "rps": 7.93,
      "error_ratio": 1.0,
-     "baseline_error_ratio": 0.11,
-     "p95_ms": 97.5,
-     "baseline_p95_ms": 3642.2,
+     "baseline_error_ratio": 0.145,
+     "p95_ms": 98.5,
+     "baseline_p95_ms": 3969.0,
      "up": 1.0
     },
     "payment": {
@@ -677,7 +764,7 @@
      "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
      "p95_ms": null,
-     "baseline_p95_ms": 475.9,
+     "baseline_p95_ms": 477.0,
      "up": 1.0
     },
     "recommendation": {
@@ -685,7 +772,7 @@
      "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
      "p95_ms": null,
-     "baseline_p95_ms": 241.1,
+     "baseline_p95_ms": 239.9,
      "up": 1.0
     },
     "shipping": {
@@ -693,15 +780,23 @@
      "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
      "p95_ms": null,
-     "baseline_p95_ms": 81.6,
+     "baseline_p95_ms": 74.4,
      "up": 1.0
     },
     "inventory": {
-     "rps": 8.27,
+     "rps": 7.84,
      "error_ratio": 0.0,
-     "baseline_error_ratio": 0.136,
+     "baseline_error_ratio": 0.131,
      "p95_ms": 23.9,
-     "baseline_p95_ms": 3900.4,
+     "baseline_p95_ms": 3858.2,
+     "up": 1.0
+    },
+    "cart": {
+     "rps": 0.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": null,
+     "baseline_p95_ms": 23.8,
      "up": 1.0
     }
    },
@@ -729,7 +824,7 @@
     {
      "caller": "checkout",
      "callee": "currency",
-     "calls": 40
+     "calls": 39
     },
     {
      "caller": "checkout",
@@ -778,11 +873,11 @@
      "anomalous_dependencies": [],
      "deepest": true,
      "health": {
-      "rps": 8.4,
+      "rps": 7.91,
       "error_ratio": 1.0,
       "baseline_error_ratio": 0.0,
       "p95_ms": 4.8,
-      "baseline_p95_ms": 23.9,
+      "baseline_p95_ms": 23.8,
       "up": 1.0
      }
     },
@@ -793,11 +888,11 @@
      ],
      "deepest": false,
      "health": {
-      "rps": 8.36,
+      "rps": 7.93,
       "error_ratio": 1.0,
-      "baseline_error_ratio": 0.11,
-      "p95_ms": 97.5,
-      "baseline_p95_ms": 3642.2,
+      "baseline_error_ratio": 0.145,
+      "p95_ms": 98.5,
+      "baseline_p95_ms": 3969.0,
       "up": 1.0
      }
     },
@@ -808,11 +903,11 @@
      ],
      "deepest": false,
      "health": {
-      "rps": 8.4,
+      "rps": 7.82,
       "error_ratio": 1.0,
-      "baseline_error_ratio": 0.229,
-      "p95_ms": 218.8,
-      "baseline_p95_ms": 4343.6,
+      "baseline_error_ratio": 0.214,
+      "p95_ms": 222.7,
+      "baseline_p95_ms": 4300.5,
       "up": 1.0
      }
     }
@@ -828,7 +923,8 @@
   }
  },
  "window": [
-  1795618574.9372365,
-  1795618694.9372365
- ]
+  1795620307.7320118,
+  1795620427.7320118
+ ],
+ "rerun_note": "Re-run on 25 Nov: the first attempt hit Google Gemini HTTP 503 'high demand' on every model for at least one method (kept in results/runs_hard_attempt1/)."
 }

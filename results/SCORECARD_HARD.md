@@ -7,31 +7,31 @@
 | Method | Top-1 service | Top-3 service | Fault type correct | Inconclusive | Failed | Median time (s) | Median tokens |
 |---|---|---|---|---|---|---|---|
 | B1_dashboard_rule | 5/6 = 83% [44%–97%] | 6/6 = 100% [61%–100%] | n/a (no type) | 0 | 0 | 0 | 0 |
-| B0_single_prompt | 4/6 = 67% [30%–90%] | 4/6 = 67% [30%–90%] | 4/6 = 67% [30%–90%] | 0 | 0 | 11.4 | 14929 |
-| EvidenceTrail | 2/6 = 33% [10%–70%] | 5/6 = 83% [44%–97%] | 2/6 = 33% [10%–70%] | 0 | 4 | 63.8 | 5800 |
-| EvidenceTrail_ADK | 5/6 = 83% [44%–97%] | 6/6 = 100% [61%–100%] | 5/6 = 83% [44%–97%] | 0 | 1 | 60.3 | 12365 |
+| B0_single_prompt | 4/6 = 67% [30%–90%] | 4/6 = 67% [30%–90%] | 3/6 = 50% [19%–81%] | 0 | 0 | 4.2 | 15050 |
+| EvidenceTrail | 5/6 = 83% [44%–97%] | 6/6 = 100% [61%–100%] | 6/6 = 100% [61%–100%] | 1 | 0 | 25.5 | 6387 |
+| EvidenceTrail_ADK | 6/6 = 100% [61%–100%] | 6/6 = 100% [61%–100%] | 6/6 = 100% [61%–100%] | 0 | 0 | 67.9 | 17226 |
 
 ## EvidenceTrail evidence gate
 
-- Claims kept: **4**, dropped by the gate: **1** (cited evidence never fetched, or quote not found).
-- Mean evidence precision per investigation: **83%**
+- Claims kept: **10**, dropped by the gate: **3** (cited evidence never fetched, or quote not found).
+- Mean evidence precision per investigation: **72%**
 - Every suggested action labelled by policy; none executed during evaluation.
 
 ## Every scenario (misses included)
 
 | ID | Truth | B1 | B0 | EvidenceTrail | ET verdict | ET conf | ET time (s) |
 |---|---|---|---|---|---|---|---|
-| H01 | currency/latency | ❌ frontend/- | ❌ analytics-collector/resource_exhaustion | ❌ None/- | FAILED | - | 77.7 |
-| H02 | shipping/latency | ✅ shipping/- | ❌ checkout/latency | ❌ None/- | FAILED | - | 63.8 |
+| H01 | currency/latency | ❌ frontend/- | ❌ cart/resource_exhaustion | ❌ currency/latency | INCONCLUSIVE | 0.9 | 5.3 |
+| H02 | shipping/latency | ✅ shipping/- | ❌ analytics-collector/crash_or_unreachable | ✅ shipping/latency | DIAGNOSIS | 1.0 | 25.5 |
 | H03 | payment/bad_deploy | ✅ payment/- | ✅ payment/code_error | ✅ payment/bad_deploy | DIAGNOSIS | 1.0 | 8.9 |
-| H04 | inventory/resource_exhaustion | ✅ inventory/- | ✅ inventory/resource_exhaustion | ❌ None/- | FAILED | - | 52.4 |
-| H05 | currency/bad_config | ✅ currency/- | ✅ currency/bad_config | ❌ None/- | FAILED | - | 47.9 |
-| H06 | cart/crash_or_unreachable | ✅ cart/- | ✅ cart/crash_or_unreachable | ✅ cart/crash_or_unreachable | DIAGNOSIS | 1.0 | 84.2 |
+| H04 | inventory/resource_exhaustion | ✅ inventory/- | ✅ inventory/resource_exhaustion | ✅ inventory/resource_exhaustion | DIAGNOSIS | 1.0 | 49.3 |
+| H05 | currency/bad_config | ✅ currency/- | ✅ currency/bad_config | ✅ currency/bad_config | DIAGNOSIS | 1.0 | 64.5 |
+| H06 | cart/crash_or_unreachable | ✅ cart/- | ✅ cart/crash_or_unreachable | ✅ cart/crash_or_unreachable | DIAGNOSIS | 1.0 | 16.7 |
 
 ## Cost and reliability
 
-- EvidenceTrail total tokens: 31,079 over 6 investigations (~5,179 per incident).
-- Gemini retries (429/5xx with backoff): 5; hard failures: 73. Models used: ['gemini-3.1-flash-lite', 'gemini-flash-lite-latest'].
+- EvidenceTrail total tokens: 42,180 over 6 investigations (~7,030 per incident).
+- Gemini retries (429/5xx with backoff): 1; hard failures: 41. Models used: ['gemini-flash-lite-latest'].
 - Free-tier Gemini latency varies a lot with demand; elapsed time includes retry back-off.
 - Median EvidenceTrail time excluding provider back-off/overload waits: 3.2s
 

@@ -54,8 +54,9 @@
     { cap: 'Every claim links to the evidence behind it. Claims that cite evidence which was never fetched, or misquote it, are blocked.', run: () => focus('#claims'), ms: 6500 },
     { cap: 'Click any citation to see the exact log line, trace or deploy event. Secrets are redacted before anything reaches Gemini.', run: async () => { const c = $('#claims .ev'); if (c) c.click(); }, ms: 7000, after: () => { const sc = document.getElementById('scrim'); if (sc) sc.click(); } },
     { cap: 'The suggested fix is labelled by policy, not by the AI: "rollback deploy" is risky, shown as a dry run, and runs only after a named engineer approves it.', run: () => focus('#action'), ms: 8000 },
-    { cap: 'We measure everything on injected faults against two baselines, and report every miss. EvidenceTrail: 12/12 on service and fault type.', run: async () => { go('scorecard'); await sleep(600); focus('#accChart'); }, ms: 8000 },
+    { cap: 'We measure everything on injected faults against two baselines, and report every miss. EvidenceTrail: 12/12 on service and fault type. Hatched bars are the same investigation running on Google ADK.', run: async () => { go('scorecard'); await sleep(600); focus('#accChart'); }, ms: 8000 },
     { cap: 'On the hard set (noisy logs, silent faults): 0 confident wrong answers for EvidenceTrail, against 2 for a single Gemini prompt. The chart has switched to the hard set.', run: async () => { const t = document.querySelector('#setTabs button[data-set="hard"]'); if (t) t.click(); await sleep(300); focus('#accChart'); }, ms: 9000 },
+    { cap: 'EvidenceTrail is also an MCP server: Claude Code, Claude Desktop or Gemini CLI can investigate with the same read-only tools and evidence gate. The agent loop can run natively or on Google ADK.', run: async () => { go('integrations'); await sleep(500); focus('#v-integrations .card'); }, ms: 9000 },
     { cap: 'That is EvidenceTrail: Gemini inside the product, evidence for every claim, a human in charge of every change. Explore freely, or watch the video.', run: () => { focus(null); go('investigate'); window.scrollTo({ top: 0, behavior: 'smooth' }); }, ms: 9000 },
   ];
 

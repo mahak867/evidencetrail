@@ -16,7 +16,7 @@
   "service": "cart",
   "fault_type": "crash_or_unreachable"
  },
- "injected_at": 1795618873.0193884,
+ "injected_at": 1795620617.1571305,
  "methods": {
   "B1_dashboard_rule": {
    "method": "B1_dashboard_rule",
@@ -39,7 +39,8 @@
     "type_ok": null,
     "inconclusive": false,
     "failed": false
-   }
+   },
+   "rescored": "re-scored on the saved window with the up-metric rule (B1 is deterministic; no model calls)"
   },
   "B0_single_prompt": {
    "method": "B0_single_prompt",
@@ -47,23 +48,23 @@
    "fault_type": "crash_or_unreachable",
    "ranked_candidates": [
     "cart",
-    "frontend",
-    "recommendation"
+    "analytics-collector",
+    "redis"
    ],
-   "summary": "The cart service stopped logging normal health checks (\"/work ok\") early in the logs and eventually caused the frontend service to fail with connection refused errors (\"cart:8000\") when trying to communicate with it, resulting in 5xx errors on the frontend.",
+   "summary": "The cart service stopped responding, causing the frontend service to flood with connection refused errors (`dial tcp: connect: connection refused: cart:8000`), resulting in an elevated 5xx ratio.",
    "verdict": "DIAGNOSIS",
-   "elapsed_s": 94.6,
+   "elapsed_s": 43.9,
    "usage": {
     "calls": 1,
-    "prompt_tokens": 14302,
-    "completion_tokens": 122,
-    "retries": 0,
-    "failures": 4,
-    "wait_s": 8.3,
-    "total_tokens": 14424
+    "prompt_tokens": 15188,
+    "completion_tokens": 110,
+    "retries": 1,
+    "failures": 9,
+    "wait_s": 42.4,
+    "total_tokens": 15298
    },
    "model": "gemini-flash-lite-latest",
-   "prompt_chars": 28527,
+   "prompt_chars": 30188,
    "error": null,
    "score": {
     "top1": true,
@@ -76,22 +77,22 @@
   "EvidenceTrail": {
    "alert": "frontend 5xx ratio above 5% for 1m",
    "model": "gemini-flash-lite-latest",
-   "elapsed_s": 84.2,
+   "elapsed_s": 16.7,
    "usage": {
-    "calls": 2,
-    "prompt_tokens": 7762,
-    "completion_tokens": 332,
-    "retries": 1,
-    "failures": 13,
-    "wait_s": 81.0,
-    "total_tokens": 8094
+    "calls": 1,
+    "prompt_tokens": 3851,
+    "completion_tokens": 195,
+    "retries": 0,
+    "failures": 4,
+    "wait_s": 14.2,
+    "total_tokens": 4046
    },
    "trail": [
     {
      "step": "scan",
      "t": 0,
-     "dur": 0.75,
-     "health_evidence_id": "M-fbf7a4",
+     "dur": 0.56,
+     "health_evidence_id": "M-861f69",
      "graph_evidence_id": "T-0d8fb6",
      "suspects": [
       {
@@ -114,11 +115,11 @@
        ],
        "deepest": false,
        "health": {
-        "rps": 8.0,
+        "rps": 7.73,
         "error_ratio": 1.0,
-        "baseline_error_ratio": 0.18,
-        "p95_ms": 486.5,
-        "baseline_p95_ms": 879.7,
+        "baseline_error_ratio": 0.255,
+        "p95_ms": 477.7,
+        "baseline_p95_ms": 843.8,
         "up": 1.0
        }
       }
@@ -131,7 +132,7 @@
       "service": "cart",
       "level": "ERROR+WARN"
      },
-     "t": 0.75,
+     "t": 0.56,
      "dur": 0.39,
      "evidence_ids": []
     },
@@ -142,15 +143,15 @@
       "service": "frontend",
       "level": "ERROR+WARN"
      },
-     "t": 0.75,
+     "t": 0.56,
      "dur": 0.39,
      "evidence_ids": [
-      "L-cd0cd2",
-      "L-f01ef2",
-      "L-830343",
-      "L-93cf17",
-      "L-8ef9e9",
-      "L-2b4228"
+      "L-764ed6",
+      "L-60c130",
+      "L-7c0d9f",
+      "L-4319cd",
+      "L-49ca65",
+      "L-21e69e"
      ]
     },
     {
@@ -159,47 +160,29 @@
      "args": {
       "service": "frontend"
      },
-     "t": 0.75,
+     "t": 0.56,
      "dur": 0.39,
      "evidence_ids": [
-      "T-c72e23",
-      "T-925690",
-      "T-17d550",
-      "T-1a4db3",
-      "T-346799"
+      "T-748c16",
+      "T-48fa61",
+      "T-8d5009",
+      "T-4ea9d4",
+      "T-c3cd90"
      ]
     },
     {
      "step": "tool",
      "tool": "get_recent_changes",
      "args": {},
-     "t": 0.75,
+     "t": 0.56,
      "dur": 0.39,
      "evidence_ids": []
     },
     {
      "step": "llm",
-     "t": 1.14,
-     "dur": 80.28,
-     "tokens": 3869,
-     "model": "gemini-flash-lite-latest",
-     "requested": [
-      "get_recent_changes"
-     ]
-    },
-    {
-     "step": "tool",
-     "tool": "get_recent_changes",
-     "args": {},
-     "evidence_ids": [],
-     "t": 81.42,
-     "dur": 0.0
-    },
-    {
-     "step": "llm",
-     "t": 81.42,
-     "dur": 2.79,
-     "tokens": 4225,
+     "t": 0.95,
+     "dur": 15.78,
+     "tokens": 4046,
      "model": "gemini-flash-lite-latest",
      "requested": [
       "submit_diagnosis"
@@ -218,47 +201,28 @@
     "frontend"
    ],
    "confidence": 1.0,
-   "summary": "The cart service has crashed or become unreachable, causing connection refused errors in the frontend service and leading to a spike in 5xx errors.",
+   "summary": "The frontend is experiencing 5xx errors because the cart service is down, resulting in connection refused errors.",
    "claims": [
     {
+     "quote": "connection refused: cart:8000 (dial tcp: connect: connection refused)",
      "is_root_cause_claim": true,
      "evidence_ids": [
-      "L-cd0cd2"
+      "L-764ed6"
      ],
-     "text": "The frontend service logs show persistent connection refused errors attempting to communicate with the cart service.",
-     "quote": "connection refused: cart:8000 (dial tcp: connect: connection refused)",
+     "text": "The cart service is down, causing connection refused errors when the frontend tries to call it.",
      "evidence": [
       {
-       "id": "L-cd0cd2",
+       "id": "L-764ed6",
        "kind": "log",
-       "ref": "frontend.log:26449",
+       "ref": "frontend.log:38941",
        "text": "connection refused: cart:8000 (dial tcp: connect: connection refused)",
        "meta": {
         "service": "frontend",
-        "line": 26449,
-        "ts": "2026-11-25T15:02:12.920+00:00",
+        "line": 38941,
+        "ts": "2026-11-25T15:31:17.084+00:00",
         "level": "ERROR",
-        "trace_id": "b9b4ccf3c5fcfad32b5566455c04d04b",
-        "count_in_window": 477
-       }
-      }
-     ]
-    },
-    {
-     "quote": "\"cart\": {\"rps\": 0.0, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": null, \"baseline_p95_ms\": 23.9, \"up\": 0.0}",
-     "evidence_ids": [
-      "M-fbf7a4"
-     ],
-     "text": "The service health metrics indicate that the cart service is down (up: 0.0, rps: 0.0).",
-     "is_root_cause_claim": false,
-     "evidence": [
-      {
-       "id": "M-fbf7a4",
-       "kind": "metric",
-       "ref": "service_health_scan",
-       "text": "{\"frontend\": {\"rps\": 8.0, \"error_ratio\": 1.0, \"baseline_error_ratio\": 0.18, \"p95_ms\": 486.5, \"baseline_p95_ms\": 879.7, \"up\": 1.0}, \"currency\": {\"rps\": 15.69, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.11, \"p95_ms\": 24.0, \"baseline_p95_ms\": 23.7, \"up\": 1.0}, \"catalog\": {\"rps\": 15.71, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.128, \"p95_ms\": 207.6, \"baseline_p95_ms\": 224.4, \"up\": 1.0}, \"payment\": {\"rps\": 0.0, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": null, \"baseline_p95_ms\": 23.9, \"up\": 1.0}, \"checkout\": {\"rps\": 0.0, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": null, \"baseline_p95_ms\": 478.6, \"up\": 1.0}, \"recommendation\": {\"rps\": 7.84, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 240.7, \"baseline_p95_ms\": 246.0, \"up\": 1.0}, \"shipping\": {\"rps\": 0.0, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": null, \"baseline_p95_ms\": 79.7, \"up\": 1.0}, \"inventory\": {\"rps\": 15.85, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 23.9, \"baseline_p95_ms\": 24.0, \"up\": 1.0}, \"cart\": {\"rps\": 0.0, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": null, \"baseline_p95_ms\": 23.9, \"up\": 0.0}}",
-       "meta": {
-        "source": "prometheus"
+        "trace_id": "8f8f4bb23b819c9499b0f44961c4d320",
+        "count_in_window": 479
        }
       }
      ]
@@ -268,9 +232,9 @@
    "evidence_precision": 1.0,
    "rejected_hypotheses": [],
    "suggested_action": {
-    "service": "cart",
-    "why": "The cart service is down and causing connection refused errors upstream in the frontend service.",
     "action": "start_service",
+    "service": "cart",
+    "why": "The cart service is currently down (up: 0.0) and needs to be started or restarted.",
     "risk": "risky",
     "description": "Starts a stopped service container",
     "dry_run": "docker compose start cart"
@@ -278,27 +242,27 @@
    "evidence_items": 13,
    "health": {
     "frontend": {
-     "rps": 8.0,
+     "rps": 7.73,
      "error_ratio": 1.0,
-     "baseline_error_ratio": 0.18,
-     "p95_ms": 486.5,
-     "baseline_p95_ms": 879.7,
+     "baseline_error_ratio": 0.255,
+     "p95_ms": 477.7,
+     "baseline_p95_ms": 843.8,
      "up": 1.0
     },
     "currency": {
-     "rps": 15.69,
+     "rps": 15.51,
      "error_ratio": 0.0,
-     "baseline_error_ratio": 0.11,
-     "p95_ms": 24.0,
-     "baseline_p95_ms": 23.7,
+     "baseline_error_ratio": 0.101,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 23.8,
      "up": 1.0
     },
     "catalog": {
-     "rps": 15.71,
+     "rps": 15.53,
      "error_ratio": 0.0,
-     "baseline_error_ratio": 0.128,
-     "p95_ms": 207.6,
-     "baseline_p95_ms": 224.4,
+     "baseline_error_ratio": 0.117,
+     "p95_ms": 200.0,
+     "baseline_p95_ms": 218.9,
      "up": 1.0
     },
     "payment": {
@@ -306,7 +270,7 @@
      "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
      "p95_ms": null,
-     "baseline_p95_ms": 23.9,
+     "baseline_p95_ms": 23.8,
      "up": 1.0
     },
     "checkout": {
@@ -314,15 +278,15 @@
      "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
      "p95_ms": null,
-     "baseline_p95_ms": 478.6,
+     "baseline_p95_ms": 474.0,
      "up": 1.0
     },
     "recommendation": {
-     "rps": 7.84,
+     "rps": 7.8,
      "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
-     "p95_ms": 240.7,
-     "baseline_p95_ms": 246.0,
+     "p95_ms": 237.5,
+     "baseline_p95_ms": 240.5,
      "up": 1.0
     },
     "shipping": {
@@ -330,11 +294,11 @@
      "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
      "p95_ms": null,
-     "baseline_p95_ms": 79.7,
+     "baseline_p95_ms": 74.4,
      "up": 1.0
     },
     "inventory": {
-     "rps": 15.85,
+     "rps": 15.51,
      "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
      "p95_ms": 23.9,
@@ -438,11 +402,11 @@
      ],
      "deepest": false,
      "health": {
-      "rps": 8.0,
+      "rps": 7.73,
       "error_ratio": 1.0,
-      "baseline_error_ratio": 0.18,
-      "p95_ms": 486.5,
-      "baseline_p95_ms": 879.7,
+      "baseline_error_ratio": 0.255,
+      "p95_ms": 477.7,
+      "baseline_p95_ms": 843.8,
       "up": 1.0
      }
     }
@@ -458,23 +422,23 @@
   },
   "EvidenceTrail_ADK": {
    "alert": "frontend 5xx ratio above 5% for 1m",
-   "model": "gemini-3.1-flash-lite",
-   "elapsed_s": 152.9,
+   "model": "gemini-flash-lite-latest",
+   "elapsed_s": 31.9,
    "usage": {
-    "calls": 1,
-    "prompt_tokens": 3821,
-    "completion_tokens": 17,
-    "retries": 1,
-    "failures": 10,
-    "wait_s": 30.0,
-    "total_tokens": 3838
+    "calls": 2,
+    "prompt_tokens": 7684,
+    "completion_tokens": 343,
+    "retries": 0,
+    "failures": 4,
+    "wait_s": 0.0,
+    "total_tokens": 8027
    },
    "trail": [
     {
      "step": "scan",
      "t": 0,
-     "dur": 0.76,
-     "health_evidence_id": "M-fbf7a4",
+     "dur": 0.69,
+     "health_evidence_id": "M-861f69",
      "graph_evidence_id": "T-0d8fb6",
      "suspects": [
       {
@@ -497,11 +461,11 @@
        ],
        "deepest": false,
        "health": {
-        "rps": 8.0,
+        "rps": 7.73,
         "error_ratio": 1.0,
-        "baseline_error_ratio": 0.18,
-        "p95_ms": 486.5,
-        "baseline_p95_ms": 879.7,
+        "baseline_error_ratio": 0.255,
+        "p95_ms": 477.7,
+        "baseline_p95_ms": 843.8,
         "up": 1.0
        }
       }
@@ -514,8 +478,8 @@
       "service": "cart",
       "level": "ERROR+WARN"
      },
-     "t": 0.76,
-     "dur": 0.33,
+     "t": 0.69,
+     "dur": 0.35,
      "evidence_ids": []
     },
     {
@@ -525,15 +489,15 @@
       "service": "frontend",
       "level": "ERROR+WARN"
      },
-     "t": 0.76,
-     "dur": 0.33,
+     "t": 0.69,
+     "dur": 0.35,
      "evidence_ids": [
-      "L-cd0cd2",
-      "L-f01ef2",
-      "L-830343",
-      "L-93cf17",
-      "L-8ef9e9",
-      "L-2b4228"
+      "L-764ed6",
+      "L-60c130",
+      "L-7c0d9f",
+      "L-4319cd",
+      "L-49ca65",
+      "L-21e69e"
      ]
     },
     {
@@ -542,30 +506,30 @@
      "args": {
       "service": "frontend"
      },
-     "t": 0.76,
-     "dur": 0.33,
+     "t": 0.69,
+     "dur": 0.35,
      "evidence_ids": [
-      "T-c72e23",
-      "T-925690",
-      "T-17d550",
-      "T-1a4db3",
-      "T-346799"
+      "T-748c16",
+      "T-48fa61",
+      "T-8d5009",
+      "T-4ea9d4",
+      "T-c3cd90"
      ]
     },
     {
      "step": "tool",
      "tool": "get_recent_changes",
      "args": {},
-     "t": 0.76,
-     "dur": 0.33,
+     "t": 0.69,
+     "dur": 0.35,
      "evidence_ids": []
     },
     {
      "step": "llm",
-     "t": 59.98,
+     "t": 20.61,
      "dur": 0,
      "engine": "adk",
-     "tokens": 3838,
+     "tokens": 3837,
      "model": "gemini-flash-lite-latest",
      "requested": [
       "get_logs"
@@ -581,45 +545,102 @@
      },
      "evidence_ids": [],
      "engine": "adk",
-     "t": 59.98,
+     "t": 20.61,
      "dur": 0.02
+    },
+    {
+     "step": "llm",
+     "t": 31.87,
+     "dur": 0,
+     "engine": "adk",
+     "tokens": 4190,
+     "model": "gemini-flash-lite-latest",
+     "requested": [
+      "submit_diagnosis"
+     ]
     }
    ],
    "topology_suspects": [
     "cart",
     "frontend"
    ],
-   "verdict": "FAILED",
-   "error": "ServiceUnavailableError: litellm.ServiceUnavailableError: ServiceUnavailableError: OpenAIException - Error code: 503",
-   "root_cause_service": null,
-   "fault_type": null,
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "cart",
+   "fault_type": "crash_or_unreachable",
    "ranked_candidates": [
     "cart",
     "frontend"
    ],
+   "confidence": 1.0,
+   "summary": "The frontend service is experiencing 5xx errors due to the cart service being down (up = 0.0) and unreachable, causing connection refused errors.",
+   "claims": [
+    {
+     "quote": "\"cart\": {\"rps\": 0.0, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": null, \"baseline_p95_ms\": 23.9, \"up\": 0.0}",
+     "evidence_ids": [
+      "M-861f69"
+     ],
+     "text": "The cart service is down (up = 0.0, rps = 0.0).",
+     "is_root_cause_claim": true,
+     "evidence": [
+      {
+       "id": "M-861f69",
+       "kind": "metric",
+       "ref": "service_health_scan",
+       "text": "{\"frontend\": {\"rps\": 7.73, \"error_ratio\": 1.0, \"baseline_error_ratio\": 0.255, \"p95_ms\": 477.7, \"baseline_p95_ms\": 843.8, \"up\": 1.0}, \"currency\": {\"rps\": 15.51, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.101, \"p95_ms\": 23.9, \"baseline_p95_ms\": 23.8, \"up\": 1.0}, \"catalog\": {\"rps\": 15.53, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.117, \"p95_ms\": 200.0, \"baseline_p95_ms\": 218.9, \"up\": 1.0}, \"payment\": {\"rps\": 0.0, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": null, \"baseline_p95_ms\": 23.8, \"up\": 1.0}, \"checkout\": {\"rps\": 0.0, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": null, \"baseline_p95_ms\": 474.0, \"up\": 1.0}, \"recommendation\": {\"rps\": 7.8, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 237.5, \"baseline_p95_ms\": 240.5, \"up\": 1.0}, \"shipping\": {\"rps\": 0.0, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": null, \"baseline_p95_ms\": 74.4, \"up\": 1.0}, \"inventory\": {\"rps\": 15.51, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": 23.9, \"baseline_p95_ms\": 24.0, \"up\": 1.0}, \"cart\": {\"rps\": 0.0, \"error_ratio\": 0.0, \"baseline_error_ratio\": 0.0, \"p95_ms\": null, \"baseline_p95_ms\": 23.9, \"up\": 0.0}}",
+       "meta": {
+        "source": "prometheus"
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [
+    {
+     "is_root_cause_claim": false,
+     "quote": "\"msg\": \"connection refused: cart:8000 (dial tcp: connect: connection refused)\"",
+     "evidence_ids": [
+      "L-764ed6"
+     ],
+     "text": "Frontend service logs show persistent connection refused errors when attempting to reach the cart service.",
+     "rejected_because": [
+      "quoted text not found in cited evidence"
+     ]
+    }
+   ],
+   "evidence_precision": 0.5,
+   "rejected_hypotheses": [],
+   "suggested_action": {
+    "service": "cart",
+    "action": "start_service",
+    "why": "Start the cart service so that the frontend can successfully connect to it.",
+    "risk": "risky",
+    "description": "Starts a stopped service container",
+    "dry_run": "docker compose start cart"
+   },
+   "evidence_items": 13,
    "health": {
     "frontend": {
-     "rps": 8.0,
+     "rps": 7.73,
      "error_ratio": 1.0,
-     "baseline_error_ratio": 0.18,
-     "p95_ms": 486.5,
-     "baseline_p95_ms": 879.7,
+     "baseline_error_ratio": 0.255,
+     "p95_ms": 477.7,
+     "baseline_p95_ms": 843.8,
      "up": 1.0
     },
     "currency": {
-     "rps": 15.69,
+     "rps": 15.51,
      "error_ratio": 0.0,
-     "baseline_error_ratio": 0.11,
-     "p95_ms": 24.0,
-     "baseline_p95_ms": 23.7,
+     "baseline_error_ratio": 0.101,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 23.8,
      "up": 1.0
     },
     "catalog": {
-     "rps": 15.71,
+     "rps": 15.53,
      "error_ratio": 0.0,
-     "baseline_error_ratio": 0.128,
-     "p95_ms": 207.6,
-     "baseline_p95_ms": 224.4,
+     "baseline_error_ratio": 0.117,
+     "p95_ms": 200.0,
+     "baseline_p95_ms": 218.9,
      "up": 1.0
     },
     "payment": {
@@ -627,7 +648,7 @@
      "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
      "p95_ms": null,
-     "baseline_p95_ms": 23.9,
+     "baseline_p95_ms": 23.8,
      "up": 1.0
     },
     "checkout": {
@@ -635,15 +656,15 @@
      "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
      "p95_ms": null,
-     "baseline_p95_ms": 478.6,
+     "baseline_p95_ms": 474.0,
      "up": 1.0
     },
     "recommendation": {
-     "rps": 7.84,
+     "rps": 7.8,
      "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
-     "p95_ms": 240.7,
-     "baseline_p95_ms": 246.0,
+     "p95_ms": 237.5,
+     "baseline_p95_ms": 240.5,
      "up": 1.0
     },
     "shipping": {
@@ -651,11 +672,11 @@
      "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
      "p95_ms": null,
-     "baseline_p95_ms": 79.7,
+     "baseline_p95_ms": 74.4,
      "up": 1.0
     },
     "inventory": {
-     "rps": 15.85,
+     "rps": 15.51,
      "error_ratio": 0.0,
      "baseline_error_ratio": 0.0,
      "p95_ms": 23.9,
@@ -759,27 +780,28 @@
      ],
      "deepest": false,
      "health": {
-      "rps": 8.0,
+      "rps": 7.73,
       "error_ratio": 1.0,
-      "baseline_error_ratio": 0.18,
-      "p95_ms": 486.5,
-      "baseline_p95_ms": 879.7,
+      "baseline_error_ratio": 0.255,
+      "p95_ms": 477.7,
+      "baseline_p95_ms": 843.8,
       "up": 1.0
      }
     }
    ],
    "engine": "adk",
    "score": {
-    "top1": false,
+    "top1": true,
     "top3": true,
-    "type_ok": false,
+    "type_ok": true,
     "inconclusive": false,
-    "failed": true
+    "failed": false
    }
   }
  },
  "window": [
-  1795618813.019587,
-  1795618933.019587
- ]
+  1795620557.1573584,
+  1795620677.1573584
+ ],
+ "rerun_note": "Re-run on 25 Nov: the first attempt hit Google Gemini HTTP 503 'high demand' on every model for at least one method (kept in results/runs_hard_attempt1/)."
 }

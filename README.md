@@ -106,35 +106,31 @@ python -m pytest -q tests          # offline tests: evidence gate, redaction, sa
 
 ## Evaluation
 
-### Results so far
+### Results (re-run 25 Nov 2026, after the code review fixes)
+
+Every method investigates **one frozen 120-second telemetry window** per scenario; the deploy/config event log is reset between scenarios; the dashboard rule treats a service Prometheus cannot scrape (`up == 0`) as down. Raw runs are in `results/runs/` and `results/runs_hard/`.
 
 **Standard set** (12 faults, 6 fault types; [`results/SCORECARD.md`](results/SCORECARD.md)):
 
 | Method | Right service | Right service + fault type |
 |---|---|---|
-| **EvidenceTrail** | **12/12** | **12/12** |
+| **EvidenceTrail (native)** | **12/12** | **12/12** |
+| **EvidenceTrail (Google ADK)** | 10/12 | 10/12 (S07, S08 lost to Gemini HTTP 503 on every model) |
 | B0 single-prompt Gemini | 12/12 | 10/12 (called both bad deploys "code error") |
-| B1 dashboard rule | 8/12 | n/a |
-
-The evidence gate blocked 7 of 30 claims Gemini proposed (fabricated or misquoted citations).
+| B1 dashboard rule | 10/12 | n/a |
 
 **Hard set** (6 faults with red-herring log noise and silent faults; [`results/SCORECARD_HARD.md`](results/SCORECARD_HARD.md)):
 
 | Method | Right service | Confident wrong answers |
 |---|---|---|
-| **EvidenceTrail** | **5/6** (plus 1 correct answer withheld as INCONCLUSIVE) | **0** |
-| B0 single-prompt Gemini | 3/6 | 2 (including a service that does not exist) |
-| B1 dashboard rule | 3/6 | 3 |
+| **EvidenceTrail (native)** | **5/6** (+1 correct service withheld as INCONCLUSIVE) | **0** |
+| **EvidenceTrail (Google ADK)** | **6/6** | **0** |
+| B0 single-prompt Gemini | 4/6 | 2 (including a service that does not exist) |
+| B1 dashboard rule | 5/6 | 1 |
 
-H03 and H05 were re-run after Google returned HTTP 503 "high demand" on every model. The first attempts are kept in `results/runs_hard_attempt1/`.
+Across all 18 faults: **0 confident wrong answers for EvidenceTrail** (both engines) vs 2 for single-prompt Gemini and 3 for the dashboard rule. The evidence gate blocked **9 of 80** claims across both engines. The native engine used 1–4 Gemini calls per incident (median 2).
 
-
-The scorecard compares three methods on the same faults, telemetry window and conditions:
-- **B1, dashboard rule:** blame the service with the largest error-ratio (or p95) jump. This is how dashboard triage works.
-- **B0, single-prompt Gemini:** the alert plus raw logs in one call, with no tools. This is "paste logs into a chat model".
-- **EvidenceTrail.**
-
-It reports top-1 and top-3 accuracy with 95% Wilson intervals, fault-type accuracy, inconclusive and failed counts, time, tokens, evidence precision and every individual scenario, misses included. See [`results/SCORECARD.md`](results/SCORECARD.md).
+H01, H02, H04, H05 and H06 were re-run because the first attempt hit Google Gemini HTTP 503 "high demand" on every model for at least one method; first attempts are kept in `results/runs_hard_attempt1/`. B1 was re-scored on each scenario's saved window with the `up` rule (`eval/rescore_b1.py`; B1 makes no model calls). Results from before the fixes are archived in `results/archive_v1/` with a note on what was wrong.
 
 ## Demo video
 
