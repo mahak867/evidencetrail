@@ -1,6 +1,7 @@
 """Reproducible fault injection into the team's own Compose test environment."""
 from __future__ import annotations
 
+import os
 import subprocess
 
 import httpx
@@ -33,6 +34,10 @@ def inject(service: str, kind: str, **params) -> None:
 
 def clear_all() -> None:
     subprocess.run(["docker", "compose", "start"] + list(PORTS), check=True, capture_output=True)
+    # reset the deploy/config event log so one scenario's change can't leak into the next
+    ev = os.path.join(os.path.dirname(__file__), "..", "logs", "events.log")
+    if os.path.exists(ev):
+        open(ev, "w").close()
     for svc, port in PORTS.items():
         try:
             httpx.delete(f"http://localhost:{port}/admin/fault", timeout=5, trust_env=False)
