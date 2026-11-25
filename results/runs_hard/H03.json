@@ -1,0 +1,949 @@
+{
+ "scenario": {
+  "id": "H03",
+  "service": "payment",
+  "kind": "bad_deploy",
+  "params": {
+   "rate": "0.6"
+  },
+  "noise": [
+   "frontend",
+   "cart",
+   "recommendation"
+  ],
+  "alert": "checkout error rate above 5% for 1m (SLO burn)"
+ },
+ "truth": {
+  "service": "payment",
+  "fault_type": "bad_deploy"
+ },
+ "injected_at": 1795617861.6974356,
+ "methods": {
+  "B1_dashboard_rule": {
+   "method": "B1_dashboard_rule",
+   "root_cause_service": "payment",
+   "fault_type": null,
+   "ranked_candidates": [
+    "payment",
+    "checkout",
+    "frontend"
+   ],
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 0.0,
+   "usage": {
+    "total_tokens": 0,
+    "calls": 0
+   },
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": null,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "B0_single_prompt": {
+   "method": "B0_single_prompt",
+   "root_cause_service": "payment",
+   "fault_type": "code_error",
+   "ranked_candidates": [
+    "payment",
+    "checkout",
+    "frontend"
+   ],
+   "summary": "The payment service is throwing a TypeError ('cannot read property 'amount' of undefined') specifically tied to version v2.7.0-rc1, causing upstream checkout requests to fail with HTTP 500 errors and triggering the checkout error rate SLO burn.",
+   "verdict": "DIAGNOSIS",
+   "elapsed_s": 3.3,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 15748,
+    "completion_tokens": 117,
+    "retries": 0,
+    "failures": 4,
+    "wait_s": 2.2,
+    "total_tokens": 15865
+   },
+   "model": "gemini-flash-lite-latest",
+   "prompt_chars": 30930,
+   "error": null,
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": false,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail": {
+   "alert": "checkout error rate above 5% for 1m (SLO burn)",
+   "model": "gemini-flash-lite-latest",
+   "elapsed_s": 8.9,
+   "usage": {
+    "calls": 2,
+    "prompt_tokens": 9308,
+    "completion_tokens": 383,
+    "retries": 0,
+    "failures": 8,
+    "wait_s": 5.7,
+    "total_tokens": 9691
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "t": 0,
+     "dur": 0.82,
+     "health_evidence_id": "M-d4662f",
+     "graph_evidence_id": "T-fa0f15",
+     "suspects": [
+      {
+       "service": "payment",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 1.95,
+        "error_ratio": 0.607,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 22.5,
+        "baseline_p95_ms": 24.0,
+        "up": 1.0
+       }
+      },
+      {
+       "service": "checkout",
+       "anomalous_dependencies": [
+        "payment"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 2.0,
+        "error_ratio": 0.609,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 431.2,
+        "baseline_p95_ms": 1800.0,
+        "up": 1.0
+       }
+      },
+      {
+       "service": "frontend",
+       "anomalous_dependencies": [
+        "checkout"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 7.98,
+        "error_ratio": 0.157,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 796.8,
+        "baseline_p95_ms": 2254.3,
+        "up": 1.0
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "payment",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.82,
+     "dur": 0.31,
+     "evidence_ids": [
+      "L-14cc4b"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "checkout",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.82,
+     "dur": 0.31,
+     "evidence_ids": [
+      "L-7af6cd"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "frontend",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.82,
+     "dur": 0.31,
+     "evidence_ids": [
+      "L-4e8261",
+      "L-79cbe9",
+      "L-6e820c",
+      "L-679632",
+      "L-d18a18",
+      "L-bfd3ab"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "checkout"
+     },
+     "t": 0.82,
+     "dur": 0.31,
+     "evidence_ids": [
+      "T-8c60cf",
+      "T-fafb5f",
+      "T-586c13",
+      "T-9e66a8",
+      "T-85f69a"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "t": 0.82,
+     "dur": 0.31,
+     "evidence_ids": [
+      "C-007dc9"
+     ]
+    },
+    {
+     "step": "llm",
+     "t": 1.13,
+     "dur": 4.4,
+     "tokens": 4589,
+     "model": "gemini-flash-lite-latest",
+     "requested": [
+      "get_recent_changes"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "evidence_ids": [
+      "C-007dc9"
+     ],
+     "t": 5.53,
+     "dur": 0.0
+    },
+    {
+     "step": "llm",
+     "t": 5.53,
+     "dur": 3.41,
+     "tokens": 5102,
+     "model": "gemini-flash-lite-latest",
+     "requested": [
+      "submit_diagnosis"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "payment",
+    "checkout",
+    "frontend"
+   ],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "payment",
+   "fault_type": "bad_deploy",
+   "ranked_candidates": [
+    "payment",
+    "checkout",
+    "frontend"
+   ],
+   "confidence": 1.0,
+   "summary": "The checkout errors were caused by a bad deployment of the payment service (v2.7.0-rc1) which introduced a TypeError when trying to read property 'amount' of undefined. Rolling back the payment service deployment will resolve the incident.",
+   "claims": [
+    {
+     "quote": "TypeError: cannot read property 'amount' of undefined (v2.7.0-rc1)",
+     "evidence_ids": [
+      "L-14cc4b"
+     ],
+     "is_root_cause_claim": true,
+     "text": "The payment service throws TypeError exceptions due to a code bug in version v2.7.0-rc1.",
+     "evidence": [
+      {
+       "id": "L-14cc4b",
+       "kind": "log",
+       "ref": "payment.log:7873",
+       "text": "TypeError: cannot read property 'amount' of undefined (v2.7.0-rc1)",
+       "meta": {
+        "service": "payment",
+        "line": 7873,
+        "ts": "2026-11-25T14:45:19.908+00:00",
+        "level": "ERROR",
+        "trace_id": "b347dd45408be66766c40df17f8dcd1e",
+        "count_in_window": 73
+       }
+      }
+     ]
+    },
+    {
+     "evidence_ids": [
+      "T-8c60cf"
+     ],
+     "is_root_cause_claim": false,
+     "quote": "deepest failing service: payment",
+     "text": "Trace analysis confirms that the failures originate in the payment service and propagate up through checkout and frontend.",
+     "evidence": [
+      {
+       "id": "T-8c60cf",
+       "kind": "trace",
+       "ref": "trace:64e6fa9ddb2753a4",
+       "text": "trace 64e6fa9ddb2753a4103ae338b89c1172: failing server spans in call order: frontend(502, 405.7ms) -> checkout(502, 132.2ms) -> payment(500, 0.7ms); deepest failing service: payment",
+       "meta": {
+        "trace_id": "64e6fa9ddb2753a4103ae338b89c1172",
+        "deepest": "payment"
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [
+    {
+     "is_root_cause_claim": true,
+     "evidence_ids": [
+      "C-007dc9"
+     ],
+     "quote": "DeploymentRolledOut, image: shopsim/payment:v2.7.0-rc1",
+     "text": "A deployment of payment service version v2.7.0-rc1 occurred immediately before errors started.",
+     "rejected_because": [
+      "quoted text not found in cited evidence"
+     ]
+    }
+   ],
+   "evidence_precision": 0.667,
+   "rejected_hypotheses": [],
+   "suggested_action": {
+    "service": "payment",
+    "why": "Rolling back the payment service deployment to the previous stable version (v2.6.3) will remove the TypeError code bug.",
+    "action": "rollback_deploy",
+    "risk": "risky",
+    "description": "Rolls the service back to its previous image",
+    "dry_run": "DELETE http://localhost:8105/admin/fault  (test env: roll back to v2.6.3)"
+   },
+   "evidence_items": 16,
+   "health": {
+    "cart": {
+     "rps": 10.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 24.0,
+     "up": 1.0
+    },
+    "frontend": {
+     "rps": 7.98,
+     "error_ratio": 0.157,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 796.8,
+     "baseline_p95_ms": 2254.3,
+     "up": 1.0
+    },
+    "currency": {
+     "rps": 19.38,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 23.9,
+     "up": 1.0
+    },
+    "catalog": {
+     "rps": 17.91,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 212.3,
+     "baseline_p95_ms": 222.5,
+     "up": 1.0
+    },
+    "payment": {
+     "rps": 1.95,
+     "error_ratio": 0.607,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 22.5,
+     "baseline_p95_ms": 24.0,
+     "up": 1.0
+    },
+    "checkout": {
+     "rps": 2.0,
+     "error_ratio": 0.609,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 431.2,
+     "baseline_p95_ms": 1800.0,
+     "up": 1.0
+    },
+    "recommendation": {
+     "rps": 7.95,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 240.4,
+     "baseline_p95_ms": 240.7,
+     "up": 1.0
+    },
+    "shipping": {
+     "rps": 0.8,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 49.9,
+     "baseline_p95_ms": 1752.4,
+     "up": 1.0
+    },
+    "inventory": {
+     "rps": 17.85,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 23.9,
+     "up": 1.0
+    }
+   },
+   "edges": [
+    {
+     "caller": "catalog",
+     "callee": "currency",
+     "calls": 258
+    },
+    {
+     "caller": "catalog",
+     "callee": "inventory",
+     "calls": 258
+    },
+    {
+     "caller": "checkout",
+     "callee": "cart",
+     "calls": 58
+    },
+    {
+     "caller": "checkout",
+     "callee": "catalog",
+     "calls": 58
+    },
+    {
+     "caller": "checkout",
+     "callee": "currency",
+     "calls": 28
+    },
+    {
+     "caller": "checkout",
+     "callee": "payment",
+     "calls": 58
+    },
+    {
+     "caller": "checkout",
+     "callee": "shipping",
+     "calls": 28
+    },
+    {
+     "caller": "frontend",
+     "callee": "cart",
+     "calls": 100
+    },
+    {
+     "caller": "frontend",
+     "callee": "catalog",
+     "calls": 100
+    },
+    {
+     "caller": "frontend",
+     "callee": "checkout",
+     "calls": 58
+    },
+    {
+     "caller": "frontend",
+     "callee": "recommendation",
+     "calls": 100
+    },
+    {
+     "caller": "recommendation",
+     "callee": "catalog",
+     "calls": 100
+    },
+    {
+     "caller": "shipping",
+     "callee": "currency",
+     "calls": 28
+    }
+   ],
+   "suspects": [
+    {
+     "service": "payment",
+     "anomalous_dependencies": [],
+     "deepest": true,
+     "health": {
+      "rps": 1.95,
+      "error_ratio": 0.607,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 22.5,
+      "baseline_p95_ms": 24.0,
+      "up": 1.0
+     }
+    },
+    {
+     "service": "checkout",
+     "anomalous_dependencies": [
+      "payment"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 2.0,
+      "error_ratio": 0.609,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 431.2,
+      "baseline_p95_ms": 1800.0,
+      "up": 1.0
+     }
+    },
+    {
+     "service": "frontend",
+     "anomalous_dependencies": [
+      "checkout"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 7.98,
+      "error_ratio": 0.157,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 796.8,
+      "baseline_p95_ms": 2254.3,
+      "up": 1.0
+     }
+    }
+   ],
+   "engine": "native",
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  },
+  "EvidenceTrail_ADK": {
+   "alert": "checkout error rate above 5% for 1m (SLO burn)",
+   "model": "gemini-flash-lite-latest",
+   "elapsed_s": 314.2,
+   "usage": {
+    "calls": 1,
+    "prompt_tokens": 4541,
+    "completion_tokens": 317,
+    "retries": 0,
+    "failures": 4,
+    "wait_s": 0.0,
+    "total_tokens": 4858
+   },
+   "trail": [
+    {
+     "step": "scan",
+     "t": 0,
+     "dur": 0.84,
+     "health_evidence_id": "M-d4662f",
+     "graph_evidence_id": "T-fa0f15",
+     "suspects": [
+      {
+       "service": "payment",
+       "anomalous_dependencies": [],
+       "deepest": true,
+       "health": {
+        "rps": 1.95,
+        "error_ratio": 0.607,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 22.5,
+        "baseline_p95_ms": 24.0,
+        "up": 1.0
+       }
+      },
+      {
+       "service": "checkout",
+       "anomalous_dependencies": [
+        "payment"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 2.0,
+        "error_ratio": 0.609,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 431.2,
+        "baseline_p95_ms": 1800.0,
+        "up": 1.0
+       }
+      },
+      {
+       "service": "frontend",
+       "anomalous_dependencies": [
+        "checkout"
+       ],
+       "deepest": false,
+       "health": {
+        "rps": 7.98,
+        "error_ratio": 0.157,
+        "baseline_error_ratio": 0.0,
+        "p95_ms": 796.8,
+        "baseline_p95_ms": 2254.3,
+        "up": 1.0
+       }
+      }
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "payment",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.84,
+     "dur": 0.24,
+     "evidence_ids": [
+      "L-14cc4b"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "checkout",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.84,
+     "dur": 0.24,
+     "evidence_ids": [
+      "L-7af6cd"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_logs",
+     "args": {
+      "service": "frontend",
+      "level": "ERROR+WARN"
+     },
+     "t": 0.84,
+     "dur": 0.24,
+     "evidence_ids": [
+      "L-4e8261",
+      "L-79cbe9",
+      "L-6e820c",
+      "L-679632",
+      "L-d18a18",
+      "L-bfd3ab"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_error_traces",
+     "args": {
+      "service": "checkout"
+     },
+     "t": 0.84,
+     "dur": 0.24,
+     "evidence_ids": [
+      "T-8c60cf",
+      "T-fafb5f",
+      "T-586c13",
+      "T-9e66a8",
+      "T-85f69a"
+     ]
+    },
+    {
+     "step": "tool",
+     "tool": "get_recent_changes",
+     "args": {},
+     "t": 0.84,
+     "dur": 0.24,
+     "evidence_ids": [
+      "C-007dc9"
+     ]
+    },
+    {
+     "step": "llm",
+     "t": 314.17,
+     "dur": 0,
+     "engine": "adk",
+     "tokens": 4858,
+     "model": "gemini-flash-lite-latest",
+     "requested": [
+      "submit_diagnosis"
+     ]
+    }
+   ],
+   "topology_suspects": [
+    "payment",
+    "checkout",
+    "frontend"
+   ],
+   "verdict": "DIAGNOSIS",
+   "root_cause_service": "payment",
+   "fault_type": "bad_deploy",
+   "ranked_candidates": [
+    "payment",
+    "checkout",
+    "frontend"
+   ],
+   "confidence": 1.0,
+   "summary": "The checkout error rate spike was caused by a bad deployment of the payment service (v2.7.0-rc1), which introduced a TypeError ('cannot read property 'amount' of undefined') that causes payment processing requests to fail with HTTP 500 errors.",
+   "claims": [
+    {
+     "text": "The payment service experienced a code error caused by a TypeError in version v2.7.0-rc1.",
+     "quote": "TypeError: cannot read property 'amount' of undefined (v2.7.0-rc1)",
+     "evidence_ids": [
+      "L-14cc4b"
+     ],
+     "is_root_cause_claim": true,
+     "evidence": [
+      {
+       "id": "L-14cc4b",
+       "kind": "log",
+       "ref": "payment.log:7873",
+       "text": "TypeError: cannot read property 'amount' of undefined (v2.7.0-rc1)",
+       "meta": {
+        "service": "payment",
+        "line": 7873,
+        "ts": "2026-11-25T14:45:19.908+00:00",
+        "level": "ERROR",
+        "trace_id": "b347dd45408be66766c40df17f8dcd1e",
+        "count_in_window": 73
+       }
+      }
+     ]
+    },
+    {
+     "quote": "shopsim/payment:v2.7.0-rc1",
+     "is_root_cause_claim": true,
+     "evidence_ids": [
+      "C-007dc9"
+     ],
+     "text": "The error started immediately after deploying version v2.7.0-rc1 of the payment service.",
+     "evidence": [
+      {
+       "id": "C-007dc9",
+       "kind": "change",
+       "ref": "events.log:1",
+       "text": "{\"ts\": \"2026-11-25T14:44:21.696+00:00\", \"service\": \"payment\", \"kind\": \"DeploymentRolledOut\", \"image\": \"shopsim/payment:v2.7.0-rc1\", \"previous\": \"shopsim/payment:v2.6.3\", \"author\": \"ci-pipeline\"}",
+       "meta": {
+        "ts": "2026-11-25T14:44:21.696+00:00",
+        "service": "payment",
+        "kind": "DeploymentRolledOut",
+        "image": "shopsim/payment:v2.7.0-rc1",
+        "previous": "shopsim/payment:v2.6.3",
+        "author": "ci-pipeline"
+       }
+      }
+     ]
+    }
+   ],
+   "dropped_claims": [],
+   "evidence_precision": 1.0,
+   "rejected_hypotheses": [],
+   "suggested_action": {
+    "why": "Rollback payment service to the previous stable version (v2.6.3) to resolve the TypeError caused by v2.7.0-rc1.",
+    "service": "payment",
+    "action": "rollback_deploy",
+    "risk": "risky",
+    "description": "Rolls the service back to its previous image",
+    "dry_run": "DELETE http://localhost:8105/admin/fault  (test env: roll back to v2.6.3)"
+   },
+   "evidence_items": 16,
+   "health": {
+    "cart": {
+     "rps": 10.0,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 24.0,
+     "up": 1.0
+    },
+    "frontend": {
+     "rps": 7.98,
+     "error_ratio": 0.157,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 796.8,
+     "baseline_p95_ms": 2254.3,
+     "up": 1.0
+    },
+    "currency": {
+     "rps": 19.38,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 23.9,
+     "up": 1.0
+    },
+    "catalog": {
+     "rps": 17.91,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 212.3,
+     "baseline_p95_ms": 222.5,
+     "up": 1.0
+    },
+    "payment": {
+     "rps": 1.95,
+     "error_ratio": 0.607,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 22.5,
+     "baseline_p95_ms": 24.0,
+     "up": 1.0
+    },
+    "checkout": {
+     "rps": 2.0,
+     "error_ratio": 0.609,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 431.2,
+     "baseline_p95_ms": 1800.0,
+     "up": 1.0
+    },
+    "recommendation": {
+     "rps": 7.95,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 240.4,
+     "baseline_p95_ms": 240.7,
+     "up": 1.0
+    },
+    "shipping": {
+     "rps": 0.8,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 49.9,
+     "baseline_p95_ms": 1752.4,
+     "up": 1.0
+    },
+    "inventory": {
+     "rps": 17.85,
+     "error_ratio": 0.0,
+     "baseline_error_ratio": 0.0,
+     "p95_ms": 23.9,
+     "baseline_p95_ms": 23.9,
+     "up": 1.0
+    }
+   },
+   "edges": [
+    {
+     "caller": "catalog",
+     "callee": "currency",
+     "calls": 258
+    },
+    {
+     "caller": "catalog",
+     "callee": "inventory",
+     "calls": 258
+    },
+    {
+     "caller": "checkout",
+     "callee": "cart",
+     "calls": 58
+    },
+    {
+     "caller": "checkout",
+     "callee": "catalog",
+     "calls": 58
+    },
+    {
+     "caller": "checkout",
+     "callee": "currency",
+     "calls": 28
+    },
+    {
+     "caller": "checkout",
+     "callee": "payment",
+     "calls": 58
+    },
+    {
+     "caller": "checkout",
+     "callee": "shipping",
+     "calls": 28
+    },
+    {
+     "caller": "frontend",
+     "callee": "cart",
+     "calls": 100
+    },
+    {
+     "caller": "frontend",
+     "callee": "catalog",
+     "calls": 100
+    },
+    {
+     "caller": "frontend",
+     "callee": "checkout",
+     "calls": 58
+    },
+    {
+     "caller": "frontend",
+     "callee": "recommendation",
+     "calls": 100
+    },
+    {
+     "caller": "recommendation",
+     "callee": "catalog",
+     "calls": 100
+    },
+    {
+     "caller": "shipping",
+     "callee": "currency",
+     "calls": 28
+    }
+   ],
+   "suspects": [
+    {
+     "service": "payment",
+     "anomalous_dependencies": [],
+     "deepest": true,
+     "health": {
+      "rps": 1.95,
+      "error_ratio": 0.607,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 22.5,
+      "baseline_p95_ms": 24.0,
+      "up": 1.0
+     }
+    },
+    {
+     "service": "checkout",
+     "anomalous_dependencies": [
+      "payment"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 2.0,
+      "error_ratio": 0.609,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 431.2,
+      "baseline_p95_ms": 1800.0,
+      "up": 1.0
+     }
+    },
+    {
+     "service": "frontend",
+     "anomalous_dependencies": [
+      "checkout"
+     ],
+     "deepest": false,
+     "health": {
+      "rps": 7.98,
+      "error_ratio": 0.157,
+      "baseline_error_ratio": 0.0,
+      "p95_ms": 796.8,
+      "baseline_p95_ms": 2254.3,
+      "up": 1.0
+     }
+    }
+   ],
+   "engine": "adk",
+   "score": {
+    "top1": true,
+    "top3": true,
+    "type_ok": true,
+    "inconclusive": false,
+    "failed": false
+   }
+  }
+ },
+ "window": [
+  1795617801.6975796,
+  1795617921.6975796
+ ]
+}
