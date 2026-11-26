@@ -61,7 +61,7 @@ async function waitForErrors(service, minRatio = 0.4, timeoutMs = 150000) {
   t0 = Date.now();
 
   mark('title');
-  await card(page, `<div class="k">CODERED '26 · NTT DATA Track B · PS2</div><h1>EvidenceTrail</h1><h2>Find the cause. Show the evidence.</h2>
+  await card(page, `<div class="k">CODERED '26 · Track 1 · Niveus Solutions (NTT DATA) · PS2</div><h1>EvidenceTrail</h1><h2>Find the cause. Show the evidence.</h2>
     <p>A Google Gemini incident investigator for on-call engineers, built on one rule: <b style="color:#f0efec">no evidence, no claim.</b></p>
     <div class="m">Team EvidenceTrail · Chennai Institute of Technology</div>`, 6000);
 
@@ -152,11 +152,11 @@ async function waitForErrors(service, minRatio = 0.4, timeoutMs = 150000) {
   await sleep(5000);
 
   mark('results');
-  await card(page, `<div class="k">Measured results</div><h2 style="margin-top:10px">Same injected faults, same telemetry, every miss reported</h2>
+  await card(page, `<div class="k">Measured results · 18 injected faults</div><h2 style="margin-top:10px">Same faults, one frozen telemetry window for every method, every miss reported</h2>
     <div class="row"><div class="s"><b>12/12</b><span>right service and fault type on the standard set (single-prompt Gemini: 10/12 fault type)</span></div>
-    <div class="s"><b>0 vs 2</b><span>confident wrong answers on the hard set (noisy logs, silent faults): EvidenceTrail vs single-prompt Gemini</span></div>
-    <div class="s"><b>7 / 30</b><span>AI claims blocked by the evidence gate for citing evidence that was never fetched or was misquoted</span></div></div>
-    <div class="m">~2 Gemini calls per incident · secrets redacted before Gemini · read-only by default · open scorecard on GitHub</div>`, 10000);
+    <div class="s"><b>0 vs 2</b><span>confident wrong answers across all 18 faults: EvidenceTrail vs single-prompt Gemini (dashboard rule: 3)</span></div>
+    <div class="s"><b>9 / 80</b><span>AI claims blocked by the evidence gate for citing evidence never fetched or misquoting it</span></div></div>
+    <div class="m">1–4 Gemini calls per incident (median 2) · runs natively or on Google ADK · MCP server for Claude / Gemini CLI · secrets redacted</div>`, 10000);
 
   mark('team');
   await card(page, `<div class="k">Team EvidenceTrail · Chennai Institute of Technology</div><h2 style="margin-top:10px">Everyone owns a part</h2>

@@ -5,3 +5,4 @@
 {"ts": 1795103525.629107, "event": "fault_injected", "service": "payment", "kind": "bad_deploy"}
 {"ts": 1795103583.0055966, "event": "investigation_started", "id": "03a8f8f7", "alert": "checkout error rate above 5% for 1m (SLO burn)"}
 {"ts": 1795103637.7758555, "event": "faults_cleared"}
+{"ts": 1795673090.5246933, "event": "faults_cleared"}

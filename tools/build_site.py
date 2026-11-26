@@ -12,7 +12,7 @@ banner = f'''<div id="staticbar" style="position:sticky;top:0;z-index:15;display
 reps = [
     ('<div class="shell">', banner + '\n<div class="shell">'),
     ('<script>\nconst $ = s =>', '<script src="static-shim.js"></script>\n<script src="tour.js"></script>\n<script>\nconst $ = s =>'),
-    ('<title>EvidenceTrail</title>', '<title>EvidenceTrail</title>\n<meta name="description" content="EvidenceTrail: evidence-backed incident investigation powered by Google Gemini. CODERED \'26, NTT DATA Track B.">'),
+    ('<title>EvidenceTrail</title>', '<title>EvidenceTrail</title>\n<meta name="description" content="EvidenceTrail: evidence-backed incident investigation powered by Google Gemini. CODERED \'26, Track 1 (Niveus Solutions, NTT DATA), PS2.">'),
     ('  await loadRecorded(); go(location.hash.slice(1)||"investigate");', '''  await loadRecorded(); go(location.hash.slice(1)||"investigate");
   window.__staticNote = m => toast(m);
   if (!location.hash || location.hash === "#investigate") { $("#recorded").value = "0"; $("#recorded").dispatchEvent(new Event("change")); }'''),
