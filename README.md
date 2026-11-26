@@ -134,7 +134,7 @@ H01, H02, H04, H05 and H06 were re-run because the first attempt hit Google Gemi
 
 ## Demo video
 
-[`docs/demo/EvidenceTrail_demo.mp4`](docs/demo/EvidenceTrail_demo.mp4) (2:27): a live run on the test environment. A bad deploy of payment is injected, Gemini diagnoses it with cited evidence, and the rollback runs after a named approval. Subtitles: `docs/demo/EvidenceTrail_demo.srt`.
+[`docs/demo/EvidenceTrail_demo.mp4`](docs/demo/EvidenceTrail_demo.mp4) (2:10): a live run on the test environment. A bad deploy of payment is injected, Gemini diagnoses it with cited evidence, and the rollback runs after a named approval. Subtitles: `docs/demo/EvidenceTrail_demo.srt`.
 
 ## Recording the demo video
 
