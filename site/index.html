@@ -510,8 +510,10 @@ function topology(el, health, edges, rc, suspects){
   const st={}; nodes.forEach(n=>st[n]= health ? statusOf(health[n]) : ((suspects||[]).includes(n) ? {k:"critical",l:"Anomalous",ic:"alert"} : {k:"neutral",l:"Not captured",ic:"x"}));
   const color=k=>css(k==="neutral"?"--axis":"--"+k);
   const bad=n=>st[n].k==="critical"||st[n].k==="warning";
-  // origin = failing service whose own dependencies are healthy (deepest failure)
-  const origin=new Set(nodes.filter(n=>bad(n)&&!(out[n]||[]).some(e=>bad(e.callee))));
+  // origin = deepest failing service: erroring (or down) while its own dependencies are not.
+  // Slow-only services count only when nothing is erroring. With a diagnosis, the root cause is the origin.
+  const crit=n=>st[n].k==="critical", anyCrit=nodes.some(crit), fails=n=>anyCrit?crit(n):bad(n);
+  const origin=new Set(rc&&nodes.includes(rc) ? [rc] : nodes.filter(n=>fails(n)&&!(out[n]||[]).some(e=>fails(e.callee))));
   const W=1160, nodeW=222, nodeH=86, gapY=26, padTop=58, colW=(W-nodeW-40)/Math.max(1,L.length-1);
   const H=Math.max(...layers.map(ly=>ly.length))*(nodeH+gapY)+padTop+20;
   const pos={}; layers.forEach((ly,li)=>{ const tot=ly.length*(nodeH+gapY)-gapY, off=padTop+(H-padTop-20-tot)/2; ly.forEach((n,k)=>pos[n]={x:20+li*colW, y:off+k*(nodeH+gapY)}); });
@@ -573,7 +575,7 @@ function topology(el, health, edges, rc, suspects){
   const summary=health?`<div class="row" style="gap:10px;margin-bottom:10px;flex-wrap:wrap">
       <span class="chip">${nodes.length} services</span><span class="chip">${tot.toFixed(1)} req/s total</span>
       <span class="status st-${nBad?"critical":"good"}"><span class="sw"></span>${nBad?nBad+" failing or slow":"all healthy"}</span>
-      ${origin.size?`<span class="chip" style="border-color:${color("critical")}">failure origin: <b style="margin-left:4px">${esc([...origin].join(", "))}</b></span>`:""}
+      ${origin.size?`<span class="chip" style="border-color:${color("critical")}">${rc?"root cause":"failure origin"}: <b style="margin-left:4px">${esc([...origin].join(", "))}</b></span>`:""}
       ${worst&&(health[worst].error_ratio||0)>0.05?`<span class="chip">worst error ratio: ${esc(worst)} ${fmtV(health[worst].error_ratio,"pct")}</span>`:""}</div>`:"";
   el.innerHTML = summary + s + `<div class="legend"><span><i class="sw" style="background:${color("good")}"></i>Healthy</span><span><i class="sw" style="background:${color("warning")}"></i>Slow</span>
     <span><i class="sw" style="background:${color("critical")}"></i>Errors / down</span>

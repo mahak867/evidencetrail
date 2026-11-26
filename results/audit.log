@@ -6,3 +6,8 @@
 {"ts": 1795103583.0055966, "event": "investigation_started", "id": "03a8f8f7", "alert": "checkout error rate above 5% for 1m (SLO burn)"}
 {"ts": 1795103637.7758555, "event": "faults_cleared"}
 {"ts": 1795673090.5246933, "event": "faults_cleared"}
+{"ts": 1795673172.308545, "event": "fault_injected", "service": "payment", "kind": "bad_deploy"}
+{"ts": 1795673216.9688816, "event": "investigation_started", "id": "0bb8d580", "alert": "checkout error rate above 5% for 1m (SLO burn)"}
+{"ts": 1795673255.818987, "event": "action_executed", "id": "0bb8d580", "action": {"why": "The payment service deployment v2.7.0-rc1 introduced a code error causing 500 responses. Rolling back to the previous version should resolve the issue.", "action": "rollback_deploy", "service": "payment", "risk": "risky", "description": "Rolls the service back to its previous image", "dry_run": "DELETE http://localhost:8105/admin/fault  (test env: roll back to v2.6.3)"}, "result": {"executed": true, "command": "DELETE http://localhost:8105/admin/fault  (test env: roll back to v2.6.3)", "approved_by": "On-call: Annika"}}
+{"ts": 1795673432.1190748, "event": "faults_cleared"}
+{"ts": 1795673456.5785825, "event": "faults_cleared"}

@@ -58,6 +58,7 @@ async function waitForErrors(service, minRatio = 0.4, timeoutMs = 150000) {
   const ctx = await browser.newContext({ viewport: { width: W, height: H }, recordVideo: { dir: 'video_raw', size: { width: W, height: H } } });
   await ctx.addInitScript(() => { try { localStorage.setItem('et-theme', 'dark') } catch (e) {} });
   const page = await ctx.newPage();
+  await page.setContent("<body style=\"margin:0;background:#0d0d0d\"></body>"); await sleep(800);
   t0 = Date.now();
 
   mark('title');
