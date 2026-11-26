@@ -146,7 +146,21 @@ pre.code{background:var(--code);border:1px solid var(--hair);border-radius:10px;
 
 /* ---------- topology ---------- */
 .topo{width:100%;height:auto;display:block}
-.topo .edge{fill:none;stroke:var(--axis);stroke-width:1.5}
+.topo .edge{fill:none;stroke:var(--axis);stroke-width:1.5;transition:opacity .15s}
+.topo .flow{fill:none;stroke:var(--s1);stroke-width:2.4;stroke-linecap:round;stroke-dasharray:2 11;animation:flow var(--d,2s) linear infinite;opacity:.85;transition:opacity .15s}
+.topo .flow.hot{stroke:var(--critical)}
+@keyframes flow{to{stroke-dashoffset:-26}}
+@media (prefers-reduced-motion: reduce){.topo .flow{animation:none}}
+.topo .node{transition:opacity .15s}
+.topo.focus .node:not(.lit){opacity:.25}
+.topo.focus .edge:not(.lit),.topo.focus .flow:not(.lit){opacity:.08}
+.topo .node{cursor:pointer}
+.eg [data-c],.eg [data-e],.eg [data-s],.eg path{transition:opacity .15s}
+.eg.focus [data-c]:not(.lit),.eg.focus [data-e]:not(.lit),.eg.focus [data-s]:not(.lit),.eg.focus path:not(.lit){opacity:.12}
+.dim-others [data-m]:not(.mlit){opacity:.2;transition:opacity .15s}
+#accLegend span[data-m],#timeChart .legend span[data-m]{cursor:pointer}
+.svc-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+.drawer .pcwrap svg.pc{max-height:118px}
 .topo .edge.hot{stroke:var(--critical);stroke-width:2}
 .topo .node rect{fill:var(--surface);stroke:var(--hair);stroke-width:1.5}
 .topo .node.rc rect{stroke:var(--critical);stroke-width:2.5}
@@ -485,34 +499,72 @@ function topology(el, health, edges, rc, suspects){
   nodes.forEach(n=>{ if(depth[n]==null) depth[n]=1; });
   const levels={}; nodes.forEach(n=>(levels[depth[n]]=levels[depth[n]]||[]).push(n));
   const L=Object.keys(levels).map(Number).sort((a,b)=>a-b);
-  const W=820, colW=W/L.length, nodeW=150, nodeH=48, rowH=64, maxRows=Math.max(...L.map(l=>levels[l].length));
+  const W=820, colW=W/L.length, nodeW=150, nodeH=54, rowH=70, maxRows=Math.max(...L.map(l=>levels[l].length));
   const H=Math.max(200, maxRows*rowH+30); const pos={};
   L.forEach((l,i)=>{ const arr=levels[l].sort(); const off=(H-arr.length*rowH)/2; arr.forEach((n,j)=>pos[n]={x:i*colW+(colW-nodeW)/2, y:off+j*rowH+(rowH-nodeH)/2}); });
   const st={}; nodes.forEach(n=>st[n]= health ? statusOf(health[n]) : ((suspects||[]).includes(n) ? {k:"critical",l:"Anomalous",ic:"alert"} : {k:"neutral",l:"Not captured",ic:"x"}));
   const color=k=>css(k==="neutral"?"--axis":"--"+k);
-  let s=`<svg class="topo" viewBox="0 0 ${W} ${H}" role="img" aria-label="Service call graph">
+  const maxRps=Math.max(1,...nodes.map(n=>health?.[n]?.rps||0));
+  let s=`<svg class="topo" viewBox="0 0 ${W} ${H}" role="img" aria-label="Service call graph. Animated dots show request flow; red paths are failing.">
     <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="${color("axis")}"/></marker>
     <marker id="ahot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="${color("critical")}"/></marker></defs>`;
   edges.forEach(e=>{ const a=pos[e.caller], b=pos[e.callee]; if(!a||!b) return;
     const x1=a.x+nodeW, y1=a.y+nodeH/2, x2=b.x-2, y2=b.y+nodeH/2, mx=(x1+x2)/2;
-    const hot = st[e.callee].k!=="good" && st[e.caller].k!=="good";
+    const hot = st[e.callee].k!=="good" && st[e.caller].k!=="good" && st[e.callee].k!=="neutral";
     const back = x2<x1; const d = back ? `M${a.x+nodeW/2} ${a.y+nodeH} C ${a.x+nodeW/2} ${a.y+nodeH+40}, ${b.x+nodeW/2} ${b.y+nodeH+40}, ${b.x+nodeW/2} ${b.y+nodeH+2}` : `M${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
-    s+=`<path class="edge ${hot?"hot":""}" d="${d}" marker-end="url(#${hot?"ahot":"ah"})"/>`; });
+    const rps=health?.[e.callee]?.rps||0, dur=rps?Math.max(0.7, 3.2-Math.log10(1+rps)*1.6):0;
+    s+=`<path class="edge ${hot?"hot":""}" data-a="${esc(e.caller)}" data-b="${esc(e.callee)}" d="${d}" marker-end="url(#${hot?"ahot":"ah"})"/>`;
+    if(dur) s+=`<path class="flow ${hot?"hot":""}" data-a="${esc(e.caller)}" data-b="${esc(e.callee)}" d="${d}" style="--d:${dur.toFixed(2)}s"/>`; });
   nodes.forEach(n=>{ const p=pos[n], h=health?.[n]||{}, k=st[n];
-    const sub = !health ? (st[n].k==="critical"?"flagged by scan":"—") : !h.rps ? "no traffic" : `${(h.error_ratio*100).toFixed(0)}% err · p95 ${Math.round(h.p95_ms??0)}ms`;
-    s+=`<g class="node ${n===rc?"rc":""}" data-n="${esc(n)}" transform="translate(${p.x},${p.y})">
-      <rect width="${nodeW}" height="${nodeH}" rx="11" ${health&&k.k==="critical"&&!h.rps?'stroke-dasharray="5 4"':''}/>
-      <circle cx="16" cy="${nodeH/2}" r="5" fill="${color(k.k)}"/>
-      <text x="28" y="19">${esc(n)}${n===rc?" · root cause":""}</text><text class="sub" x="28" y="35">${esc(sub)}</text></g>`; });
+    const sub = !health ? (st[n].k==="critical"?"flagged by scan":"—") : h.up===0 ? "down (no scrape)" : !h.rps ? "no traffic" : `${(h.error_ratio*100).toFixed(0)}% err · p95 ${Math.round(h.p95_ms??0)}ms`;
+    const er=Math.min(1,h.error_ratio||0), tw=(h.rps||0)/maxRps;
+    s+=`<g class="node ${n===rc?"rc":""}" data-n="${esc(n)}" transform="translate(${p.x},${p.y})" tabindex="0" role="button" aria-label="${esc(n)}: ${esc(st[n].l)}">
+      <rect width="${nodeW}" height="${nodeH}" rx="11" ${health&&(h.up===0||(k.k==="critical"&&!h.rps))?'stroke-dasharray="5 4"':''}/>
+      <circle cx="16" cy="18" r="5" fill="${color(k.k)}"/>
+      <text x="28" y="22">${esc(n)}${n===rc?" · root cause":""}</text><text class="sub" x="28" y="37">${esc(sub)}</text>
+      ${health?`<rect x="12" y="${nodeH-9}" width="${nodeW-24}" height="3" rx="1.5" fill="${css("--surface-3")}"/><rect x="12" y="${nodeH-9}" width="${(nodeW-24)*tw}" height="3" rx="1.5" fill="${css("--s1")}" opacity=".7"/>
+      ${er>0?`<rect x="12" y="${nodeH-9}" width="${(nodeW-24)*tw*er}" height="3" rx="1.5" fill="${color("critical")}"/>`:""}`:""}</g>`; });
   s+="</svg>";
   el.innerHTML = s + `<div class="legend"><span><i class="sw" style="background:${color("good")}"></i>Healthy</span><span><i class="sw" style="background:${color("warning")}"></i>Slow</span>
     <span><i class="sw" style="background:${color("critical")}"></i>Errors / down</span>${rc?`<span><svg width="22" height="12"><rect x="1" y="1" width="20" height="10" rx="4" fill="none" stroke="${color("critical")}" stroke-width="2"/></svg>Root cause</span>`:""}
-    <span><svg width="26" height="10"><path d="M1 5h20" stroke="${color("critical")}" stroke-width="2"/><path d="M19 1l5 4-5 4z" fill="${color("critical")}"/></svg>Failure path</span></div>`;
+    <span><svg width="26" height="10"><path d="M1 5h20" stroke="${color("critical")}" stroke-width="2"/><path d="M19 1l5 4-5 4z" fill="${color("critical")}"/></svg>Failure path</span>
+    ${health?`<span><svg width="30" height="8"><rect y="2" width="30" height="3" rx="1.5" fill="${css("--s1")}" opacity=".7"/><rect y="2" width="11" height="3" rx="1.5" fill="${color("critical")}"/></svg>traffic share (red = failing)</span><span class="muted">dots flow faster with more requests/s · hover to trace · click for detail</span>`:""}</div>`;
+  const svg=el.querySelector("svg.topo");
+  const neigh=n=>{ const set=new Set([n]); edges.forEach(e=>{ if(e.caller===n) set.add(e.callee); if(e.callee===n) set.add(e.caller); }); return set; };
+  const focus=n=>{ const ns=neigh(n); svg.classList.add("focus");
+    svg.querySelectorAll(".node").forEach(g=>g.classList.toggle("lit", ns.has(g.dataset.n)));
+    svg.querySelectorAll(".edge,.flow").forEach(p=>p.classList.toggle("lit", p.dataset.a===n||p.dataset.b===n)); };
+  const unfocus=()=>{ svg.classList.remove("focus"); svg.querySelectorAll(".lit").forEach(x=>x.classList.remove("lit")); };
   el.querySelectorAll(".node").forEach(g=>{ const n=g.dataset.n, h=health?.[n]||{};
+    const callers=edges.filter(e=>e.callee===n).map(e=>e.caller), deps=edges.filter(e=>e.caller===n).map(e=>e.callee);
+    g.onmouseenter=()=>focus(n);
     g.onmousemove=e=>showTip(e,`<b>${esc(n)}</b> ${statusChip(st[n])}<div class="mrow" style="margin-top:6px"><span>Requests/s</span><b>${h.rps??0}</b></div>
       <div class="mrow"><span>Error ratio</span><b>${((h.error_ratio||0)*100).toFixed(1)}% <span class="muted">(was ${((h.baseline_error_ratio||0)*100).toFixed(1)}%)</span></b></div>
-      <div class="mrow"><span>p95 latency</span><b>${h.p95_ms??"–"} ms <span class="muted">(was ${h.baseline_p95_ms??"–"})</span></b></div>`);
-    g.onmouseleave=hideTip; });
+      <div class="mrow"><span>p95 latency</span><b>${h.p95_ms??"–"} ms <span class="muted">(was ${h.baseline_p95_ms??"–"})</span></b></div>
+      <div class="mrow"><span>Called by</span><b>${esc(callers.join(", ")||"—")}</b></div><div class="mrow"><span>Calls</span><b>${esc(deps.join(", ")||"—")}</b></div>
+      <div class="muted" style="margin-top:4px">click for charts</div>`);
+    g.onmouseleave=()=>{ unfocus(); hideTip(); };
+    g.onclick=()=>openSvc(n, health, edges);
+    g.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openSvc(n, health, edges); } }; });
+}
+
+/* ---------- service detail drawer ---------- */
+function openSvc(n, health, edges){
+  hideTip();
+  const h=(health||LASTH?.services||{})[n]||{}, k=statusOf(h), sv=SERIES?.services?.[n];
+  const callers=(edges||[]).filter(e=>e.callee===n).map(e=>e.caller), deps=(edges||[]).filter(e=>e.caller===n).map(e=>e.callee);
+  $("#drawer").innerHTML=`<div class="row" style="justify-content:space-between"><span class="chip">${icon("map")} service</span><button class="iconbtn" id="dclose" aria-label="Close">${icon("x")}</button></div>
+    <h3>${esc(n)} ${statusChip(k)}</h3>
+    <div class="svc-kpis"><div class="kpi"><div class="l">Error ratio</div><div class="v">${fmtV(h.error_ratio??0,"pct")}</div><div class="l">${delta(h.error_ratio,h.baseline_error_ratio,"pct")}</div></div>
+      <div class="kpi"><div class="l">p95 latency</div><div class="v">${fmtV(h.p95_ms,"ms")}</div><div class="l">${delta(h.p95_ms,h.baseline_p95_ms,"ms")}</div></div>
+      <div class="kpi"><div class="l">Requests/s</div><div class="v">${h.rps??0}</div><div class="l">${h.up===0?"<span class='no'>not scraped</span>":"scraped"}</div></div></div>
+    <div class="kv"><div>Called by</div><div>${esc(callers.join(", ")||"—")}</div><div>Calls</div><div>${esc(deps.join(", ")||"—")}</div></div>
+    ${sv?`<div class="svcpanel" data-svc="${esc(n)}" style="margin-top:14px">
+      <div class="pcwrap" data-label="Error ratio"><div class="pct">Error ratio · 10 min</div>${panelChart(errSeries(n),{unit:"pct",color:k.k==="critical"?"--critical":"--s1",area:true,minMax:0.1,ref:{v:0.05,label:"SLO 5%",color:"--critical"}})}</div>
+      <div class="pcwrap" data-label="p95 latency"><div class="pct">p95 latency · 10 min</div>${panelChart(sv.p95_ms,{unit:"ms",color:"--s2",minMax:50,ref:h.baseline_p95_ms!=null?{v:h.baseline_p95_ms,label:"baseline"}:null})}</div>
+      <div class="pcwrap" data-label="Requests/s"><div class="pct">Requests/s · 10 min</div>${panelChart(sv.rps,{unit:"rps",color:"--s3",bars:true,minMax:1})}</div></div>`
+      :`<p class="muted" style="font-size:12.5px">Time series appear in the Service map view.</p>`}`;
+  $("#drawer").classList.add("open"); $("#scrim").classList.add("open"); $("#dclose").onclick=closeEv; bindPanels();
 }
 
 /* ---------- investigate ---------- */
@@ -615,12 +667,19 @@ function timeline(r){
   const ev=(r.trail||[]).filter(t=>t.t!=null&&t.dur!=null);
   if(!ev.length){ $("#timeline").innerHTML=`<div class="empty" style="padding:18px">Step timing was not recorded for this run (added in newer runs).</div>`; return; }
   const total=Math.max(r.elapsed_s||0, ...ev.map(e=>e.t+e.dur))||1;
-  const W=460,rowH=24,P={l:150,r:16,t:6,b:26},H=P.t+ev.length*rowH+P.b,X=v=>P.l+v/total*(W-P.l-P.r);
+  const W=460,rowH=24,P={l:150,r:16,t:6,b:26},H=P.t+12+ev.length*rowH+P.b,X=v=>P.l+v/total*(W-P.l-P.r);
   const nice=[0.5,1,2,5,10,20,30,60,120,300].find(n=>total/n<=5)||600;
   let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Investigation timeline"><g class="grid">`;
   for(let v=0;v<=total+1e-9;v+=nice) s+=`<line x1="${X(v)}" x2="${X(v)}" y1="${P.t}" y2="${H-P.b}"/><text x="${X(v)}" y="${H-8}" text-anchor="middle">${+v.toFixed(1)}s</text>`;
   s+=`</g>`;
-  ev.forEach((e,i)=>{ const y=P.t+i*rowH+5, h=rowH-10, llm=e.step==="llm";
+  // phase bands: scan -> prefetch -> Gemini -> gate, from the recorded step times
+  { const llms=ev.filter(e=>e.step==="llm"), scan=ev.find(e=>e.step==="scan"), tools=ev.filter(e=>e.step==="tool");
+    const g0=llms.length?Math.min(...llms.map(e=>e.t)):null, g1=llms.length?Math.max(...llms.map(e=>e.t+e.dur)):null;
+    const ph=[["scan",0,scan?scan.dur:0,"--s3"],["prefetch",scan?scan.dur:0,g0??(tools.length?Math.max(...tools.map(e=>e.t+e.dur)):0),"--s2"],
+              ["Gemini",g0,g1,"--s1"],["gate",g1,total,"--good"]].filter(([,a,b])=>a!=null&&b!=null&&b-a>total*0.01);
+    ph.forEach(([n,a,b,c])=>{ s+=`<rect x="${X(a)}" y="${P.t}" width="${Math.max(1,X(b)-X(a))}" height="${H-P.t-P.b}" fill="${css(c)}" opacity=".07"/>
+      <text x="${(X(a)+X(b))/2}" y="${P.t+9}" text-anchor="middle" style="font-size:9.5px;font-weight:700;letter-spacing:.05em;fill:${css("--muted")}">${n.toUpperCase()} ${(b-a).toFixed(1)}s</text>`; }); }
+  ev.forEach((e,i)=>{ const y=P.t+12+i*rowH+5, h=rowH-10, llm=e.step==="llm";
     const name = llm ? `Gemini call ${ev.filter((x,j)=>j<=i&&x.step==="llm").length}` : e.step==="scan" ? "Health scan + call graph" : `${e.tool}(${Object.values(e.args||{})[0]??""})`;
     const w=Math.max(3, X(e.t+e.dur)-X(e.t));
     s+=`<text x="${P.l-8}" y="${y+h/2+4}" text-anchor="end" style="font-size:11px">${esc(name.length>22?name.slice(0,21)+"…":name)}</text>
@@ -646,11 +705,11 @@ function egraph(r){
   const W=980,colX=[20,400,760],rowH=46,H=Math.max(claims.length,evs.length,svcs.length)*rowH+30;
   const y=(i,n)=>15+i*rowH+(H-30-n*rowH)/2;
   const KCOL={log:"--s1",metric:"--s2",trace:"--s3",change:"--ink-2",missing:"--critical"};
-  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Evidence graph">`;
+  let s=`<svg class="chart eg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Evidence graph">`;
   const cy=claims.map((c,i)=>y(i,claims.length)+rowH/2-4), ey=new Map(evs.map((e,i)=>[e.id,y(i,evs.length)+rowH/2-4])), sy=new Map(svcs.map((v,i)=>[v,y(i,svcs.length)+rowH/2-4]));
   claims.forEach((c,i)=>(c.evidence_ids||[]).forEach(id=>{ const y2=ey.get(id); if(y2==null) return;
-    s+=`<path d="M${colX[0]+300} ${cy[i]} C ${colX[0]+350} ${cy[i]}, ${colX[1]-50} ${y2}, ${colX[1]} ${y2}" fill="none" stroke="${css(c.ok?"--good":"--critical")}" stroke-width="${c.ok?2:1.6}" ${c.ok?"":'stroke-dasharray="5 4"'} opacity=".75"/>`; }));
-  evs.forEach(e=>{ const y1=ey.get(e.id), y2=sy.get(svcOf(e)); s+=`<path d="M${colX[1]+250} ${y1} C ${colX[1]+290} ${y1}, ${colX[2]-40} ${y2}, ${colX[2]} ${y2}" fill="none" stroke="${css("--axis")}" stroke-width="1.5"/>`; });
+    s+=`<path data-pc="${i}" data-pe="${esc(id)}" d="M${colX[0]+300} ${cy[i]} C ${colX[0]+350} ${cy[i]}, ${colX[1]-50} ${y2}, ${colX[1]} ${y2}" fill="none" stroke="${css(c.ok?"--good":"--critical")}" stroke-width="${c.ok?2:1.6}" ${c.ok?"":'stroke-dasharray="5 4"'} opacity=".75"/>`; }));
+  evs.forEach(e=>{ const y1=ey.get(e.id), y2=sy.get(svcOf(e)); s+=`<path data-pe="${esc(e.id)}" data-ps="${esc(svcOf(e))}" d="M${colX[1]+250} ${y1} C ${colX[1]+290} ${y1}, ${colX[2]-40} ${y2}, ${colX[2]} ${y2}" fill="none" stroke="${css("--axis")}" stroke-width="1.5"/>`; });
   claims.forEach((c,i)=>{ const t=c.text.length>46?c.text.slice(0,45)+"…":c.text;
     s+=`<g data-c="${i}"><rect x="${colX[0]}" y="${cy[i]-16}" width="300" height="32" rx="8" fill="${css("--surface-2")}" stroke="${css(c.ok?"--good":"--critical")}" stroke-width="1.5" ${c.ok?"":'stroke-dasharray="5 4"'}/>
       <text x="${colX[0]+12}" y="${cy[i]+4}" style="font-size:12px;fill:${css("--ink")}">${c.ok?"✓":"✕"} ${esc(t)}</text></g>`; });
@@ -658,12 +717,25 @@ function egraph(r){
     s+=`<g data-e="${esc(e.id)}" style="cursor:pointer"><rect x="${colX[1]}" y="${yy-14}" width="250" height="28" rx="7" fill="${css("--surface")}" stroke="${css(KCOL[e.kind]||"--axis")}" stroke-width="1.8"/>
       <circle cx="${colX[1]+14}" cy="${yy}" r="5" fill="${css(KCOL[e.kind]||"--axis")}"/><text x="${colX[1]+26}" y="${yy+4}" class="mono" style="font:12px ui-monospace,monospace;fill:${css("--ink")}">${esc(String(e.ref).slice(0,30))}</text></g>`; });
   svcs.forEach(v=>{ const yy=sy.get(v), rc=v===r.root_cause_service;
-    s+=`<rect x="${colX[2]}" y="${yy-15}" width="190" height="30" rx="15" fill="${css(rc?"--critical":"--surface-2")}" opacity="${rc?.16:1}" stroke="${css(rc?"--critical":"--hair")}" stroke-width="${rc?2:1}"/>
-      <text x="${colX[2]+95}" y="${yy+4}" text-anchor="middle" style="font-size:12.5px;font-weight:700;fill:${css("--ink")}">${esc(v)}${rc?" · root cause":""}</text>`; });
+    s+=`<g data-s="${esc(v)}"><rect x="${colX[2]}" y="${yy-15}" width="190" height="30" rx="15" fill="${css(rc?"--critical":"--surface-2")}" opacity="${rc?.16:1}" stroke="${css(rc?"--critical":"--hair")}" stroke-width="${rc?2:1}"/>
+      <text x="${colX[2]+95}" y="${yy+4}" text-anchor="middle" style="font-size:12.5px;font-weight:700;fill:${css("--ink")}">${esc(v)}${rc?" · root cause":""}</text></g>`; });
   ["CLAIMS","EVIDENCE CITED","SERVICE"].forEach((h,i)=>{ s+=`<text x="${colX[i]}" y="10" style="font-size:10.5px;font-weight:700;letter-spacing:.06em;fill:${css("--muted")}">${h}</text>`; });
   s+="</svg>";
   el.innerHTML=s+`<div class="legend"><span><i class="sw" style="background:${css("--s1")}"></i>Log</span><span><i class="sw" style="background:${css("--s2")}"></i>Metric</span><span><i class="sw" style="background:${css("--s3")}"></i>Trace</span><span><i class="sw" style="background:${css("--ink-2")}"></i>Change</span><span><i class="sw" style="background:${css("--critical")}"></i>Never fetched</span><span class="muted">click an evidence box to open it</span></div>`;
   el.querySelectorAll("g[data-e]").forEach(g=>{ const e=ev.get(g.dataset.e); if(e&&e.kind!=="missing"){ EVID[e.id]=e; g.onclick=()=>openEv(e.id); } });
+  // hover any node: light up its whole claim -> evidence -> service path
+  const svgEl=el.querySelector("svg.eg");
+  const light=(cs,es,ss)=>{ svgEl.classList.add("focus");
+    svgEl.querySelectorAll("[data-c]").forEach(x=>x.classList.toggle("lit",cs.has(+x.dataset.c)));
+    svgEl.querySelectorAll("[data-e]").forEach(x=>x.classList.toggle("lit",es.has(x.dataset.e)));
+    svgEl.querySelectorAll("[data-s]").forEach(x=>x.classList.toggle("lit",ss.has(x.dataset.s)));
+    svgEl.querySelectorAll("path").forEach(x=>x.classList.toggle("lit",(x.dataset.pc!=null&&cs.has(+x.dataset.pc)&&es.has(x.dataset.pe))||(x.dataset.ps!=null&&es.has(x.dataset.pe)&&ss.has(x.dataset.ps)))); };
+  const clear=()=>{ svgEl.classList.remove("focus"); svgEl.querySelectorAll(".lit").forEach(x=>x.classList.remove("lit")); };
+  const fromClaims=cs=>{ const es=new Set(); cs.forEach(i=>(claims[i].evidence_ids||[]).forEach(id=>es.add(id))); const ss=new Set([...es].map(id=>ev.get(id)).filter(Boolean).map(svcOf)); light(cs,es,ss); };
+  svgEl.querySelectorAll("g[data-c]").forEach(g=>g.addEventListener("mouseenter",()=>fromClaims(new Set([+g.dataset.c]))));
+  svgEl.querySelectorAll("g[data-e]").forEach(g=>g.addEventListener("mouseenter",()=>{ const id=g.dataset.e; fromClaims(new Set(claims.map((c,i)=>(c.evidence_ids||[]).includes(id)?i:-1).filter(i=>i>=0))); }));
+  svgEl.querySelectorAll("g[data-s]").forEach(g=>g.addEventListener("mouseenter",()=>{ const v=g.dataset.s; const es=new Set(evs.filter(e=>svcOf(e)===v).map(e=>e.id)); fromClaims(new Set(claims.map((c,i)=>(c.evidence_ids||[]).some(id=>es.has(id))?i:-1).filter(i=>i>=0))); }));
+  svgEl.querySelectorAll("g[data-c],g[data-e],g[data-s]").forEach(g=>g.addEventListener("mouseleave",clear));
   el.querySelectorAll("g[data-c]").forEach(g=>{ const c=claims[+g.dataset.c]; g.onmousemove=m=>showTip(m,`<b>${c.ok?"Kept":"Blocked"} claim</b><div style="max-width:240px">${esc(c.text)}</div>${c.ok?"":`<div class="no" style="margin-top:4px">${esc((c.rejected_because||[]).join("; "))}</div>`}`); g.onmouseleave=hideTip; });
 }
 function evmix(r){
@@ -769,18 +841,28 @@ function heatmap(){
   const el=$("#heat"); if(!el) return; const svcs=LASTH?.expected||ALL; const any=svcs.some(n=>(SERIES?.services?.[n]?.rps||[]).length);
   if(!any){ el.innerHTML=`<div class="empty">No time-series yet.</div>`; return; }
   const times=[...new Set(svcs.flatMap(n=>(SERIES.services[n]?.rps||[]).map(p=>p[0])))].sort((a,b)=>a-b);
-  const W=900,rowH=24,P={l:120,r:12,t:6,b:26},H=P.t+svcs.length*rowH+P.b,cw=(W-P.l-P.r)/times.length;
+  const W=900,rowH=24,P={l:120,r:86,t:20,b:26},H=P.t+svcs.length*rowH+P.b,cw=(W-P.l-P.r)/times.length;
   // sequential single hue (orange ramp), light = no errors, dark = all requests failing
   const ramp=["#fde4d6","#f9c3a6","#f39d76","#eb6834","#c94f1f","#9c3a14","#6e2709"];
   const col=v=>v==null?css("--surface-2"):v<=0.001?css("--surface-3"):ramp[Math.min(ramp.length-1,Math.floor(Math.sqrt(v)*ramp.length))];
-  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Error ratio heatmap">`;
-  svcs.forEach((n,i)=>{ const er=new Map(errSeries(n)); const y=P.t+i*rowH;
-    s+=`<text class="lbl" x="${P.l-10}" y="${y+rowH/2+4}" text-anchor="end">${esc(n)}</text>`;
-    times.forEach((t,j)=>{ const v=er.has(t)?er.get(t):null; s+=`<rect x="${P.l+j*cw+1}" y="${y+2}" width="${Math.max(1,cw-2)}" height="${rowH-4}" rx="3" fill="${col(v)}" data-n="${esc(n)}" data-t="${t}" data-v="${v??""}"/>`; }); });
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Error ratio heatmap"><text x="${W-P.r+10}" y="13" style="font-size:10.5px;font-weight:700;letter-spacing:.05em;fill:${css("--muted")}">PEAK</text>`;
+  svcs.forEach((n,i)=>{ const ser=errSeries(n), er=new Map(ser); const y=P.t+i*rowH, pk=Math.max(0,...ser.map(p=>p[1]||0));
+    s+=`<text class="lbl" x="${P.l-10}" y="${y+rowH/2+4}" text-anchor="end" data-row="${i}" style="cursor:pointer">${esc(n)}</text>`;
+    times.forEach((t,j)=>{ const v=er.has(t)?er.get(t):null; s+=`<rect x="${P.l+j*cw+1}" y="${y+2}" width="${Math.max(1,cw-2)}" height="${rowH-4}" rx="3" fill="${col(v)}" data-n="${esc(n)}" data-i="${i}" data-j="${j}" data-t="${t}" data-v="${v??""}" style="cursor:pointer"/>`; });
+    s+=`<rect x="${W-P.r+10}" y="${y+7}" width="${Math.max(1,46*pk)}" height="${rowH-14}" rx="2" fill="${pk>0.05?css("--critical"):css("--axis")}"/><text x="${W-P.r+10+Math.max(1,46*pk)+5}" y="${y+rowH/2+4}" style="font-size:11px;fill:${css("--ink")};font-weight:650">${pk>0?(pk*100).toFixed(0)+"%":"0"}</text>`; });
   [0, Math.floor(times.length/2), times.length-1].forEach(j=>{ s+=`<text x="${P.l+j*cw+cw/2}" y="${H-8}" text-anchor="middle">${new Date(times[j]*1000).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</text>`; });
-  s+="</svg>";
-  el.innerHTML=s+`<div class="legend" style="align-items:center"><span>Error ratio</span><span style="display:inline-flex;gap:2px">${[css("--surface-3"),...ramp].map(c=>`<i style="width:22px;height:10px;border-radius:2px;background:${c};display:inline-block"></i>`).join("")}</span><span>0% → 100%</span><span class="muted">grey = no traffic sampled</span></div>`;
-  el.querySelectorAll("rect[data-n]").forEach(r=>{ r.onmousemove=e=>showTip(e,`<b>${esc(r.dataset.n)}</b> <span class="muted">${new Date(r.dataset.t*1000).toLocaleTimeString()}</span><div class="mrow"><span>Error ratio</span><b>${r.dataset.v===""?"no traffic":(r.dataset.v*100).toFixed(1)+"%"}</b></div>`); r.onmouseleave=hideTip; });
+  s+=`<rect id="hmRow" x="${P.l-2}" y="0" width="${W-P.l-P.r+4}" height="${rowH}" rx="5" fill="none" stroke="${css("--ink")}" stroke-width="1.5" opacity="0" pointer-events="none"/>
+      <rect id="hmCol" x="0" y="${P.t}" width="${cw}" height="${svcs.length*rowH}" rx="4" fill="none" stroke="${css("--ink")}" stroke-width="1.2" stroke-dasharray="3 3" opacity="0" pointer-events="none"/></svg>`;
+  el.innerHTML=s+`<div class="legend" style="align-items:center"><span>Error ratio</span><span style="display:inline-flex;gap:2px">${[css("--surface-3"),...ramp].map(c=>`<i style="width:22px;height:10px;border-radius:2px;background:${c};display:inline-block"></i>`).join("")}</span><span>0% → 100%</span><span class="muted">grey = no traffic sampled · click a cell or name for the service detail</span></div>`;
+  const hr=el.querySelector("#hmRow"), hc=el.querySelector("#hmCol");
+  el.querySelectorAll("rect[data-n]").forEach(r=>{
+    r.onmousemove=e=>{ const i=+r.dataset.i, j=+r.dataset.j; hr.setAttribute("y",P.t+i*rowH); hr.setAttribute("opacity",1); hc.setAttribute("x",P.l+j*cw); hc.setAttribute("opacity",.7);
+      const t=+r.dataset.t, others=svcs.map(n=>[n,new Map(errSeries(n)).get(t)]).filter(([n,v])=>v>0.05&&n!==r.dataset.n);
+      showTip(e,`<b>${esc(r.dataset.n)}</b> <span class="muted">${new Date(t*1000).toLocaleTimeString()}</span><div class="mrow"><span>Error ratio</span><b>${r.dataset.v===""?"no traffic":(r.dataset.v*100).toFixed(1)+"%"}</b></div>
+        ${others.length?`<div class="muted" style="margin-top:4px">also failing then: ${esc(others.map(([n,v])=>n+" "+(v*100).toFixed(0)+"%").join(", "))}</div>`:""}`); };
+    r.onmouseleave=()=>{ hr.setAttribute("opacity",0); hc.setAttribute("opacity",0); hideTip(); };
+    r.onclick=()=>openSvc(r.dataset.n, LASTH?.services, LASTH?.edges); });
+  el.querySelectorAll("text[data-row]").forEach(t=>t.onclick=()=>openSvc(t.textContent, LASTH?.services, LASTH?.edges));
 }
 function delta(now, base, unit){ if(now==null||base==null) return ""; const d=now-base; if(Math.abs(d)<(unit==="pct"?0.005:Math.max(5,base*0.1))) return `<span class="muted">≈ baseline</span>`;
   return `<span class="${d>0?"no":"ok"}">${d>0?"▲":"▼"} ${unit==="pct"?(Math.abs(d)*100).toFixed(1)+" pts":fmtV(Math.abs(d),unit)}</span>`; }
@@ -844,7 +926,7 @@ function drawScore(){
         if(!nn){ s+=`<text x="${X(0)+4}" y="${y+h/2+4}" style="font-size:11px">n/a (no fault type)</text>`; return; }
         const v=kk/nn, [lo,hi]=wil(kk,nn);
         s+=`<rect x="${X(0)}" y="${y}" width="${X(1)-X(0)}" height="${h}" rx="4" fill="${css("--surface-2")}"/>`;
-        if(v>0) s+=`<rect x="${X(0)}" y="${y}" width="${X(v)-X(0)}" height="${h}" rx="4" fill="${fillOf(k,col)}" ${isADK(k)?`stroke="${css("--s1")}" stroke-width="1.5"`:""}/>`;
+        if(v>0) s+=`<rect data-m="${k}" x="${X(0)}" y="${y}" width="${X(v)-X(0)}" height="${h}" rx="4" fill="${fillOf(k,col)}" ${isADK(k)?`stroke="${css("--s1")}" stroke-width="1.5"`:""}/>`;
         s+=`<line class="whisk" x1="${X(lo)}" x2="${X(hi)}" y1="${y+h/2}" y2="${y+h/2}"/><line class="whisk" x1="${X(lo)}" x2="${X(lo)}" y1="${y+4}" y2="${y+h-4}"/><line class="whisk" x1="${X(hi)}" x2="${X(hi)}" y1="${y+4}" y2="${y+h-4}"/>`;
         s+=`<text class="lbl" x="${X(1)+6}" y="${y+h/2+4}" style="font-size:12px">${kk}/${nn}</text>`;
         s+=`<rect x="${ox}" y="${y-6}" width="${PW}" height="${h+12}" fill="transparent" data-a="${mi},${i}"/>`; });
@@ -852,7 +934,7 @@ function drawScore(){
     s+="</svg>"; $("#accChart").innerHTML=s;
     $$("#accChart rect[data-a]").forEach(r=>{ const [mi,i]=r.dataset.a.split(",").map(Number), [title,get]=measures[mi], [k,label]=MM[i], m=st.methods[k], [kk,nn]=get(m), [lo,hi]=wil(kk,nn);
       r.onmousemove=e=>showTip(e,`<b>${label}</b><div class="muted">${title}</div><div class="mrow"><span>Correct</span><b>${nn?kk+"/"+nn+" = "+Math.round(100*kk/nn)+"%":"n/a"}</b></div>${nn?`<div class="mrow"><span>95% interval</span><b>${Math.round(lo*100)}–${Math.round(hi*100)}%</b></div>`:""}`); r.onmouseleave=hideTip; });
-    $("#accLegend").innerHTML=MM.map(([k,l,c])=>`<span>${swatch(k,c)}${l}</span>`).join("")+`<span><svg width="22" height="10"><path d="M2 5H20M2 1V9M20 1V9" stroke="${css("--ink-2")}" stroke-width="1.5"/></svg>95% interval</span>`; }
+    $("#accLegend").innerHTML=MM.map(([k,l,c])=>`<span data-m="${k}">${swatch(k,c)}${l}</span>`).join("")+`<span><svg width="22" height="10"><path d="M2 5H20M2 1V9M20 1V9" stroke="${css("--ink-2")}" stroke-width="1.5"/></svg>95% interval</span>`; }
 
   // ---- 2. outcome breakdown (stacked, status colours + labels) ----
   { const OUT=[["correct","Correct","--good","✓"],["wrong","Wrong answer, given confidently","--critical","✕"],["abstain","Abstained (inconclusive)","--warning","?"],["failed","Failed (provider error)","--axis","!"]];
@@ -864,7 +946,7 @@ function drawScore(){
       s+=`<text class="lbl" x="${P.l-10}" y="${y+h/2+4}" text-anchor="end" style="font-size:12px">${SHORT[k]}</text>`;
       OUT.forEach(([key,lab,col,ic])=>{ const n=c[key]; if(!n) return; const x=X(acc), w=X(acc+n)-x; acc+=n;
         const dark=key==="warning"||key==="abstain";
-        s+=`<rect x="${x+1}" y="${y}" width="${Math.max(2,w-2)}" height="${h}" rx="4" fill="${css(col)}" data-o="${k},${key}"/>`;
+        s+=`<rect x="${x+1}" y="${y}" width="${Math.max(2,w-2)}" height="${h}" rx="4" fill="${css(col)}" data-o="${k},${key}" data-m="${k}"/>`;
         if(w>26) s+=`<text x="${x+w/2}" y="${y+h/2+4.5}" text-anchor="middle" style="font-size:12.5px;font-weight:700;fill:${dark?"#0b0b0b":"#fff"};pointer-events:none">${ic} ${n}</text>`; }); });
     s+="</svg>";
     $("#outcomeChart").innerHTML=s+`<div class="legend">${OUT.map(([k,l,c,ic])=>`<span><i class="sw" style="background:${css(c)}"></i>${ic} ${l}</span>`).join("")}</div>`;
@@ -882,7 +964,7 @@ function drawScore(){
     types.forEach((t,i)=>{ const y=P.t+i*rowH, rs=st.scenarios.filter(r=>r.truth.fault_type===t);
       s+=`<text x="${P.l-10}" y="${y+rowH/2+4}" text-anchor="end" style="font-size:12px;fill:${css("--ink")}">${t.replaceAll("_"," ")}</text>`;
       MM.forEach(([k],j)=>{ const ok=rs.filter(r=>r.methods[k].top1).length, v=ok/rs.length, x=P.l+j*cw;
-        s+=`<rect x="${x+3}" y="${y+3}" width="${cw-6}" height="${rowH-6}" rx="6" fill="${cellCol(v)}" data-t="${esc(t)}" data-k="${k}" data-v="${ok}/${rs.length}"/>
+        s+=`<rect x="${x+3}" y="${y+3}" width="${cw-6}" height="${rowH-6}" rx="6" fill="${cellCol(v)}" data-t="${esc(t)}" data-k="${k}" data-m="${k}" data-v="${ok}/${rs.length}"/>
           <text x="${x+cw/2}" y="${y+rowH/2+4.5}" text-anchor="middle" style="font-size:12.5px;font-weight:700;fill:${v>0.55?"#fff":"#0b0b0b"};pointer-events:none">${ok}/${rs.length}</text>`; }); });
     s+="</svg>";
     $("#typeChart").innerHTML=s+`<div class="legend" style="align-items:center"><span>0%</span><span style="display:inline-flex;gap:2px">${seq.map(c=>`<i style="width:18px;height:10px;border-radius:2px;background:${c};display:inline-block"></i>`).join("")}</span><span>100% right service</span></div>`;
@@ -899,19 +981,27 @@ function drawScore(){
     MM.forEach(([k,label,col],i)=>{ const y=P.t+i*rowH+rowH/2, ts=st.scenarios.map(r=>r.methods[k].s||0.05);
       const q1=q(ts,.25), md=q(ts,.5), q3=q(ts,.75);
       s+=`<text class="lbl" x="${P.l-12}" y="${y+4}" text-anchor="end">${label}</text>`;
-      s+=`<rect x="${X(q1)}" y="${y-17}" width="${Math.max(2,X(q3)-X(q1))}" height="34" rx="6" fill="${css(col)}" opacity=".13"/>`;
+      s+=`<rect data-m="${k}" x="${X(q1)}" y="${y-17}" width="${Math.max(2,X(q3)-X(q1))}" height="34" rx="6" fill="${css(col)}" opacity=".13"/>`;
       s+=`<line x1="${X(md)}" x2="${X(md)}" y1="${y-20}" y2="${y+20}" stroke="${css(col)}" stroke-width="2.5"/>`;
       s+=`<text x="${X(md)}" y="${y-23}" text-anchor="middle" style="font-size:11px;font-weight:700;fill:${css("--ink")}">${md<0.1?"instant":"median "+(md<10?md.toFixed(1):Math.round(md))+"s"}</text>`;
       st.scenarios.forEach((r,j)=>{ const m=r.methods[k], x=X(m.s||0.05), jy=y+((j%3)-1)*8;
         const hit=`<circle cx="${x}" cy="${jy}" r="9" fill="transparent" data-k="${k}" data-j="${j}"/>`;
+        s+=`<g data-m="${k}">`;
         if(m.top1) s+= isADK(k) ? `<circle cx="${x}" cy="${jy}" r="5" fill="${css("--surface")}" stroke="${css(col)}" stroke-width="2.5" data-k="${k}" data-j="${j}"/>`
                                  : `<circle cx="${x}" cy="${jy}" r="5.5" fill="${css(col)}" stroke="${css("--surface")}" stroke-width="2" data-k="${k}" data-j="${j}"/>`;
         else if(m.verdict==="INCONCLUSIVE") s+=`<circle cx="${x}" cy="${jy}" r="6" fill="${css("--surface")}" stroke="${css("--warning")}" stroke-width="2.5"/><text x="${x}" y="${jy+3.5}" text-anchor="middle" style="font-size:9px;font-weight:800;fill:${css("--ink")}">?</text>`+hit;
         else if(m.verdict==="FAILED") s+=`<rect x="${x-5.5}" y="${jy-5.5}" width="11" height="11" rx="2" fill="${css("--axis")}"/><text x="${x}" y="${jy+3.5}" text-anchor="middle" style="font-size:9px;font-weight:800;fill:${css("--ink")}">!</text>`+hit;
-        else s+=`<path d="M${x-5} ${jy-5}L${x+5} ${jy+5}M${x+5} ${jy-5}L${x-5} ${jy+5}" stroke="${css("--critical")}" stroke-width="2.5"/>`+hit; }); });
-    s+="</svg>"; $("#timeChart").innerHTML=s+`<div class="legend">${MM.map(([k,l,c])=>`<span>${isADK(k)?`<svg width="12" height="12"><circle cx="6" cy="6" r="4.5" fill="none" stroke="${css(c)}" stroke-width="2.5"/></svg>`:`<i class="sw" style="background:${css(c)}"></i>`}${l}</span>`).join("")}<span><svg width="12" height="12"><path d="M2 2L10 10M10 2L2 10" stroke="${css("--critical")}" stroke-width="2.5"/></svg>Wrong answer</span><span><svg width="14" height="14"><circle cx="7" cy="7" r="5.5" fill="none" stroke="${css("--warning")}" stroke-width="2.5"/></svg>Abstained</span><span><svg width="12" height="12"><rect x="1" y="1" width="10" height="10" rx="2" fill="${css("--axis")}"/></svg>Failed (provider)</span><span class="muted">log scale · times include Gemini free-tier retry waits</span></div>`;
+        else s+=`<path d="M${x-5} ${jy-5}L${x+5} ${jy+5}M${x+5} ${jy-5}L${x-5} ${jy+5}" stroke="${css("--critical")}" stroke-width="2.5"/>`+hit;
+        s+=`</g>`; }); });
+    s+="</svg>"; $("#timeChart").innerHTML=s+`<div class="legend">${MM.map(([k,l,c])=>`<span data-m="${k}">${isADK(k)?`<svg width="12" height="12"><circle cx="6" cy="6" r="4.5" fill="none" stroke="${css(c)}" stroke-width="2.5"/></svg>`:`<i class="sw" style="background:${css(c)}"></i>`}${l}</span>`).join("")}<span><svg width="12" height="12"><path d="M2 2L10 10M10 2L2 10" stroke="${css("--critical")}" stroke-width="2.5"/></svg>Wrong answer</span><span><svg width="14" height="14"><circle cx="7" cy="7" r="5.5" fill="none" stroke="${css("--warning")}" stroke-width="2.5"/></svg>Abstained</span><span><svg width="12" height="12"><rect x="1" y="1" width="10" height="10" rx="2" fill="${css("--axis")}"/></svg>Failed (provider)</span><span class="muted">log scale · times include Gemini free-tier retry waits</span></div>`;
     $$("#timeChart circle[data-k]").forEach(c=>{ const r=st.scenarios[+c.dataset.j], m=r.methods[c.dataset.k];
       c.onmousemove=e=>showTip(e,`<b>${esc(r.id)} · ${esc(r.truth.service)} / ${esc(r.truth.fault_type.replaceAll("_"," "))}</b><div class="mrow"><span>Answer</span><b>${esc(m.svc||"—")}</b></div><div class="mrow"><span>Time</span><b>${m.s}s</b></div><div class="mrow"><span>Outcome</span><b>${m.top1?"correct":m.verdict==="INCONCLUSIVE"?"abstained":m.verdict==="FAILED"?"failed (provider)":"wrong answer"}</b></div>`); c.onmouseleave=hideTip; }); }
+  // linked highlighting: hover a method in any legend or chart row and it lights up in every chart
+  { const root=$("#v-scorecard");
+    const hl=k=>{ root.classList.add("dim-others"); root.querySelectorAll("[data-m]").forEach(x=>x.classList.toggle("mlit",x.dataset.m===k)); };
+    const un=()=>{ root.classList.remove("dim-others"); root.querySelectorAll(".mlit").forEach(x=>x.classList.remove("mlit")); };
+    root.querySelectorAll("span[data-m]").forEach(x=>{ x.onmouseenter=()=>hl(x.dataset.m); x.onmouseleave=un; });
+    root.querySelectorAll("#accChart rect[data-a]").forEach(r=>{ const i=+r.dataset.a.split(",")[1]; r.addEventListener("mouseenter",()=>hl(MM[i][0])); r.addEventListener("mouseleave",un); }); }
   const cell=(m,t)=>`${m.top1?`<span class="ok">${icon("check")}</span>`:`<span class="no">${icon("x")}</span>`} ${esc(m.svc||"—")}${m.type?(m.type===t?`<span class="muted"> / ${esc(m.type.replaceAll("_"," "))}</span>`
     :` <span class="no" title="wrong fault type (truth: ${esc(t.replaceAll("_"," "))})">/ ${esc(m.type.replaceAll("_"," "))} ✕ type</span>`):""}`;
   $("#scTable").innerHTML=`<table><thead><tr><th>ID</th><th>Injected fault (truth)</th>${MM.map(([k,l])=>`<th>${SHORT[k]}</th>`).join("")}<th>ET time</th></tr></thead><tbody>
