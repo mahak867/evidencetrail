@@ -1,0 +1,10 @@
+<style>body{margin:0;height:100vh;display:grid;place-items:center;background:#0d0d0d;color:#f0efec;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.w{max-width:1100px;padding:40px} .k{color:#3987e5;font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:16px}
+h1{font-size:72px;margin:10px 0 6px;letter-spacing:-.03em} h2{font-size:30px;font-weight:500;color:#c3c2b7;margin:0 0 30px}
+.row{display:flex;gap:28px;margin-top:26px} .s{border:1px solid #2c2c2a;border-radius:16px;padding:22px 26px;background:#1a1a19;flex:1}
+.s b{display:block;font-size:52px;letter-spacing:-.03em;color:#fab219} .s span{color:#c3c2b7;font-size:18px} p{font-size:22px;color:#c3c2b7;line-height:1.5}
+.m{color:#8f8d86;font-size:16px;margin-top:28px}</style><div class="w"><div class="k">Measured results · 18 injected faults</div><h2 style="margin-top:10px">Same faults, one frozen telemetry window for every method, every miss reported</h2>
+    <div class="row"><div class="s"><b>12/12</b><span>right service and fault type on the standard set (single-prompt Gemini: 10/12 fault type)</span></div>
+    <div class="s"><b>0 vs 2</b><span>confident wrong answers across all 18 faults: EvidenceTrail vs single-prompt Gemini (dashboard rule: 3)</span></div>
+    <div class="s"><b>9 / 80</b><span>AI claims blocked by the evidence gate for citing evidence never fetched or misquoting it</span></div></div>
+    <div class="m">1–4 Gemini calls per incident (median 2) · runs natively or on Google ADK · MCP server for Claude / Gemini CLI · secrets redacted</div></div>

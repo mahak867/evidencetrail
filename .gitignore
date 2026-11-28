@@ -3,3 +3,14 @@ shop/wheels/
 .env
 __pycache__/
 *.pyc
+
+# deck build outputs and private contact details
+deck/team.local.json
+deck/*.pptx
+!deck/template.pptx
+deck/*.pdf
+deck/slide-*.jpg
+deck/video_raw/
+deck/scenes.json
+deck/*.mp4
+deck/*.srt
