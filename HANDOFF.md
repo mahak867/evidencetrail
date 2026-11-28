@@ -9,7 +9,7 @@ CODERED '26 (E-Cell BMSIT&M, Bengaluru, on Unstop), **Track 1 · Niveus Solution
 
 | Stage | Date | Format | Status |
 |---|---|---|---|
-| Round 1 | closed 27 Nov 2026, 11:59 PM IST | Deck (official template) + demo video | Submitted files: `deck/` builds the deck; video in `docs/demo/` |
+| Round 1 | deadline extended to 30 Nov 2026, 11:59 PM IST (was 27 Nov) | Deck (official template) + demo video | Submitted files: `deck/` builds the deck; video in `docs/demo/` |
 | Round 2 | 12–13 Dec 2026 | Online live demo | **Next** |
 | Finale | 28–29 Dec 2026, BMSIT&M (the Niveus brief says 3–4 Dec; confirm with the organisers) | 24-hour on-site sprint | |
 
