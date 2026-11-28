@@ -62,6 +62,7 @@ def eval_numbers():
                   "type": (sum(bool(s["type_ok"]) for s in typed), len(typed)),
                   "inconc": sum(bool(s.get("inconclusive")) for s in sc), "ci": wilson(k1, len(runs)),
                   "median_s": times[len(times) // 2],
+                  "median_s_nowait": sorted(max(0, (x.get("elapsed_s") or 0) - (x.get("usage") or {}).get("wait_s", 0)) for x in rs)[len(rs) // 2],
                   "tokens": sorted((x.get("usage") or {}).get("total_tokens", 0) for x in rs)[len(rs) // 2]}
     et = [r["methods"].get("EvidenceTrail", {}) for r in runs]
     calls = sorted((x.get("usage") or {}).get("calls", 0) for x in et)
@@ -101,7 +102,9 @@ def all_numbers():
     out = {"n": len(runs)}
     for m in ("B1_dashboard_rule", "B0_single_prompt", "EvidenceTrail", "EvidenceTrail_ADK"):
         rs = [r["methods"].get(m, {}) for r in runs]
-        out[m] = {"wrong": sum(1 for x in rs if x.get("verdict") == "DIAGNOSIS" and not x.get("score", {}).get("top1"))}
+        out[m] = {"wrong": sum(1 for x in rs if x.get("verdict") == "DIAGNOSIS" and not x.get("score", {}).get("top1")),
+                  # also counting a wrong fault type (methods that name one)
+                  "wrong_any": sum(1 for x in rs if x.get("verdict") == "DIAGNOSIS" and not (x.get("score", {}).get("top1") and x.get("score", {}).get("type_ok") is not False))}
     eng = [r["methods"].get(m, {}) for r in runs for m in ("EvidenceTrail", "EvidenceTrail_ADK")]
     out["kept"] = sum(len(x.get("claims") or []) for x in eng)
     out["dropped"] = sum(len(x.get("dropped_claims") or []) for x in eng)
@@ -232,7 +235,8 @@ for lbl in ("Track Name", "Team Name", "Team Leader"):
     remove(by(s, lbl))
 text(s, 1.54, 3.75, 12.5, 1.0, [[("EvidenceTrail", {"size": 54, "bold": True, "color": GOLD})]], name="Product")
 text(s, 1.54, 4.95, 12.5, 0.6, "Find the cause. Show the evidence.", size=26, color=WHITE, name="Tagline")
-text(s, 1.54, 5.9, 13.5, 3.5, [
+text(s, 1.54, 5.6, 17.5, 0.4, "When an alert fires, EvidenceTrail names the broken service and the cause, and shows the logs, traces and metrics that prove it.", size=14, color=MUTED, name="Plain")
+text(s, 1.54, 6.2, 13.5, 3.5, [
     [("Track Name & Idea Number:  ", {"bold": True, "color": MUTED}), ("Track 1 – Niveus Solutions (NTT DATA) · Challenge Brief PS2: AI Incident Investigation for Cloud-Native Systems", {})],
     [("Team Name:  ", {"bold": True, "color": MUTED}), (TEAM, {})],
     [("Team Leader Name:  ", {"bold": True, "color": MUTED}), (LEADER, {})],
@@ -241,7 +245,7 @@ text(s, 1.54, 5.9, 13.5, 3.5, [
      (f"{AV['EvidenceTrail']['wrong'] + AV['EvidenceTrail_ADK']['wrong']} confident wrong answers across {AV['n']} injected faults, "
       f"vs {AV['B0_single_prompt']['wrong']} for a single Gemini prompt and {AV['B1_dashboard_rule']['wrong']} for a dashboard rule", {"bold": True})],
 ], size=17, spacing=8, name="Outline")
-text(s, 1.54, 9.75, 14.5, 0.5, [[("Live demo: ", {"bold": True, "color": GREEN}), ("evidencetrail.vercel.app", {"link": DEMO_URL, "color": WHITE}),
+text(s, 1.54, 10.05, 14.5, 0.4, [[("Live demo: ", {"bold": True, "color": GREEN}), ("evidencetrail.vercel.app", {"link": DEMO_URL, "color": WHITE}),
     ("   ·   ", {"color": MUTED}), ("Demo video", {"link": VIDEO_URL, "color": WHITE, "bold": True}),
     ("   ·   ", {"color": MUTED}), ("Code: ", {"bold": True, "color": GREEN}), ("github.com/mahak867/evidencetrail", {"link": REPO_URL, "color": WHITE})]], size=12.5, name="Links")
 
@@ -256,7 +260,7 @@ text(s, 0.75, 3.15, 5.5, 1.6, [
     "One fault makes alerts fire in many services. Dashboards show symptoms, not causes.",
     "AI summaries without evidence can't be trusted mid-incident.",
 ], size=15, spacing=8)
-stats = [("11.3%", "best AI agent's root-cause accuracy on OpenRCA (Claude 3.5 + RCA-Agent)"),
+stats = [("11.3%", "best AI agent's root-cause accuracy on the OpenRCA benchmark"),
          ("7–40%", "of root causes hallucinated by 5 frontier AI agents (ORCA-bench)")]
 for i, (big, lbl) in enumerate(stats):
     y = 5.35 + i * 1.45
@@ -296,7 +300,7 @@ stack = [
     ("AI", GOLD, ["Gemini (3.1 Flash-Lite + 4 fallback models)", "Two engines: native loop or Google ADK", "MCP server for Claude / Gemini CLI",
                   (f"Native: {EV['calls'][0]}–{EV['calls'][1]} Gemini calls / incident (median {EV['calls'][2]:g})" if EV else "Gemini calls per incident measured")]),
     ("Telemetry", GREEN, ["OpenTelemetry SDK → Jaeger (traces)", "Prometheus (metrics)", "JSON logs with trace IDs + change/event log"]),
-    ("Test system", PURPLE, ["9-service shop on Docker Compose", "7 injectable faults, scored as 6 types", "Load generator; OpenTelemetry Demo next"]),
+    ("Test system", PURPLE, ["9-service shop on Docker Compose", "7 fault kinds, scored as 6 types", "18 scored scenarios: 12 standard + 6 hard", "OpenTelemetry Demo next"]),
     ("App", RGBColor(0x4F, 0x9C, 0xF9), ["Python, FastAPI, httpx", "Web UI: diagnosis + clickable evidence", "Audit log of every approval"]),
 ]
 for i, (h, col, items) in enumerate(stack):
@@ -339,21 +343,22 @@ nov = [("No evidence, no claim", "enforced citation gate + INCONCLUSIVE instead 
        ("Public scorecard", "every fault reported, misses included")]
 text(s, 0.43, 2.9, 6.4, 5, [[(h + ": ", {"bold": True}), (d, {"color": MUTED})] for h, d in nov], size=14, spacing=10)
 # results
-card(s, 7.1, 2.35, 6.0, 7.5, fill=CARD2, name="ResultsCard")
+card(s, 7.1, 2.35, 6.0, 7.7, fill=CARD2, name="ResultsCard")
 text(s, 7.4, 2.55, 5.5, 0.45, "PROTOTYPE RESULTS (MEASURED)", size=15, bold=True, color=GREEN)
 if EV:
     # headline first (A2): confident wrong answers across all faults, then claims blocked
     text(s, 7.4, 3.0, 5.5, 1.0, [[(f"{AV['EvidenceTrail']['wrong'] + AV['EvidenceTrail_ADK']['wrong']}", {"bold": True, "color": GREEN, "size": 40}),
                                   ("  confident wrong answers", {"bold": True, "color": WHITE, "size": 17})]], size=17)
-    text(s, 7.4, 3.95, 5.5, 0.7, [[(f"EvidenceTrail, all {AV['n']} faults, both engines · ", {"color": MUTED}),
-                                   (f"single-prompt Gemini {AV['B0_single_prompt']['wrong']} · dashboard rule {AV['B1_dashboard_rule']['wrong']}", {"bold": True})]], size=12)
-    text(s, 7.4, 4.6, 5.5, 0.9, [[(f"{AV['dropped']} of {AV['kept'] + AV['dropped']}", {"bold": True, "color": GOLD, "size": 22}),
+    text(s, 7.4, 3.95, 5.5, 0.85, [[(f"EvidenceTrail, all {AV['n']} faults, both engines · ", {"color": MUTED}),
+                                   (f"single-prompt Gemini {AV['B0_single_prompt']['wrong']} · dashboard rule {AV['B1_dashboard_rule']['wrong']}", {"bold": True})],
+                                  [(f"With fault type counted: EvidenceTrail {AV['EvidenceTrail']['wrong_any'] + AV['EvidenceTrail_ADK']['wrong_any']} · single prompt {AV['B0_single_prompt']['wrong_any']}", {"color": MUTED, "size": 11})]], size=12, spacing=2)
+    text(s, 7.4, 4.78, 5.5, 0.9, [[(f"{AV['dropped']} of {AV['kept'] + AV['dropped']}", {"bold": True, "color": GOLD, "size": 22}),
                                   ("  AI claims blocked", {"bold": True, "color": WHITE, "size": 14})],
-                                 [("by the evidence gate (both engines)", {"color": MUTED})]], size=12, spacing=0)
-    text(s, 7.4, 5.65, 5.5, 0.4, f"Standard set: {EV['n']} injected faults · {EV['types']} fault types", size=12, bold=True, color=WHITE)
+                                 [("quote not found in the cited evidence (both engines)", {"color": MUTED})]], size=12, spacing=0)
+    text(s, 7.4, 5.8, 5.5, 0.4, f"Standard set: {EV['n']} injected faults · {EV['types']} fault types", size=12, bold=True, color=WHITE)
     rows = [("EvidenceTrail (native engine)", EV["EvidenceTrail"], GREEN), ("Single-prompt Gemini", EV["B0_single_prompt"], GOLD), ("Dashboard rule", EV["B1_dashboard_rule"], MUTED)]
     for i, (lbl, d, col) in enumerate(rows):
-        y = 6.03 + i * 0.85
+        y = 6.18 + i * 0.85
         text(s, 7.4, y, 5.5, 0.35, lbl, size=12, bold=True, color=WHITE)
         for j, (k, n, sub) in enumerate(((d["top1"], EV["n"], "service"), (d["type"][0], d["type"][1], "service + fault type"))):
             yy = y + 0.32 + j * 0.28
@@ -367,9 +372,9 @@ if EV:
             text(s, 10.15, yy, 2.8, 0.3, [[(f"{k}/{n}", {"bold": True}), (f"  {sub}", {"color": MUTED})]], size=10.5)
     if HV and HV["n"] >= 6:
         et, adk, b0 = HV["EvidenceTrail"], HV["EvidenceTrail_ADK"], HV["B0_single_prompt"]
-        text(s, 7.4, 8.64, 5.5, 0.3, [[("ADK engine: ", {"color": MUTED}), (f"{ADK_STD[0]}/{ADK_STD[1]} service", {"bold": True}),
+        text(s, 7.4, 8.82, 5.5, 0.3, [[("ADK engine: ", {"color": MUTED}), (f"{ADK_STD[0]}/{ADK_STD[1]} service", {"bold": True}),
                                        (f" ({ADK_STD[2]} runs lost to Gemini outages)" if ADK_STD[2] else "", {"color": MUTED})]], size=10.5)
-        text(s, 7.4, 8.98, 5.5, 0.85, [
+        text(s, 7.4, 9.14, 5.5, 0.8, [
             [("Hard set ", {"bold": True, "color": GOLD}), (f"(noisy logs, silent faults, n={HV['n']}): ", {"color": MUTED})],
             [("Right service: ", {"color": MUTED}), (f"ADK {adk['right']}/{HV['n']}, native {et['right']}/{HV['n']}", {"bold": True, "color": GREEN}),
              (f" (+{et['abstain']} abstained)" if et["abstain"] else "", {"color": MUTED}), (f" vs single-prompt {b0['right']}/{HV['n']}", {"bold": True})],
@@ -388,7 +393,8 @@ text(s, 13.45, 7.0, 6.1, 2.8, [
     {"t": [("Open core: ", {"bold": True}), ("free self-hosted investigator drives adoption", {"color": MUTED})], "bullet": True},
     {"t": [("Team plan: ", {"bold": True}), ("per-cluster monthly subscription: history, approvals, audit, SSO", {"color": MUTED})], "bullet": True},
     {"t": [("MSP licence: ", {"bold": True}), ("per-client pricing for systems integrators", {"color": MUTED})], "bullet": True},
-    {"t": [("Unit cost: ", {"bold": True}), (f"~{EV['EvidenceTrail']['tokens']:,} Gemini tokens per investigated incident (median, measured)" if EV else "Gemini tokens per incident measured in every run", {"color": MUTED})], "bullet": True},
+    {"t": [("Unit cost & speed: ", {"bold": True}), (f"median {EV['EvidenceTrail']['tokens']:,} Gemini tokens and {EV['EvidenceTrail']['median_s']:g} s per incident "
+            f"({EV['EvidenceTrail']['median_s_nowait']:.1f} s without Gemini overload waits; single prompt {EV['B0_single_prompt']['median_s']:g} s)" if EV else "Gemini tokens per incident measured in every run", {"color": MUTED})], "bullet": True},
 ], size=13, spacing=6)
 
 # ================================================================== slide 5
