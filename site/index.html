@@ -713,7 +713,22 @@ function render(r, recorded, truth){
 }
 async function act(approve){ const who=($("#approver").value||"").trim(); if(approve&&!who){ $("#actmsg").textContent="Enter your name to approve."; $("#approver").focus(); return; }
   const res=await api(`/api/investigations/${JOB}/action`,{method:"POST",body:JSON.stringify({approved_by:who||"on-call",approve})});
-  $("#actmsg").innerHTML = res.executed?`<span class="ok">${icon("check")} Executed:</span> <code>${esc(res.command)}</code>`:`<span class="no">Not executed:</span> ${esc(res.reason||"")}`; }
+  $("#actmsg").innerHTML = res.executed?`<span class="ok">${icon("check")} Executed:</span> <code>${esc(res.command)}</code><div id="recov" style="margin-top:6px">Checking recovery…</div>`:`<span class="no">Not executed:</span> ${esc(res.reason||"")}`;
+  if(res.executed) watchRecovery(JOB); }
+// After an approved action: poll the read-only recovery check until it says recovered / not confirmed.
+async function watchRecovery(jid){
+  for(let i=0;i<40 && jid===JOB;i++){
+    const j=await api(`/api/investigations/${jid}`); const r=j.recovery; const el=$("#recov"); if(!r||!el) return;
+    const last=r.checks&&r.checks.length?r.checks[r.checks.length-1]:null;
+    const off=r.still_off||(last?Object.fromEntries(Object.entries(last.services).filter(([,v])=>!v.ok).map(([k,v])=>[k,v.problems])):{});
+    const offPlain=Object.entries(off).map(([s,p])=>`${s}: ${p.join("; ")}`).join(" · "), offTxt=esc(offPlain);
+    if(r.status==="recovered"){ el.innerHTML=`<span class="ok">${icon("check")} Recovered</span> after ${r.after_s}s: ${esc(r.services.join(", "))} back to pre-incident baseline (2 checks in a row).`; return; }
+    if(r.status==="not_confirmed"){ el.innerHTML=`<span class="no">Recovery not confirmed</span> after ${r.after_s}s. Still off: ${offTxt||"—"}`; return; }
+    if(r.status==="error"){ el.innerHTML=`<span class="no">Recovery check failed:</span> ${esc(r.error||"")}`; return; }
+    el.textContent=`Checking recovery of ${r.services.join(", ")}… ${last?`(${r.checks.length} check${r.checks.length>1?"s":""}${offPlain?"; still off: "+offPlain:"; looks healthy"})`:""}`;
+    await new Promise(ok=>setTimeout(ok,6000));
+  }
+}
 async function fb(d){ let c=null; if(d==="correct"){ c=prompt("Correct root-cause service?"); if(!c) return; }
   await api(`/api/investigations/${JOB}/feedback`,{method:"POST",body:JSON.stringify({decision:d,corrected_service:c})}); $("#fbmsg").textContent=`Recorded: ${d}${c?" → "+c:""}`; }
 

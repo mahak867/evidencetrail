@@ -99,6 +99,12 @@ External statistics used in the deck: OpenRCA 11.34% best-agent root-cause accur
 5. Rehearse a 5–7 minute live demo with the recorded replay (`/api/recorded`, static site) as the backup if Gemini is overloaded.
 6. Optional: one feature beyond the field, such as incident memory (match past incidents) or opening the fix as a pull request.
 
+**Status on 28 Nov 2026** (branch `claude/otel-demo-port`, not yet on `main`):
+- Item 1 done up to the Gemini step: `TARGET=oteldemo`, `otel/up.sh`, 8 flagd faults with ground truth in `evidencetrail/faults.py`, eval set `--set otel`. The steps before Gemini (health scan, call graph, suspect ranking, logs, traces) were checked live on all 8 faults (see README). This was a development check: some signals were added after seeing misses on these same faults.
+- Item 2 blocked: needs the Gemini key in the "evidencetrail" cloud environment (see section 3), then `TARGET=oteldemo python -m eval.run_eval --set otel`.
+- Item 3 needs a Google Cloud project with billing owned by the team (budget alert on, no reliance on credits).
+- Item 4, recovery check: done (`evidencetrail/recovery.py`, server + UI; tested live with a real approved rollback). Postmortem not started.
+
 Team roles for the demo: problem + results (Annika), live UI (Roshini), live fault injection and test environment (Kanish), agent and evidence gate + technical Q&A (Mahak).
 
 ## 7. Useful Claude skills and tools for this work

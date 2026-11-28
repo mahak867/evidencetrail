@@ -217,3 +217,14 @@ def test_missing_flags_are_skipped_on_clear_and_rejected_on_set(tmp_path, monkey
     assert faults.clear_flags_for(None) == ["paymentFailure"]
     with pytest.raises(ValueError, match="not defined"):
         faults.set_flag("adHighCpu", "on")
+
+
+def test_unreachable_callee_makes_its_caller_a_victim_without_a_trace_edge():
+    from evidencetrail.investigator import suspects
+    health = {"checkout": {"error_ratio": 1.0, "baseline_error_ratio": 0.0, "up": 1, "called_by": []},
+              "payment": {"error_ratio": 0.0, "baseline_error_ratio": 0.0, "up": 0, "called_by": ["checkout"]}}
+    out = suspects(health, edges=[])  # no checkout -> payment trace edge: payment was never reached
+    names = [x["service"] for x in out]
+    pay, chk = out[names.index("payment")], out[names.index("checkout")]
+    assert pay["deepest"] is True and chk["deepest"] is False and "payment" in chk["anomalous_dependencies"]
+    assert names.index("payment") < names.index("checkout")

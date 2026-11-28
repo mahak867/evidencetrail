@@ -39,7 +39,11 @@ alert ─► 1. health scan (Prometheus): error ratio + p95 vs a baseline window
               root-cause claim must survive AND confidence ≥ 0.5, else INCONCLUSIVE
        ─► 6. engineer confirms / corrects / rejects  ─►  suggested action labelled by POLICY
               (safe / risky / blocked), dry run shown, runs only after named human approval
+       ─► 7. recovery check (read-only): after an approved action, the affected services must be
+              back to their pre-incident baseline on 2 checks in a row, else "not confirmed"
 ```
+
+The recovery check (`recovery.py`) compares each affected service (the action's target, the root cause and the alerted entry service) with the baseline from before the incident: error ratio within 2 points, p95 within 2× (at least 250 ms), reachable, and no single operation still failing. It waits at least 60 s so that 1-minute rates no longer include the incident, gives up after 4 minutes, and lists what is still off. The result is shown in the UI and written to the audit log.
 
 Safety by design:
 - Read-only telemetry access by default.

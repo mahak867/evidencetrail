@@ -104,6 +104,11 @@ def suspects(health: dict, edges: list[dict]) -> list[dict]:
     callees: dict[str, set] = {}
     for e in edges:
         callees.setdefault(e["caller"], set()).add(e["callee"])
+    # edges seen in metrics (OpenTelemetry Demo health only): a caller of an unreachable service has
+    # no trace edge to it, but its client-span metrics still show the call
+    for s, h in health.items():
+        for caller in h.get("called_by") or ():
+            callees.setdefault(caller, set()).add(s)
     # only services a diagnosis may name; infrastructure in the call graph (load generator,
     # flag service, browser) has no health data and must not be mistaken for "down"
     all_svcs = (set(health) | {e["callee"] for e in edges} | {e["caller"] for e in edges} | set(safety.SERVICES)) & set(safety.SERVICES)
@@ -115,6 +120,11 @@ def suspects(health: dict, edges: list[dict]) -> list[dict]:
                         "health": health.get(s, {"rps": 0, "note": "no metrics: service may be down"})})
     out.sort(key=lambda x: (not x["deepest"], -(x["health"].get("error_ratio") or 0)))
     return out
+
+
+def entry_service(alert: str) -> str:
+    """The user-facing service an alert is about (where failing requests are traced from)."""
+    return next((sv for sv in ("checkout", "frontend") if sv in alert), "frontend")
 
 
 @dataclass
@@ -175,7 +185,7 @@ class Investigation:
         self.stage = "prefetch"
         prefetched = {}
         top3 = [x["service"] for x in sus[:3]]
-        entry = next((sv for sv in ("checkout", "frontend") if sv in self.alert), "frontend")
+        entry = entry_service(self.alert)
         jobs = [(sv, "logs", "get_logs", {"service": sv, "level": "ERROR"}) for sv in top3] + \
                [(sv, "warnings", "get_logs", {"service": sv, "level": "WARN"}) for sv in top3] + \
                [("_entry", "error_traces", "get_error_traces", {"service": entry}), ("_changes", "changes", "get_recent_changes", {})]

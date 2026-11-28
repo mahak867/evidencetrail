@@ -17,9 +17,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, PlainTextResponse
 from pydantic import BaseModel
 
-from . import faults, safety
+from . import faults, recovery, safety
 from .gemini import FALLBACKS, MODEL
-from .investigator import Investigation
+from .investigator import Investigation, entry_service
 from .telemetry import make_telemetry, telemetry_class
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
@@ -119,7 +119,30 @@ def action(jid: str, ap: Approval):
     res = safety.execute(act, approved_by=ap.approved_by)
     audit("action_executed" if res.get("executed") else "action_not_executed", id=jid, action=act, result=res)
     job["action_result"] = res
+    if res.get("executed"):
+        _start_recovery_check(jid, job, act)
     return res
+
+
+def _start_recovery_check(jid: str, job: dict, act: dict) -> None:
+    """After an approved action ran, watch health until the affected services are back to their
+    pre-incident baseline (or report what is still off). Read-only; progress is in job["recovery"]."""
+    inv = INVS.get(jid)
+    baseline_start = inv.tel.window.start if inv else time.time() - 300
+    svcs = [s for s in dict.fromkeys([act.get("service"), (job.get("result") or {}).get("root_cause_service"),
+                                      entry_service(job["alert"])]) if s in safety.SERVICES]
+    job["recovery"] = {"status": "verifying", "services": svcs, "checks": []}
+
+    def watch():
+        try:
+            r = recovery.verify(svcs, baseline_start, on_check=lambda c: job["recovery"]["checks"].append(c))
+            job["recovery"].update(r)
+            audit("recovery_verified" if r["status"] == "recovered" else "recovery_not_confirmed",
+                  id=jid, services=svcs, after_s=r["after_s"], still_off=r.get("still_off"))
+        except Exception as e:  # reported, never hidden
+            job["recovery"].update(status="error", error=f"{type(e).__name__}: {e}")
+            audit("recovery_check_failed", id=jid, error=str(e))
+    threading.Thread(target=watch, daemon=True).start()
 
 
 @app.get("/api/health")

@@ -135,9 +135,15 @@ class OtelDemoTelemetry(Telemetry):
         Also, per service, the operation whose error ratio rose most and the one whose p95 rose most,
         each with its own baseline (a failing or slow rare endpoint is otherwise diluted by healthy
         traffic), and container CPU and memory, now and at the baseline."""
+        base_rng = rng
         out: dict[str, dict] = defaultdict(dict)
         ops: dict[str, dict] = {"now": {}, "baseline": {}}  # (service, op) -> {"tot", "err", "p95"}
+        # "now" covers the whole incident window, not just its last minute: some faults are
+        # intermittent (only some requests are affected) and would be missed by a 1-minute snapshot.
+        # The baseline is the minute before the window starts.
+        now_rng = f"{max(60, int(self.window.end - self.window.start))}s"
         for label, at in (("now", self.window.end), ("baseline", self.window.start)):
+            rng = now_rng if label == "now" else base_rng
             for r in self._prom(f"sum by (service_name, span_name) (rate({CALLS}{{{SERVER}}}[{rng}]))", at):
                 ops[label].setdefault((r["metric"]["service_name"], r["metric"].get("span_name")), {})["tot"] = float(r["value"][1])
             for r in self._prom(f"sum by (service_name, span_name) (rate({CALLS}{{{SERVER},{ERR}}}[{rng}]))", at):
@@ -155,18 +161,25 @@ class OtelDemoTelemetry(Telemetry):
                 out[r["metric"]["service_name"]][f"{label}_p95_ms"] = None if v != v else round(v, 1)
             for r in self._prom(f"100 * rate(container_cpu_usage_nanoseconds_total[{rng}]) / 1e9", at):
                 out[r["metric"].get("container_name", "")][f"{label}_cpu"] = float(r["value"][1])
-            for r in self._prom("container_memory_rss_bytes / 1e6", at):
+            mem_q = f"max_over_time(container_memory_rss_bytes[{rng}])" if label == "now" else "container_memory_rss_bytes"
+            for r in self._prom(f"{mem_q} / 1e6", at):  # incident side: the peak (a leak is about the highest point)
                 out[r["metric"].get("container_name", "")][f"{label}_mem"] = float(r["value"][1])
         dep_tot: dict[str, float] = defaultdict(float)
         dep_err: dict[str, float] = defaultdict(float)
-        for r in self._prom(f"sum by (span_name) (rate({CALLS}{{{CLIENT}}}[{rng}]))", self.window.end):
+        # caller -> callee edges from client span metrics: unlike trace edges, these exist even
+        # when the callee is never reached (no server span on its side)
+        called_by: dict[str, set] = defaultdict(set)
+        for r in self._prom(f"sum by (service_name, span_name) (rate({CALLS}{{{CLIENT}}}[{now_rng}]))", self.window.end):
             c = callee_of(r["metric"].get("span_name", ""))
             if c:
                 dep_tot[c] += float(r["value"][1])
-        for r in self._prom(f"sum by (span_name) (rate({CALLS}{{{CLIENT},{ERR}}}[{rng}]))", self.window.end):
+                if float(r["value"][1]) > 0 and r["metric"].get("service_name") in SERVICES:
+                    called_by[c].add(r["metric"]["service_name"])
+        for r in self._prom(f"sum by (service_name, span_name) (rate({CALLS}{{{CLIENT},{ERR}}}[{now_rng}]))", self.window.end):
             c = callee_of(r["metric"].get("span_name", ""))
             if c:
                 dep_err[c] += float(r["value"][1])
+
         def err_ratio(m):
             return (m.get("err", 0.0) / m["tot"]) if m.get("tot") else 0.0
 
@@ -200,6 +213,7 @@ class OtelDemoTelemetry(Telemetry):
                 "p95_ms": d.get("now_p95_ms"),
                 "baseline_p95_ms": d.get("baseline_p95_ms"),
                 "callers_error_ratio": callers,
+                "called_by": sorted(called_by.get(svc, ())),
                 "up": 0.0 if unreachable else 1.0,
                 "worst_error_operation": we[0],
                 "worst_op_error_ratio": round(we[1], 3),
