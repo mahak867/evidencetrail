@@ -36,7 +36,8 @@
 
 ## Cost and reliability
 
-- EvidenceTrail total tokens: 90,836 over 12 investigations (~7,569 per incident).
+- EvidenceTrail total tokens: 90,836 over 12 investigations. Per investigation: median 8,282 tokens (mean 7,570).
+- Gemini calls per investigation: median 2 (range 1–4).
 - Gemini retries (429/5xx with backoff): 2; hard failures: 36. Models used: ['gemini-3-flash-preview', 'gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-flash-lite-latest'].
 - Free-tier Gemini latency varies a lot with demand; elapsed time includes retry back-off.
 - Median EvidenceTrail time excluding provider back-off/overload waits: 10.8s

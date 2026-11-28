@@ -23,7 +23,7 @@ EvidenceTrail helps an on-call engineer reach a checked root-cause diagnosis in 
 
 The model actually used for each run is recorded in its result JSON. Override the defaults with `GEMINI_MODEL`, `GEMINI_FALLBACKS` and `GEMINI_REASONING`.
 
-**Free-tier budget.** Some Gemini models allow only about 20 requests per day on the free tier. EvidenceTrail is designed around that: the health scan, call graph and the top suspects' logs, traces and changes are fetched *before* Gemini is called, so an investigation needs **1–4 Gemini calls** (median 2.5; about 8.8k tokens on the standard set). Gemini asks for more tools only when a hypothesis still needs testing.
+**Free-tier budget.** Some Gemini models allow only about 20 requests per day on the free tier. EvidenceTrail is designed around that: the health scan, call graph and the top suspects' logs, traces and changes are fetched *before* Gemini is called, so an investigation needs **1–4 Gemini calls** (median 2; median 8,282 tokens per investigation on the standard set, native engine). Gemini asks for more tools only when a hypothesis still needs testing.
 
 All Gemini calls use the Gemini API (OpenAI-compatible endpoint) with each team's own free-tier key. HTTP 429 and 5xx responses get bounded exponential backoff, then model fallback, then a clear `FAILED` state. Token usage is recorded for every investigation. Gemini is **inside the product**; it is not just a coding assistant.
 
@@ -128,7 +128,7 @@ Every method investigates **one frozen 120-second telemetry window** per scenari
 | B0 single-prompt Gemini | 4/6 | 2 (including a service that does not exist) |
 | B1 dashboard rule | 5/6 | 1 |
 
-Across all 18 faults: **0 confident wrong answers for EvidenceTrail** (both engines) vs 2 for single-prompt Gemini and 3 for the dashboard rule. The evidence gate blocked **9 of 80** claims across both engines. The native engine used 1–4 Gemini calls per incident (median 2).
+Across all 18 faults: **0 confident wrong answers for EvidenceTrail** (both engines) vs 2 for single-prompt Gemini and 3 for the dashboard rule. The evidence gate blocked **9 of 80** claims across both engines. The native engine used 1–4 Gemini calls per incident (median 2) across all 18 runs. On the standard set, the native engine's median is 2 calls and 8,282 tokens per investigation; see `results/SCORECARD.md`.
 
 H01, H02, H04, H05 and H06 were re-run because the first attempt hit Google Gemini HTTP 503 "high demand" on every model for at least one method; first attempts are kept in `results/runs_hard_attempt1/`. B1 was re-scored on each scenario's saved window with the `up` rule (`eval/rescore_b1.py`; B1 makes no model calls). Results from before the fixes are archived in `results/archive_v1/` with a note on what was wrong.
 

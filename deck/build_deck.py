@@ -289,7 +289,7 @@ remove(by(s, "Describe your Technology"))
 subtitle(s, "Technology stack, dependencies and show-stoppers")
 stack = [
     ("AI", GOLD, ["Gemini (3.1 Flash-Lite + 4 fallback models)", "Two engines: native loop or Google ADK", "MCP server for Claude / Gemini CLI",
-                  (f"{AV['calls'][0]}–{AV['calls'][1]} Gemini calls per incident (median {AV['calls'][2]:g})" if AV else "Gemini calls per incident measured")]),
+                  (f"{EV['calls'][0]}–{EV['calls'][1]} Gemini calls per incident (median {EV['calls'][2]:g})" if EV else "Gemini calls per incident measured")]),
     ("Telemetry", GREEN, ["OpenTelemetry SDK → Jaeger (traces)", "Prometheus (metrics)", "JSON logs with trace IDs + change/event log"]),
     ("Test system", PURPLE, ["9-service shop on Docker Compose", "7 reproducible fault types", "Load generator; OpenTelemetry Demo next"]),
     ("App", RGBColor(0x4F, 0x9C, 0xF9), ["Python, FastAPI, httpx", "Web UI: diagnosis + clickable evidence", "Audit log of every approval"]),
@@ -376,7 +376,7 @@ text(s, 13.45, 7.0, 6.1, 2.8, [
     {"t": [("Open core: ", {"bold": True}), ("free self-hosted investigator drives adoption", {"color": MUTED})], "bullet": True},
     {"t": [("Team plan: ", {"bold": True}), ("per-cluster monthly subscription: history, approvals, audit, SSO", {"color": MUTED})], "bullet": True},
     {"t": [("MSP licence: ", {"bold": True}), ("per-client pricing for systems integrators", {"color": MUTED})], "bullet": True},
-    {"t": [("Unit cost: ", {"bold": True}), (f"~{EV['EvidenceTrail']['tokens']:,} Gemini tokens per investigated incident (measured)" if EV else "Gemini tokens per incident measured in every run", {"color": MUTED})], "bullet": True},
+    {"t": [("Unit cost: ", {"bold": True}), (f"~{EV['EvidenceTrail']['tokens']:,} Gemini tokens per investigated incident (median, measured)" if EV else "Gemini tokens per incident measured in every run", {"color": MUTED})], "bullet": True},
 ], size=13, spacing=6)
 
 # ================================================================== slide 5

@@ -14,6 +14,7 @@ import glob
 import json
 import math
 import os
+import statistics
 import time
 
 import yaml
@@ -120,7 +121,10 @@ def report(runs: list[dict]) -> str:
     usage = [x.get("usage") or {} for x in et]
     tot = sum(u.get("total_tokens", 0) for u in usage)
     lines += ["", "## Cost and reliability", "",
-              f"- EvidenceTrail total tokens: {tot:,} over {n} investigations (~{tot//max(n,1):,} per incident).",
+              f"- EvidenceTrail total tokens: {tot:,} over {n} investigations. Per investigation: median "
+              f"{statistics.median_high(u.get('total_tokens', 0) for u in usage):,.0f} tokens (mean {tot/max(n,1):,.0f}).",
+              f"- Gemini calls per investigation: median {statistics.median_high(u.get('calls', 0) for u in usage):g} "
+              f"(range {min(u.get('calls', 0) for u in usage)}–{max(u.get('calls', 0) for u in usage)}).",
               f"- Gemini retries (429/5xx with backoff): {sum(u.get('retries', 0) for u in usage)}; "
               f"hard failures: {sum(u.get('failures', 0) for u in usage)}. Models used: "
               f"{sorted({m for x in et for m in (x.get('model') or '').split(',') if m})}.",
