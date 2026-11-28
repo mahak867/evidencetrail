@@ -291,30 +291,30 @@ stack = [
     ("AI", GOLD, ["Gemini (3.1 Flash-Lite + 4 fallback models)", "Two engines: native loop or Google ADK", "MCP server for Claude / Gemini CLI",
                   (f"{EV['calls'][0]}–{EV['calls'][1]} Gemini calls per incident (median {EV['calls'][2]:g})" if EV else "Gemini calls per incident measured")]),
     ("Telemetry", GREEN, ["OpenTelemetry SDK → Jaeger (traces)", "Prometheus (metrics)", "JSON logs with trace IDs + change/event log"]),
-    ("Test system", PURPLE, ["9-service shop on Docker Compose", "7 reproducible fault types", "Load generator; OpenTelemetry Demo next"]),
+    ("Test system", PURPLE, ["9-service shop on Docker Compose", "7 injectable faults, scored as 6 types", "Load generator; OpenTelemetry Demo next"]),
     ("App", RGBColor(0x4F, 0x9C, 0xF9), ["Python, FastAPI, httpx", "Web UI: diagnosis + clickable evidence", "Audit log of every approval"]),
 ]
 for i, (h, col, items) in enumerate(stack):
     x = 0.43 + i * 3.42
-    card(s, x, 2.35, 3.22, 3.75, fill=CARD2)
-    text(s, x + 0.25, 2.55, 2.8, 0.45, h, size=18, bold=True, color=col)
-    text(s, x + 0.25, 3.1, 2.8, 2.4, [{"t": t, "bullet": True} for t in items], size=13, color=WHITE, spacing=6)
-text(s, 14.3, 2.35, 5.3, 0.45, "SAFETY BUILT IN", size=15, bold=True, color=GREEN)
-text(s, 14.3, 2.85, 5.25, 2.8, [{"t": t, "bullet": True} for t in [
+    card(s, x, 2.35, 3.22, 4.15, fill=CARD2)
+    text(s, x + 0.25, 2.55, 2.8, 0.45, h, size=19, bold=True, color=col)
+    text(s, x + 0.25, 3.15, 2.8, 3.2, [{"t": t, "bullet": True} for t in items], size=14, color=WHITE, spacing=6)
+text(s, 14.3, 2.35, 5.3, 0.45, "SAFETY BUILT IN", size=16, bold=True, color=GREEN)
+text(s, 14.3, 2.9, 5.25, 3.5, [{"t": t, "bullet": True} for t in [
     "Read-only telemetry access by default",
     "Secrets, card numbers, emails redacted before Gemini sees logs",
     "Action risk decided by an allow-list policy, never by the model",
-    "Keys server-side only; own test environment only"]], size=13, spacing=6)
-text(s, 0.43, 6.45, 10, 0.45, "DEPENDENCIES & SHOW-STOPPERS → MITIGATION", size=15, bold=True, color=RED)
+    "Keys server-side only; own test environment only"]], size=14, spacing=6)
+text(s, 0.43, 6.8, 10, 0.45, "DEPENDENCIES & SHOW-STOPPERS → MITIGATION", size=16, bold=True, color=RED)
 risks = [("Gemini free-tier limits / 503 \"high demand\"", "Bounded retries with back-off, automatic model fallback, clear FAILED state, token cost logged"),
          ("Telemetry too big for the context window", "Scan + call graph narrow it first; logs grouped by pattern; prompt tokens reported per run"),
          ("Injected faults are cleaner than real incidents", "Stated openly; multi-fault and OpenTelemetry Demo scenarios added in Round 2"),
          ("No Kubernetes cluster on student laptops", "Docker Compose (allowed by the brief); kind/minikube optional later")]
 for i, (r, m) in enumerate(risks):
-    y = 7.0 + i * 0.75
-    card(s, 0.43, y, 19.1, 0.62, fill=CARD)
-    text(s, 0.7, y + 0.15, 6.6, 0.4, r, size=13, bold=True)
-    text(s, 7.5, y + 0.15, 11.9, 0.4, m, size=13, color=MUTED)
+    y = 7.3 + i * 0.75
+    card(s, 0.43, y, 19.1, 0.64, fill=CARD)
+    text(s, 0.7, y + 0.14, 6.6, 0.4, r, size=14, bold=True)
+    text(s, 7.5, y + 0.14, 11.9, 0.4, m, size=14, color=MUTED)
 
 # ================================================================== slide 4
 s = S[3]
@@ -332,36 +332,36 @@ text(s, 0.43, 2.9, 6.4, 5, [[(h + ": ", {"bold": True}), (d, {"color": MUTED})] 
 card(s, 7.1, 2.35, 6.0, 7.5, fill=CARD2, name="ResultsCard")
 text(s, 7.4, 2.55, 5.5, 0.45, "PROTOTYPE RESULTS (MEASURED)", size=15, bold=True, color=GREEN)
 if EV:
-    text(s, 7.4, 3.0, 5.5, 0.4, f"{EV['n']} injected faults · {EV['types']} fault types", size=12, color=MUTED)
+    # headline first (A2): confident wrong answers across all faults, then claims blocked
+    text(s, 7.4, 3.0, 5.5, 1.0, [[(f"{AV['EvidenceTrail']['wrong'] + AV['EvidenceTrail_ADK']['wrong']}", {"bold": True, "color": GREEN, "size": 40}),
+                                  ("  confident wrong answers", {"bold": True, "color": WHITE, "size": 17})]], size=17)
+    text(s, 7.4, 3.95, 5.5, 0.7, [[(f"EvidenceTrail, all {AV['n']} faults, both engines · ", {"color": MUTED}),
+                                   (f"single-prompt Gemini {AV['B0_single_prompt']['wrong']} · dashboard rule {AV['B1_dashboard_rule']['wrong']}", {"bold": True})]], size=12)
+    text(s, 7.4, 4.6, 5.5, 0.9, [[(f"{AV['dropped']} of {AV['kept'] + AV['dropped']}", {"bold": True, "color": GOLD, "size": 22}),
+                                  ("  AI claims blocked", {"bold": True, "color": WHITE, "size": 14})],
+                                 [("by the evidence gate (both engines)", {"color": MUTED})]], size=12, spacing=0)
+    text(s, 7.4, 5.65, 5.5, 0.4, f"Standard set: {EV['n']} injected faults · {EV['types']} fault types", size=12, bold=True, color=WHITE)
     rows = [("EvidenceTrail", EV["EvidenceTrail"], GREEN), ("Single-prompt Gemini", EV["B0_single_prompt"], GOLD), ("Dashboard rule", EV["B1_dashboard_rule"], MUTED)]
     for i, (lbl, d, col) in enumerate(rows):
-        y = 3.5 + i * 1.18
-        text(s, 7.4, y, 5.5, 0.4, lbl, size=13, bold=True, color=WHITE)
+        y = 6.03 + i * 0.92
+        text(s, 7.4, y, 5.5, 0.35, lbl, size=12, bold=True, color=WHITE)
         for j, (k, n, sub) in enumerate(((d["top1"], EV["n"], "service"), (d["type"][0], d["type"][1], "service + fault type"))):
-            yy = y + 0.38 + j * 0.34
+            yy = y + 0.32 + j * 0.28
             if not n:
                 text(s, 7.4, yy, 5.4, 0.3, f"{sub}: n/a (rule gives no fault type)", size=10.5, color=MUTED)
                 continue
             w = 2.6 * k / n
-            card(s, 7.4, yy + 0.04, 2.6, 0.22, fill=CARD, line=None, radius=0.3)
+            card(s, 7.4, yy + 0.05, 2.6, 0.18, fill=CARD, line=None, radius=0.3)
             if w > 0.03:
-                card(s, 7.4, yy + 0.04, w, 0.22, fill=col, line=None, radius=0.3)
-            text(s, 10.15, yy, 2.8, 0.3, [[(f"{k}/{n}", {"bold": True}), (f"  {sub}", {"color": MUTED})]], size=11)
-    y2 = 7.1
+                card(s, 7.4, yy + 0.05, w, 0.18, fill=col, line=None, radius=0.3)
+            text(s, 10.15, yy, 2.8, 0.3, [[(f"{k}/{n}", {"bold": True}), (f"  {sub}", {"color": MUTED})]], size=10.5)
     if HV and HV["n"] >= 6:
         et, adk, b0 = HV["EvidenceTrail"], HV["EvidenceTrail_ADK"], HV["B0_single_prompt"]
-        text(s, 7.4, y2, 5.5, 1.3, [
+        text(s, 7.4, 8.85, 5.5, 0.95, [
             [("Hard set ", {"bold": True, "color": GOLD}), (f"(noisy logs, silent faults, n={HV['n']}): ", {"color": MUTED})],
             [("Right service: ", {"color": MUTED}), (f"ADK {adk['right']}/{HV['n']}, native {et['right']}/{HV['n']}", {"bold": True, "color": GREEN}),
              (f" (+{et['abstain']} abstained)" if et["abstain"] else "", {"color": MUTED}), (f" vs single-prompt {b0['right']}/{HV['n']}", {"bold": True})],
         ], size=11.5, spacing=3)
-        y2 += 0.95
-    text(s, 7.4, y2, 5.5, 1.6, [
-        [("Confident wrong answers, all ", {"color": MUTED}), (f"{AV['n']}", {"color": MUTED}), (" faults: ", {"color": MUTED}),
-         (f"EvidenceTrail {AV['EvidenceTrail']['wrong'] + AV['EvidenceTrail_ADK']['wrong']}", {"bold": True, "color": GREEN}),
-         (f" · single prompt {AV['B0_single_prompt']['wrong']} · dashboard {AV['B1_dashboard_rule']['wrong']}", {"bold": True})],
-        [(f"{AV['dropped']} of {AV['kept'] + AV['dropped']}", {"bold": True, "color": GOLD}), (" AI claims blocked by the evidence gate (both engines)", {"color": MUTED})],
-    ], size=11.5, spacing=4)
 else:
     text(s, 7.4, 3.2, 5.5, 3, "Evaluation in progress: 12 injected faults × 3 methods.", size=15, color=MUTED)
 # market + revenue
@@ -390,7 +390,7 @@ for i, (h, d, col) in enumerate(boxes):
     x = 0.43 + i * (bw + gap)
     b = card(s, x, y0, bw, 1.35, fill=CARD2, line=col)
     text(s, x + 0.2, y0 + 0.2, bw - 0.4, 0.45, h, size=17, bold=True, color=col, align=PP_ALIGN.CENTER)
-    text(s, x + 0.2, y0 + 0.72, bw - 0.4, 0.5, d, size=12, color=MUTED, align=PP_ALIGN.CENTER)
+    text(s, x + 0.2, y0 + 0.7, bw - 0.4, 0.55, d, size=13, color=MUTED, align=PP_ALIGN.CENTER)
     if i < len(boxes) - 1:
         arrow(s, x + bw + 0.04, y0 + 0.67, x + bw + gap - 0.04, y0 + 0.67)
 # tools row under agent
@@ -399,36 +399,37 @@ tx = 0.43 + 3 * (bw + gap)
 arrow(s, tx + bw / 2, y0 + 1.4, tx + bw / 2, y0 + 1.85, color=GREEN)
 card(s, 5.4, y0 + 1.9, 9.3, 1.3, fill=CARD)
 text(s, 5.6, y0 + 2.05, 8.9, 1.1, [[("Read-only tools: ", {"bold": True, "color": GREEN}), ("  ·  ".join(tools), {"color": WHITE})],
-                                   [("Telemetry from: ", {"bold": True, "color": GREEN}), ("Prometheus · Jaeger · logs · deploy events, redacted", {"color": MUTED})]], size=12.5, spacing=2)
+                                   [("Telemetry from: ", {"bold": True, "color": GREEN}), ("Prometheus · Jaeger · logs · deploy events, redacted", {"color": MUTED})]], size=13.5, spacing=2)
 ex = 0.43 + 5 * (bw + gap)
 arrow(s, ex + bw / 2, y0 + 1.4, ex + bw / 2, y0 + 1.85, color=PURPLE)
 card(s, 15.65, y0 + 1.9, 3.9, 1.3, fill=CARD, line=PURPLE)
-text(s, 15.85, y0 + 2.05, 3.5, 1.1, [[("Suggested fix", {"bold": True, "color": PURPLE})], [("safe / risky label → dry run → named approval", {"color": MUTED})]], size=12.5, spacing=2)
-# eval loop + screenshot
-card(s, 0.43, 5.75, 7.4, 4.15, fill=CARD)
-text(s, 0.7, 5.95, 7, 0.45, "REPEATABLE EVALUATION LOOP", size=15, bold=True, color=GOLD)
-text(s, 0.7, 6.45, 6.9, 3.3, [{"t": t, "bullet": True} for t in [
+text(s, 15.85, y0 + 2.05, 3.5, 1.1, [[("Suggested fix", {"bold": True, "color": PURPLE})], [("safe / risky label → dry run → named approval", {"color": MUTED})]], size=13.5, spacing=2)
+# eval loop + screenshot (A3: bigger product image)
+card(s, 0.43, 5.75, 5.85, 4.6, fill=CARD)
+text(s, 0.68, 5.95, 5.4, 0.45, "REPEATABLE EVALUATION LOOP", size=15, bold=True, color=GOLD)
+text(s, 0.68, 6.45, 5.4, 3.8, [{"t": t, "bullet": True} for t in [
     "Inject a known fault into the 9-service shop (error, latency, crash, memory leak, DB pool, bad config, bad deploy)",
     "One frozen 120-second telemetry window shared by every method",
     "Score top-1 / top-3 service, fault type, time, tokens, evidence precision",
-    "Every scenario reported, misses included"]], size=13, spacing=6)
-vh, vw = 4.15, 4.15 * 1440 / 900
+    "Every scenario reported, misses included"]], size=14, spacing=6)
+vx, vh = 6.5, 4.6
+vw = vh * 1440 / 900
 if EMBED_VIDEO and os.path.exists(VIDEO_FILE):
-    mv = s.shapes.add_movie(VIDEO_FILE, Inches(8.15), Inches(5.75), Inches(vw), Inches(vh), poster_frame_image=POSTER, mime_type="video/mp4")
+    mv = s.shapes.add_movie(VIDEO_FILE, Inches(vx), Inches(5.75), Inches(vw), Inches(vh), poster_frame_image=POSTER, mime_type="video/mp4")
     mv.name = "Demo video"
 else:
-    mv = s.shapes.add_picture(POSTER, Inches(8.15), Inches(5.75), Inches(vw), Inches(vh)); mv.name = "Demo video poster"
+    mv = s.shapes.add_picture(POSTER, Inches(vx), Inches(5.75), Inches(vw), Inches(vh)); mv.name = "Demo video poster"
     mv.click_action.hyperlink.address = VIDEO_URL
-qx = 8.15 + vw + 0.3
+qx = vx + vw + 0.3
 text(s, qx, 5.75, 19.55 - qx, 0.45, "TRY IT", size=15, bold=True, color=GOLD)
-text(s, qx, 6.2, 19.55 - qx, 0.9, [[("Live demo (recorded data), 2:10 video of a live run, and the full code.", {"color": MUTED})]], size=11.5)
+text(s, qx, 6.2, 19.55 - qx, 1.0, [[("Live demo (recorded data), 2:10 video of a live run, and the full code.", {"color": MUTED})]], size=12.5)
 qs = [("qr_demo.png", "Live demo", DEMO_URL), ("qr_video.png", "Video", VIDEO_URL), ("qr_repo.png", "GitHub", REPO_URL)]
 qw = (19.55 - qx - 0.3) / 3
 for i, (img, lbl, url) in enumerate(qs):
     x = qx + i * (qw + 0.15)
-    q = s.shapes.add_picture(f"{HERE}/{img}", Inches(x), Inches(7.25), Inches(qw), Inches(qw))
+    q = s.shapes.add_picture(f"{HERE}/{img}", Inches(x), Inches(7.4), Inches(qw), Inches(qw))
     q.name = f"QR {lbl}"; q.click_action.hyperlink.address = url
-    text(s, x, 7.3 + qw, qw, 0.4, [[(lbl, {"bold": True, "link": url, "color": WHITE})]], size=11.5, align=PP_ALIGN.CENTER)
+    text(s, x, 7.45 + qw, qw, 0.4, [[(lbl, {"bold": True, "link": url, "color": WHITE})]], size=12, align=PP_ALIGN.CENTER)
 
 # ================================================================== slide 6
 s = S[5]
