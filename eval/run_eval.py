@@ -28,6 +28,10 @@ HERE = os.path.dirname(__file__)
 RUNS = os.path.join(HERE, "..", "results", "runs")
 SET = "standard"
 WARMUP_S, SOAK_S, WINDOW_S = 75, 60, 120
+# set -> (scenario file, runs folder, scorecard). "otel" runs against the OpenTelemetry Demo (TARGET=oteldemo).
+SETS = {"standard": ("scenarios.yaml", "runs", "SCORECARD.md"),
+        "hard": ("scenarios_hard.yaml", "runs_hard", "SCORECARD_HARD.md"),
+        "otel": ("scenarios_otel.yaml", "runs_otel", "SCORECARD_OTEL.md")}
 
 
 def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
@@ -84,7 +88,7 @@ def report(runs: list[dict]) -> str:
     n = len(runs)
     lines = [f"# EvidenceTrail evaluation scorecard ({SET} set)", "",
              f"- Scenarios: **{n}** injected faults across **{len({r['truth']['fault_type'] for r in runs})}** fault types "
-             f"and **{len({r['truth']['service'] for r in runs})}** services (see `eval/scenarios.yaml`).",
+             f"and **{len({r['truth']['service'] for r in runs})}** services (see `eval/{SETS[SET][0]}`).",
              f"- Each method investigates the same {WINDOW_S}s telemetry window, {SOAK_S}s after injection.",
              "- 95% Wilson confidence intervals in brackets. Small n: treat as indicative, not definitive.",
              "- Medians: with an even number of runs, the upper of the two middle values is reported.", "",
@@ -136,7 +140,9 @@ def report(runs: list[dict]) -> str:
               "## Known limitations", "",
               "- Injected faults are single-cause and cleaner than real incidents.",
               "- Small scenario set (n per method is small); intervals are wide.",
-              "- The shop is a simplified 9-service app; telemetry volume is far below production."]
+              ("- The OpenTelemetry Demo (Apache-2.0) runs with only the local overrides in `otel/`; faults are its own "
+               "flagd feature flags; load comes from its own load generator, far below production volume."
+               if SET == "otel" else "- The shop is a simplified 9-service app; telemetry volume is far below production.")]
     return "\n".join(lines) + "\n"
 
 
@@ -144,15 +150,19 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--only")
     ap.add_argument("--report-only", action="store_true")
-    ap.add_argument("--set", default="standard", choices=["standard", "hard"])
+    ap.add_argument("--set", default="standard", choices=sorted(SETS))
     a = ap.parse_args()
-    global RUNS, SET
+    global RUNS, SET, SOAK_S, WARMUP_S
     SET = a.set
-    if a.set == "hard":
-        RUNS = os.path.join(HERE, "..", "results", "runs_hard")
+    if (SET == "otel") != faults.OTEL:
+        raise SystemExit("--set otel needs TARGET=oteldemo, and the other sets need the default TARGET=shopsim")
+    if SET == "otel":
+        SOAK_S = 120  # some demo faults take 60-90s to show (adHighCpu); keep the whole 120s window under the fault
+        WARMUP_S = 120  # so the baseline's 1-minute rates no longer include the previous fault
+    RUNS = os.path.join(HERE, "..", "results", SETS[SET][1])
     os.makedirs(RUNS, exist_ok=True)
     if not a.report_only:
-        scs = yaml.safe_load(open(os.path.join(HERE, "scenarios.yaml" if SET == "standard" else "scenarios_hard.yaml")))
+        scs = yaml.safe_load(open(os.path.join(HERE, SETS[SET][0])))
         if a.only:
             scs = [s for s in scs if s["id"] in a.only.split(",")]
         for sc in scs:
@@ -161,7 +171,7 @@ def main():
             json.dump(res, open(os.path.join(RUNS, f"{sc['id']}.json"), "w"), indent=1, default=str)
     runs = [json.load(open(p)) for p in sorted(glob.glob(os.path.join(RUNS, "*.json")))]
     md = report(runs)
-    open(os.path.join(HERE, "..", "results", "SCORECARD.md" if SET == "standard" else "SCORECARD_HARD.md"), "w").write(md)
+    open(os.path.join(HERE, "..", "results", SETS[SET][2]), "w").write(md)
     print(md)
 
 

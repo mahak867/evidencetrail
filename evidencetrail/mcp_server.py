@@ -17,7 +17,7 @@ from mcp.server.mcpserver import MCPServer
 from mcp.types import ToolAnnotations
 
 from .investigator import Investigation, suspects
-from .telemetry import Telemetry, Window
+from .telemetry import Telemetry, make_telemetry
 
 READ_ONLY = ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 
@@ -35,7 +35,7 @@ mcp = MCPServer(
 
 
 def _tel(window_s: int) -> Telemetry:
-    return Telemetry(window=Window.last(max(30, min(window_s, 1800))))
+    return make_telemetry(window_s=max(30, min(window_s, 1800)))
 
 
 @mcp.tool(annotations=READ_ONLY)
@@ -60,8 +60,9 @@ def get_logs(service: str, level: str = "ERROR", contains: str = "", window_s: i
 
 @mcp.tool(annotations=READ_ONLY)
 def get_metric(service: str, name: str, window_s: int = 300) -> dict:
-    """A metric time series for a service: error_ratio, p95_latency_ms, request_rate, heap_mb,
-    db_pool_in_use, config_version, dependency_errors or up."""
+    """A metric time series for a service. ShopSim: error_ratio, p95_latency_ms, request_rate, heap_mb,
+    db_pool_in_use, config_version, dependency_errors or up. OpenTelemetry Demo: error_ratio,
+    p95_latency_ms, request_rate, dependency_errors, cpu_percent or memory_mb."""
     return _tel(window_s).metric(service, name)
 
 

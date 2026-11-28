@@ -8,7 +8,14 @@ import subprocess
 
 import httpx
 
-SERVICES = {"frontend", "checkout", "catalog", "recommendation", "cart", "payment", "shipping", "currency", "inventory"}
+from .target import OTEL
+
+SHOPSIM_SERVICES = {"frontend", "checkout", "catalog", "recommendation", "cart", "payment", "shipping", "currency", "inventory"}
+# OpenTelemetry Demo application services EvidenceTrail may name (infrastructure such as flagd,
+# the load generator, the collector and the telemetry backends is excluded).
+OTEL_SERVICES = {"ad", "cart", "checkout", "currency", "email", "frontend", "frontend-proxy", "image-provider",
+                 "payment", "product-catalog", "quote", "recommendation", "shipping"}
+SERVICES = OTEL_SERVICES if OTEL else SHOPSIM_SERVICES
 PORTS = {s: 8100 + i for i, s in enumerate(["frontend", "checkout", "catalog", "recommendation", "cart",
                                               "payment", "shipping", "currency", "inventory"])}
 
@@ -37,6 +44,15 @@ def classify(action: dict) -> dict:
 
 
 def dry_run(name: str, svc: str) -> str:
+    if OTEL:
+        return {
+            "collect_diagnostics": f"query Prometheus span metrics, OpenSearch logs and Jaeger for service={svc}",
+            "restart_service": f"docker restart {svc}  (OpenTelemetry Demo test env)",
+            "start_service": f"docker start {svc}  (OpenTelemetry Demo test env)",
+            "rollback_deploy": f"test env: turn off the injected feature flags affecting {svc} (flagd)",
+            "rollback_config": f"test env: turn off the injected feature flags affecting {svc} (flagd)",
+            "scale_up": "(blocked)",
+        }.get(name, "(none)")
     return {
         "collect_diagnostics": f"GET /metrics, tail logs/{svc}.log, query Jaeger for service={svc}",
         "restart_service": f"docker compose restart {svc}",
@@ -56,9 +72,21 @@ def execute(action: dict, approved_by: str | None) -> dict:
         return {"executed": False, "reason": "risky action requires human approval"}
     name, svc = a["action"], a["service"]
     if name in ("restart_service", "start_service"):
-        cmd = ["docker", "compose", "restart" if name == "restart_service" else "start", svc]
+        verb = "restart" if name == "restart_service" else "start"
+        cmd = ["docker", verb, svc] if OTEL else ["docker", "compose", verb, svc]
         p = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
         return {"executed": p.returncode == 0, "command": " ".join(cmd), "output": (p.stdout + p.stderr)[-500:], "approved_by": approved_by}
+    if name in ("rollback_deploy", "rollback_config") and OTEL:
+        from .faults import OTEL_FLAGS, RESTART_AFTER, active_flags, clear_flags_for
+        was_on = [f for f in active_flags() if OTEL_FLAGS[f][0] == svc]
+        clear_flags_for(svc)
+        restarted = []
+        if any(f in RESTART_AFTER for f in was_on):  # e.g. leaked memory stays allocated after the flag is off
+            p = subprocess.run(["docker", "restart", svc], capture_output=True, text=True, timeout=120)
+            restarted = [svc] if p.returncode == 0 else []
+        return {"executed": bool(was_on), "command": a["dry_run"], "flags_turned_off": was_on, "restarted": restarted,
+                "approved_by": approved_by,
+                **({} if was_on else {"reason": f"no injected fault is active in {svc}; nothing was changed"})}
     if name in ("rollback_deploy", "rollback_config"):
         r = httpx.delete(f"http://localhost:{PORTS[svc]}/admin/fault", timeout=10, trust_env=False)
         return {"executed": r.status_code == 200, "command": a["dry_run"], "approved_by": approved_by}

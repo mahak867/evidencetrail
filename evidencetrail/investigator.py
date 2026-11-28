@@ -23,7 +23,7 @@ from dataclasses import dataclass, field
 from . import safety
 from .evidence import gate
 from .gemini import Gemini, GeminiUnavailable, parse_args
-from .telemetry import Telemetry, Window
+from .telemetry import Telemetry, Window, make_telemetry, telemetry_class
 
 FAULT_TYPES = ["crash_or_unreachable", "latency", "resource_exhaustion", "bad_config", "bad_deploy", "code_error"]
 
@@ -59,8 +59,7 @@ TOOLS = [
           {"service": SVC, "level": {"type": "string", "enum": ["ERROR", "WARN", "INFO"]},
            "contains": {"type": "string"}}, ["service"]),
     _tool("get_metric", "Time series for one metric of a service across the incident window.",
-          {"service": SVC, "name": {"type": "string", "enum": ["error_ratio", "p95_latency_ms", "request_rate", "heap_mb",
-                                                               "db_pool_in_use", "config_version", "dependency_errors", "up"]}},
+          {"service": SVC, "name": {"type": "string", "enum": telemetry_class().METRIC_NAMES}},
           ["service", "name"]),
     _tool("get_error_traces", "Failing traces through a service, reduced to the chain of failing spans.", {"service": SVC}, ["service"]),
     _tool("get_slow_traces", "Slowest traces through a service with self-time per service.", {"service": SVC}, ["service"]),
@@ -92,15 +91,26 @@ def suspects(health: dict, edges: list[dict]) -> list[dict]:
         p95, b = h.get("p95_ms") or 0, h.get("baseline_p95_ms") or 0
         slow = p95 > max(250, 3 * (b or 50))
         down = s not in health or h.get("up", 1) == 0  # Prometheus could not scrape it; quiet traffic alone is not "down"
-        return err_up or slow or down
+        # optional signals (OpenTelemetry Demo health only; absent for ShopSim, so its behaviour is unchanged):
+        # one operation failing far more than before, or the container's CPU or memory jumping
+        op_err = (h.get("worst_op_error_ratio") or 0) - (h.get("baseline_worst_op_error_ratio") or 0) > 0.2
+        op_p95, op_b = h.get("worst_op_p95_ms") or 0, h.get("baseline_worst_op_p95_ms") or 0
+        op_slow = op_p95 > max(250, 3 * (op_b or 50))
+        cpu, bcpu = h.get("cpu_percent"), h.get("baseline_cpu_percent")
+        cpu_up = cpu is not None and cpu >= 50 and cpu >= 3 * max(bcpu or 0, 5)
+        mem, bmem = h.get("memory_mb"), h.get("baseline_memory_mb")
+        mem_up = mem is not None and bmem is not None and mem >= 1.3 * bmem and mem - bmem >= 50
+        return err_up or slow or down or op_err or op_slow or cpu_up or mem_up
     callees: dict[str, set] = {}
     for e in edges:
         callees.setdefault(e["caller"], set()).add(e["callee"])
-    all_svcs = set(health) | {e["callee"] for e in edges} | {e["caller"] for e in edges} | set(safety.SERVICES)
+    # only services a diagnosis may name; infrastructure in the call graph (load generator,
+    # flag service, browser) has no health data and must not be mistaken for "down"
+    all_svcs = (set(health) | {e["callee"] for e in edges} | {e["caller"] for e in edges} | set(safety.SERVICES)) & set(safety.SERVICES)
     out = []
     for s in sorted(all_svcs):
         if anomalous(s):
-            bad_children = [c for c in callees.get(s, ()) if anomalous(c)]
+            bad_children = [c for c in callees.get(s, ()) if c in all_svcs and anomalous(c)]
             out.append({"service": s, "anomalous_dependencies": bad_children, "deepest": not bad_children,
                         "health": health.get(s, {"rps": 0, "note": "no metrics: service may be down"})})
     out.sort(key=lambda x: (not x["deepest"], -(x["health"].get("error_ratio") or 0)))
@@ -121,7 +131,7 @@ class Investigation:
     stage: str = "queued"  # for live progress in the UI
 
     def __post_init__(self):
-        self.tel = Telemetry(window=self.window or Window.last(self.window_s))
+        self.tel = make_telemetry(self.window, self.window_s)
         self.llm = Gemini(model=self.model) if self.model else Gemini()
 
     def _log(self, entry: dict) -> None:

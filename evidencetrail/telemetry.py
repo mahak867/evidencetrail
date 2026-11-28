@@ -42,6 +42,13 @@ class Telemetry:
     window: Window = field(default_factory=lambda: Window.last(120))
     client: httpx.Client = field(default_factory=lambda: httpx.Client(timeout=15, trust_env=False))
 
+    # per-service time series for the UI charts (/api/series), grouped by SERIES_LABEL
+    SERIES_LABEL = "service"
+    SERIES_QUERIES = {
+        "error_ratio": 'sum by (service) (rate(shop_requests_total{status=~"5.."}[1m])) / sum by (service) (rate(shop_requests_total[1m]))',
+        "p95_ms": '1000 * histogram_quantile(0.95, sum by (service, le) (rate(shop_request_duration_seconds_bucket[1m])))',
+        "rps": 'sum by (service) (rate(shop_requests_total[1m]))'}
+
     # ------------------------------------------------------------------ metrics
     def _prom(self, query: str, at: float | None = None) -> list[dict]:
         r = self.client.get(f"{PROM}/api/v1/query", params={"query": query, "time": at or self.window.end})
@@ -80,9 +87,11 @@ class Telemetry:
             }
         return res
 
-    def metric(self, service: str, name: str) -> dict:
-        """A small named set of metrics an SRE would look at, sampled across the window."""
-        queries = {
+    METRIC_NAMES = ["error_ratio", "p95_latency_ms", "request_rate", "heap_mb", "db_pool_in_use", "config_version",
+                    "dependency_errors", "up"]
+
+    def _metric_queries(self, service: str) -> dict[str, str]:
+        return {
             "error_ratio": f'sum(rate(shop_requests_total{{service="{service}",status=~"5.."}}[1m])) / sum(rate(shop_requests_total{{service="{service}"}}[1m]))',
             "p95_latency_ms": f'1000 * histogram_quantile(0.95, sum by (le) (rate(shop_request_duration_seconds_bucket{{service="{service}"}}[1m])))',
             "request_rate": f'sum(rate(shop_requests_total{{service="{service}"}}[1m]))',
@@ -92,6 +101,10 @@ class Telemetry:
             "dependency_errors": f'sum by (dependency) (rate(shop_dependency_errors_total{{service="{service}"}}[1m]))',
             "up": f'up{{instance_service="{service}"}}',
         }
+
+    def metric(self, service: str, name: str) -> dict:
+        """A small named set of metrics an SRE would look at, sampled across the window."""
+        queries = self._metric_queries(service)
         if name not in queries:
             return {"error": f"unknown metric '{name}'. Choose one of {sorted(queries)}"}
         q = queries[name]
@@ -109,7 +122,8 @@ class Telemetry:
         return {"evidence_id": eid, "service": service, "metric": name, "series": series}
 
     # ------------------------------------------------------------------ logs
-    def _read_logs(self, service: str) -> list[tuple[int, dict]]:
+    def _read_logs(self, service: str, level: str | None = None) -> list[tuple[int, dict]]:
+        # `level` lets a subclass filter at the source; logs() filters again either way
         path = os.path.join(LOG_DIR, f"{service}.log")
         rows = []
         if not os.path.exists(path):
@@ -127,7 +141,7 @@ class Telemetry:
 
     def logs(self, service: str, level: str | None = None, contains: str | None = None, limit: int = 15) -> dict:
         """Returns grouped log lines (by message pattern) so a few lines summarise thousands."""
-        rows = self._read_logs(service)
+        rows = self._read_logs(service, level)
         if level:
             rows = [(i, r) for i, r in rows if r.get("level") == level.upper()]
         if contains:
@@ -140,12 +154,15 @@ class Telemetry:
         for key, items in sorted(groups.items(), key=lambda kv: -len(kv[1]))[:limit]:
             i, r = items[-1]
             msg = redact(r.get("msg", ""))
-            eid = self.store.add("log", f"{service}.log:{i}", msg,
+            eid = self.store.add("log", self._log_ref(service, i), msg,
                                  meta={"service": service, "line": i, "ts": r["ts"], "level": r.get("level"),
                                        "trace_id": r.get("trace_id"), "count_in_window": len(items)})
             out.append({"evidence_id": eid, "level": r.get("level"), "msg": msg, "count": len(items),
                         "first_ts": items[0][1]["ts"], "last_ts": r["ts"], "trace_id": r.get("trace_id")})
         return {"service": service, "total_matching": len(rows), "groups": out}
+
+    def _log_ref(self, service: str, ref) -> str:
+        return f"{service}.log:{ref}"
 
     def all_log_lines(self, max_lines: int = 400) -> str:
         """Raw tail of every service's logs (used only by the single-prompt baseline)."""
@@ -241,3 +258,16 @@ class Telemetry:
             eid = self.store.add("trace", f"trace:{t['traceID'][:16]}", text, meta={"trace_id": t["traceID"]})
             out.append({"evidence_id": eid, "summary": text})
         return {"service": service, "traces": out}
+
+
+def telemetry_class() -> type[Telemetry]:
+    """The telemetry reader for the configured TARGET (see evidencetrail/target.py)."""
+    from .target import OTEL
+    if OTEL:
+        from .otel_demo import OtelDemoTelemetry
+        return OtelDemoTelemetry
+    return Telemetry
+
+
+def make_telemetry(window: Window | None = None, window_s: float = 120) -> Telemetry:
+    return telemetry_class()(window=window or Window.last(window_s))

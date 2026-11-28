@@ -1,0 +1,38 @@
+# EvidenceTrail's local overrides for the OpenTelemetry Demo (layered on the demo's own compose files
+# by otel/up.sh). The demo's files are not modified. EVIDENCETRAIL_OTEL_DIR is set by up.sh.
+services:
+  # Fixed host ports for Jaeger and OpenSearch (the demo publishes random ones), and a 15s
+  # span-metrics flush (default 60s) through an extra collector config layer.
+  jaeger:
+    ports:
+      - "16686:16686"
+  opensearch:
+    ports:
+      - "9200:9200"
+    # Sandboxed hosts may refuse RLIMIT_MEMLOCK; memory locking is a performance setting only.
+    environment:
+      - bootstrap.memory_lock=false
+    ulimits: !reset {}
+  otel-collector:
+    command:
+      - "--config=/etc/otelcol-config.yml"
+      - "--config=/etc/otelcol-config-full.yml"
+      - "--config=/etc/otelcol-config-observability.yml"
+      - "--config=/etc/otelcol-config-extras.yml"
+      - "--config=/etc/otelcol-config-evidencetrail.yml"
+      - "--feature-gates=service.profilesSupport"
+    volumes:
+      - ${EVIDENCETRAIL_OTEL_DIR}/otelcol-config-evidencetrail.yml:/etc/otelcol-config-evidencetrail.yml
+  # Hosts without IPv6 (some cloud containers): these services also listen on [::] and would fail
+  # with "Address family not supported". Drop only that listen line / bind IPv4 at start-up.
+  telemetry-docs:
+    command: ["/bin/sh", "-c", "sed '/listen \\[::\\]/d' /nginx.conf.template | envsubst '$$OTEL_COLLECTOR_HOST $$OTEL_COLLECTOR_PORT_GRPC $$OTEL_SERVICE_NAME $$TELEMETRY_DOCS_PORT' > /etc/nginx/nginx.conf && exec nginx -g 'daemon off;'"]
+  image-provider:
+    command: ["/bin/sh", "-c", "sed '/listen \\[::\\]/d' /nginx.conf.template | envsubst '$$OTEL_COLLECTOR_HOST $$IMAGE_PROVIDER_PORT $$OTEL_COLLECTOR_PORT_GRPC $$OTEL_SERVICE_NAME' > /etc/nginx/nginx.conf && exec nginx -g 'daemon off;'"]
+  # flagd-ui raises the open-file limit (refused in sandboxes) and listens on IPv6 only.
+  flagd-ui:
+    command: ["sh", "-c", "sed -i 's/{0, 0, 0, 0, 0, 0, 0, 0}/{0, 0, 0, 0}/' /app/releases/*/runtime.exs && exec /app/bin/server"]
+  # Grafana is not used by EvidenceTrail; skip its plugin download (needs grafana.com).
+  grafana:
+    environment:
+      - GF_INSTALL_PLUGINS=

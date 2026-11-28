@@ -1,0 +1,5 @@
+# Extra collector config layer for EvidenceTrail's test runs (merged after the demo's own files).
+# Span metrics are flushed every 60s by default; 15s gives a 2-minute incident window enough samples.
+connectors:
+  span_metrics:
+    metrics_flush_interval: 15s

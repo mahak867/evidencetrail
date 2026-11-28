@@ -1,6 +1,6 @@
 # EvidenceTrail evaluation scorecard (hard set)
 
-- Scenarios: **6** injected faults across **5** fault types and **5** services (see `eval/scenarios.yaml`).
+- Scenarios: **6** injected faults across **5** fault types and **5** services (see `eval/scenarios_hard.yaml`).
 - Each method investigates the same 120s telemetry window, 60s after injection.
 - 95% Wilson confidence intervals in brackets. Small n: treat as indicative, not definitive.
 - Medians: with an even number of runs, the upper of the two middle values is reported.

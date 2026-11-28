@@ -1,0 +1,37 @@
+# OpenTelemetry Demo set (TARGET=oteldemo, `python -m eval.run_eval --set otel`).
+# Faults are the demo's own flagd feature flags; ground truth for each flag (service, fault type)
+# is defined once in evidencetrail/faults.py (OTEL_FLAGS), next to a note on how the demo implements it.
+# Alerts name a symptom the on-call engineer would see, never the cause.
+# 8 scenarios, 4 fault types, 6 services.
+- id: O01
+  service: payment
+  kind: paymentFailure
+  alert: "checkout error rate above 5% for 1m (SLO burn)"
+- id: O02
+  service: payment
+  kind: paymentUnreachable
+  alert: "checkout error rate above 5% for 1m (SLO burn)"
+- id: O03
+  service: cart
+  kind: cartFailure
+  alert: "checkout error rate above 5% for 1m (SLO burn)"
+- id: O04
+  service: product-catalog
+  kind: productCatalogFailure
+  alert: "frontend 5xx ratio above 2% for 1m"
+- id: O05
+  service: ad
+  kind: adFailure
+  alert: "frontend error rate above 2% for 1m"
+- id: O06
+  service: ad
+  kind: adHighCpu
+  alert: "frontend p95 latency above 300ms for 2m"
+- id: O07
+  service: shipping
+  kind: intlShippingSlowdown
+  alert: "checkout p95 latency above 2s for 2m"
+- id: O08
+  service: recommendation
+  kind: recommendationCacheFailure
+  alert: "frontend p95 latency above 300ms for 2m"

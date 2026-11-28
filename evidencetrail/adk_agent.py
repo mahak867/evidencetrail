@@ -53,6 +53,8 @@ def run_adk(inv, context: dict) -> tuple[dict | None, str | None]:
         """Time series for one metric of a service: error_ratio, p95_latency_ms, request_rate, heap_mb,
         db_pool_in_use, config_version, dependency_errors or up."""
         return _tool("get_metric", {"service": service, "name": name})
+    # ADK builds the tool description from the docstring: list the metrics of the configured target
+    get_metric.__doc__ = "Time series for one metric of a service: " + ", ".join(inv.tel.METRIC_NAMES) + "."
 
     def get_error_traces(service: str) -> dict:
         """Failing traces through a service, reduced to the chain of failing spans."""

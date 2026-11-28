@@ -14,12 +14,12 @@ import time
 from .gemini import Gemini, GeminiUnavailable
 from .investigator import FAULT_TYPES
 from .safety import SERVICES
-from .telemetry import Telemetry, Window
+from .telemetry import Window, make_telemetry
 
 
 def b1_dashboard_rule(window_s: int = 120, window: Window | None = None) -> dict:
     t0 = time.time()
-    tel = Telemetry(window=window or Window.last(window_s))
+    tel = make_telemetry(window, window_s)
     h = tel.service_health()
     # a dashboard shows a service with no data as DOWN: blame it first
     # Prometheus marks a service it cannot scrape as up == 0: that is what a dashboard shows as DOWN
@@ -52,7 +52,7 @@ LOGS:
 
 def b0_single_prompt(alert: str, window_s: int = 120, max_lines: int = 400, window: Window | None = None) -> dict:
     t0 = time.time()
-    tel = Telemetry(window=window or Window.last(window_s))
+    tel = make_telemetry(window, window_s)
     llm = Gemini()
     prompt = B0_PROMPT.format(alert=alert, types=", ".join(FAULT_TYPES), logs=tel.all_log_lines(max_lines))
     try:

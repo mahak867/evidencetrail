@@ -20,7 +20,7 @@ from pydantic import BaseModel
 from . import faults, safety
 from .gemini import FALLBACKS, MODEL
 from .investigator import Investigation
-from .telemetry import Telemetry, Window
+from .telemetry import make_telemetry, telemetry_class
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 app = FastAPI(title="EvidenceTrail")
@@ -125,7 +125,7 @@ def action(jid: str, ap: Approval):
 @app.get("/api/health")
 def health(window_s: int = 120):
     """Live service health and call graph for the service map."""
-    tel = Telemetry(window=Window.last(window_s))
+    tel = make_telemetry(window_s=window_s)
     try:
         h = tel.service_health()
         edges = tel.dependency_graph()["edges"]
@@ -140,9 +140,8 @@ def series(minutes: int = 10):
     import httpx
     from .telemetry import PROM
     end = time.time(); start = end - minutes * 60; step = max(10, minutes * 60 // 48)
-    qs = {"error_ratio": 'sum by (service) (rate(shop_requests_total{status=~"5.."}[1m])) / sum by (service) (rate(shop_requests_total[1m]))',
-          "p95_ms": '1000 * histogram_quantile(0.95, sum by (service, le) (rate(shop_request_duration_seconds_bucket[1m])))',
-          "rps": 'sum by (service) (rate(shop_requests_total[1m]))'}
+    cls = telemetry_class()
+    qs, label = cls.SERIES_QUERIES, cls.SERIES_LABEL
     out: dict = {"start": start, "end": end, "step": step, "services": {}}
     with httpx.Client(timeout=10, trust_env=False) as c:
         for name, q in qs.items():
@@ -152,7 +151,9 @@ def series(minutes: int = 10):
             except Exception as e:
                 raise HTTPException(503, f"prometheus unavailable: {e}")
             for res in r.json()["data"]["result"]:
-                svc = res["metric"].get("service")
+                svc = res["metric"].get(label)
+                if svc not in safety.SERVICES:
+                    continue
                 pts = [[int(float(t)), None if v in ("NaN", "+Inf", "-Inf") else round(float(v), 4)] for t, v in res["values"]]
                 out["services"].setdefault(svc, {})[name] = pts
     return out
@@ -163,7 +164,10 @@ def series(minutes: int = 10):
 def inject(fr: FaultReq):
     if (fr.kind not in faults.KINDS and fr.kind != "noise") or fr.service not in safety.SERVICES:
         raise HTTPException(400, "unknown service or fault kind")
-    faults.inject(fr.service, fr.kind)
+    try:
+        faults.inject(fr.service, fr.kind)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
     audit("fault_injected", service=fr.service, kind=fr.kind)
     return {"ok": True}
 

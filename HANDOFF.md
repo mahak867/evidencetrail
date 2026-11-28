@@ -66,8 +66,8 @@ Video: start the stack and server, then `cd deck && node record_demo.js && pytho
 
 ### Claude Code cloud-session notes (what bit us)
 - Start `dockerd` inside a bounded command and stop it when done. Background jobs are killed after 2 hours, which took dockerd down mid-run.
-- `ghcr.io` pulls were blocked in our environment, so the official OpenTelemetry Demo images could not be pulled; Docker Hub works. This blocks the Round 2 OTel Demo port unless mirrors or another network policy are used.
-- The Gemini key lived as an environment network secret for `generativelanguage.googleapis.com` (injected as `Authorization: Bearer`), so the code ran with `GEMINI_API_KEY=proxy-injected`.
+- OpenTelemetry Demo images (28 Nov 2026): use the personal cloud environment **"evidencetrail"**. It allows `ghcr.io` and `pkg-containers.githubusercontent.com` (where ghcr.io serves image layers; ghcr.io alone is not enough). `quay.io` is still blocked, so `otel/up.sh` takes Jaeger and Prometheus from Docker Hub instead. The container has no IPv6 and refuses `memlock`/`ulimit` changes; `otel/compose.evidencetrail.yaml` works around both.
+- Gemini key: stored as an environment network secret for `generativelanguage.googleapis.com` (injected as `Authorization: Bearer`), so the code runs with `GEMINI_API_KEY=proxy-injected`. **The "evidencetrail" environment does not have it yet**: add it in that environment's settings (network secrets) before running investigations or the evaluation there.
 - Gemini free tier: 503 "high demand" spells; some models are capped at about 20 requests/day. The fallback chain handles this; budget the eval runs.
 - Big heredocs can trip the shell safety check: write scripts to a scratch file, then run them.
 - Commits are authored as the team leader. **Do not add Claude as a co-author or contributor** (team instruction).
