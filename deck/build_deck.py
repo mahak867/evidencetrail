@@ -230,15 +230,18 @@ set_runs(title, "Solution Outline / Objective", size=60)
 title.top, title.width = Inches(2.1), Inches(17)
 for lbl in ("Track Name", "Team Name", "Team Leader"):
     remove(by(s, lbl))
-text(s, 1.54, 4.45, 12.5, 1.0, [[("EvidenceTrail", {"size": 54, "bold": True, "color": GOLD})]], name="Product")
-text(s, 1.54, 5.7, 12.5, 0.6, "Find the cause. Show the evidence.", size=26, color=WHITE, name="Tagline")
-text(s, 1.54, 6.75, 13.5, 2.4, [
+text(s, 1.54, 3.75, 12.5, 1.0, [[("EvidenceTrail", {"size": 54, "bold": True, "color": GOLD})]], name="Product")
+text(s, 1.54, 4.95, 12.5, 0.6, "Find the cause. Show the evidence.", size=26, color=WHITE, name="Tagline")
+text(s, 1.54, 5.9, 13.5, 3.5, [
     [("Track Name & Idea Number:  ", {"bold": True, "color": MUTED}), ("Track 1 – Niveus Solutions (NTT DATA) · Challenge Brief PS2: AI Incident Investigation for Cloud-Native Systems", {})],
     [("Team Name:  ", {"bold": True, "color": MUTED}), (TEAM, {})],
     [("Team Leader Name:  ", {"bold": True, "color": MUTED}), (LEADER, {})],
-    [("Objective:  ", {"bold": True, "color": MUTED}), ("help an on-call engineer reach a correct, evidence-backed root cause, with fewer confident wrong answers than a single AI prompt and a human in charge of every fix.", {})],
+    [("Objective:  ", {"bold": True, "color": MUTED}), ("help an on-call engineer reach a correct, evidence-backed root cause, with a human in charge of every fix.", {})],
+    [("Measured:  ", {"bold": True, "color": GREEN}),
+     (f"{AV['EvidenceTrail']['wrong'] + AV['EvidenceTrail_ADK']['wrong']} confident wrong answers across {AV['n']} injected faults, "
+      f"vs {AV['B0_single_prompt']['wrong']} for a single Gemini prompt and {AV['B1_dashboard_rule']['wrong']} for a dashboard rule", {"bold": True})],
 ], size=17, spacing=8, name="Outline")
-text(s, 1.54, 9.6, 17.5, 0.5, [[("Live demo: ", {"bold": True, "color": GREEN}), ("evidencetrail.vercel.app", {"link": DEMO_URL, "color": WHITE}),
+text(s, 1.54, 9.75, 14.5, 0.5, [[("Live demo: ", {"bold": True, "color": GREEN}), ("evidencetrail.vercel.app", {"link": DEMO_URL, "color": WHITE}),
     ("   ·   ", {"color": MUTED}), ("Demo video", {"link": VIDEO_URL, "color": WHITE, "bold": True}),
     ("   ·   ", {"color": MUTED}), ("Code: ", {"bold": True, "color": GREEN}), ("github.com/mahak867/evidencetrail", {"link": REPO_URL, "color": WHITE})]], size=12.5, name="Links")
 
