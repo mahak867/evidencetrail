@@ -431,7 +431,9 @@ else:
     mv.click_action.hyperlink.address = VIDEO_URL
 qx = vx + vw + 0.3
 text(s, qx, 5.75, 19.55 - qx, 0.45, "TRY IT", size=15, bold=True, color=GOLD)
-text(s, qx, 6.2, 19.55 - qx, 1.0, [[("Live demo (recorded data), 2:10 video of a live run, and the full code.", {"color": MUTED})]], size=12.5)
+text(s, qx, 6.15, 19.55 - qx, 1.2, [[("One screen: ", {"bold": True}), ("alert → diagnosis → click any claim to see its evidence → approve. "
+    "Light and dark themes; captioned guided tour.", {"color": MUTED})],
+    [("Live demo (recorded data), 2:10 video, full code.", {"color": MUTED})]], size=11.5, spacing=2)
 qs = [("qr_demo.png", "Live demo", DEMO_URL), ("qr_video.png", "Video", VIDEO_URL), ("qr_repo.png", "GitHub", REPO_URL)]
 qw = (19.55 - qx - 0.3) / 3
 for i, (img, lbl, url) in enumerate(qs):
