@@ -72,6 +72,8 @@ def eval_numbers():
 
 
 EV = eval_numbers()
+_std = [json.load(open(p))["methods"].get("EvidenceTrail_ADK", {}) for p in sorted(glob.glob(f"{RUNS}/S*.json"))]
+ADK_STD = (sum(bool(x.get("score", {}).get("top1")) for x in _std), len(_std), sum(x.get("verdict") == "FAILED" for x in _std))
 
 
 def hard_numbers():
@@ -272,7 +274,7 @@ for i, (n, h, d) in enumerate(steps):
     text(s, 7.95, y + 0.14, 6.4, 0.4, h, size=16, bold=True)
     text(s, 7.95, y + 0.52, 6.45, 0.6, d, size=12.5, color=MUTED)
 # use cases
-text(s, 15.0, 2.35, 4.6, 0.5, "USE CASES", size=15, bold=True, color=PURPLE)
+text(s, 15.0, 2.35, 4.6, 0.5, "USE CASES / APPLICATIONS", size=15, bold=True, color=PURPLE)
 uses = [("On-call triage", "SaaS, fintech and e-commerce teams on Kubernetes / Cloud Run"),
         ("Managed services", "Systems integrators running many client platforms under SLAs"),
         ("Postmortems", "Timeline where every line links to its source"),
@@ -289,14 +291,14 @@ remove(by(s, "Describe your Technology"))
 subtitle(s, "Technology stack, dependencies and show-stoppers")
 stack = [
     ("AI", GOLD, ["Gemini (3.1 Flash-Lite + 4 fallback models)", "Two engines: native loop or Google ADK", "MCP server for Claude / Gemini CLI",
-                  (f"{EV['calls'][0]}–{EV['calls'][1]} Gemini calls per incident (median {EV['calls'][2]:g})" if EV else "Gemini calls per incident measured")]),
+                  (f"Native: {EV['calls'][0]}–{EV['calls'][1]} Gemini calls / incident (median {EV['calls'][2]:g})" if EV else "Gemini calls per incident measured")]),
     ("Telemetry", GREEN, ["OpenTelemetry SDK → Jaeger (traces)", "Prometheus (metrics)", "JSON logs with trace IDs + change/event log"]),
     ("Test system", PURPLE, ["9-service shop on Docker Compose", "7 injectable faults, scored as 6 types", "Load generator; OpenTelemetry Demo next"]),
     ("App", RGBColor(0x4F, 0x9C, 0xF9), ["Python, FastAPI, httpx", "Web UI: diagnosis + clickable evidence", "Audit log of every approval"]),
 ]
 for i, (h, col, items) in enumerate(stack):
     x = 0.43 + i * 3.42
-    card(s, x, 2.35, 3.22, 4.15, fill=CARD2)
+    card(s, x, 2.35, 3.22, 4.32, fill=CARD2)
     text(s, x + 0.25, 2.55, 2.8, 0.45, h, size=19, bold=True, color=col)
     text(s, x + 0.25, 3.15, 2.8, 3.2, [{"t": t, "bullet": True} for t in items], size=14, color=WHITE, spacing=6)
 text(s, 14.3, 2.35, 5.3, 0.45, "SAFETY BUILT IN", size=16, bold=True, color=GREEN)
@@ -305,11 +307,16 @@ text(s, 14.3, 2.9, 5.25, 3.5, [{"t": t, "bullet": True} for t in [
     "Secrets, card numbers, emails redacted before Gemini sees logs",
     "Action risk decided by an allow-list policy, never by the model",
     "Keys server-side only; own test environment only"]], size=14, spacing=6)
+text(s, 14.3, 5.55, 5.3, 0.4, "PATH TO PRODUCT", size=16, bold=True, color=GOLD)
+text(s, 14.3, 5.98, 5.25, 1.25, [{"t": t, "bullet": True} for t in [
+    [("Now: ", {"bold": True}), ("prototype, 18 faults vs 2 baselines", {"color": MUTED})],
+    [("Round 2: ", {"bold": True}), ("OpenTelemetry Demo, Cloud Run, recovery check", {"color": MUTED})],
+    [("Next: ", {"bold": True}), ("GKE Autopilot; team plan (SSO, audit)", {"color": MUTED})]]], size=12.5, spacing=3)
 text(s, 0.43, 6.8, 10, 0.45, "DEPENDENCIES & SHOW-STOPPERS → MITIGATION", size=16, bold=True, color=RED)
 risks = [("Gemini free-tier limits / 503 \"high demand\"", "Bounded retries with back-off, automatic model fallback, clear FAILED state, token cost logged"),
          ("Telemetry too big for the context window", "Scan + call graph narrow it first; logs grouped by pattern; prompt tokens reported per run"),
          ("Injected faults are cleaner than real incidents", "Stated openly; multi-fault and OpenTelemetry Demo scenarios added in Round 2"),
-         ("No Kubernetes cluster on student laptops", "Docker Compose (allowed by the brief); kind/minikube optional later")]
+         ("No Kubernetes / Google Cloud deployment yet", "Docker Compose now (allowed by the brief); Google Cloud Run in Round 2; GKE Autopilot later")]
 for i, (r, m) in enumerate(risks):
     y = 7.3 + i * 0.75
     card(s, 0.43, y, 19.1, 0.64, fill=CARD)
@@ -341,9 +348,9 @@ if EV:
                                   ("  AI claims blocked", {"bold": True, "color": WHITE, "size": 14})],
                                  [("by the evidence gate (both engines)", {"color": MUTED})]], size=12, spacing=0)
     text(s, 7.4, 5.65, 5.5, 0.4, f"Standard set: {EV['n']} injected faults · {EV['types']} fault types", size=12, bold=True, color=WHITE)
-    rows = [("EvidenceTrail", EV["EvidenceTrail"], GREEN), ("Single-prompt Gemini", EV["B0_single_prompt"], GOLD), ("Dashboard rule", EV["B1_dashboard_rule"], MUTED)]
+    rows = [("EvidenceTrail (native engine)", EV["EvidenceTrail"], GREEN), ("Single-prompt Gemini", EV["B0_single_prompt"], GOLD), ("Dashboard rule", EV["B1_dashboard_rule"], MUTED)]
     for i, (lbl, d, col) in enumerate(rows):
-        y = 6.03 + i * 0.92
+        y = 6.03 + i * 0.85
         text(s, 7.4, y, 5.5, 0.35, lbl, size=12, bold=True, color=WHITE)
         for j, (k, n, sub) in enumerate(((d["top1"], EV["n"], "service"), (d["type"][0], d["type"][1], "service + fault type"))):
             yy = y + 0.32 + j * 0.28
@@ -357,7 +364,9 @@ if EV:
             text(s, 10.15, yy, 2.8, 0.3, [[(f"{k}/{n}", {"bold": True}), (f"  {sub}", {"color": MUTED})]], size=10.5)
     if HV and HV["n"] >= 6:
         et, adk, b0 = HV["EvidenceTrail"], HV["EvidenceTrail_ADK"], HV["B0_single_prompt"]
-        text(s, 7.4, 8.85, 5.5, 0.95, [
+        text(s, 7.4, 8.64, 5.5, 0.3, [[("ADK engine: ", {"color": MUTED}), (f"{ADK_STD[0]}/{ADK_STD[1]} service", {"bold": True}),
+                                       (f" ({ADK_STD[2]} runs lost to Gemini outages)" if ADK_STD[2] else "", {"color": MUTED})]], size=10.5)
+        text(s, 7.4, 8.98, 5.5, 0.85, [
             [("Hard set ", {"bold": True, "color": GOLD}), (f"(noisy logs, silent faults, n={HV['n']}): ", {"color": MUTED})],
             [("Right service: ", {"color": MUTED}), (f"ADK {adk['right']}/{HV['n']}, native {et['right']}/{HV['n']}", {"bold": True, "color": GREEN}),
              (f" (+{et['abstain']} abstained)" if et["abstain"] else "", {"color": MUTED}), (f" vs single-prompt {b0['right']}/{HV['n']}", {"bold": True})],
