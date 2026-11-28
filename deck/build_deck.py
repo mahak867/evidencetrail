@@ -65,7 +65,7 @@ def eval_numbers():
                   "tokens": sorted((x.get("usage") or {}).get("total_tokens", 0) for x in rs)[len(rs) // 2]}
     et = [r["methods"].get("EvidenceTrail", {}) for r in runs]
     calls = sorted((x.get("usage") or {}).get("calls", 0) for x in et)
-    out["calls"] = (calls[0], calls[-1], (calls[(len(calls) - 1) // 2] + calls[len(calls) // 2]) / 2) if calls else (0, 0, 0)
+    out["calls"] = (calls[0], calls[-1], calls[len(calls) // 2]) if calls else (0, 0, 0)  # upper median, as in SCORECARD.md
     out["kept"] = sum(len(x.get("claims") or []) for x in et)
     out["dropped"] = sum(len(x.get("dropped_claims") or []) for x in et)
     return out

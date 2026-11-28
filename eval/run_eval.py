@@ -86,7 +86,8 @@ def report(runs: list[dict]) -> str:
              f"- Scenarios: **{n}** injected faults across **{len({r['truth']['fault_type'] for r in runs})}** fault types "
              f"and **{len({r['truth']['service'] for r in runs})}** services (see `eval/scenarios.yaml`).",
              f"- Each method investigates the same {WINDOW_S}s telemetry window, {SOAK_S}s after injection.",
-             "- 95% Wilson confidence intervals in brackets. Small n: treat as indicative, not definitive.", "",
+             "- 95% Wilson confidence intervals in brackets. Small n: treat as indicative, not definitive.",
+             "- Medians: with an even number of runs, the upper of the two middle values is reported.", "",
              "| Method | Top-1 service | Top-3 service | Fault type correct | Inconclusive | Failed | Median time (s) | Median tokens |",
              "|---|---|---|---|---|---|---|---|"]
     for m in methods:
