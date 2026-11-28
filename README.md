@@ -115,6 +115,16 @@ Injected faults (the demo's own flags; ground truth follows each flag's implemen
 
 Fairness: flag flips are **not** reported as "recent changes", because they are how faults are injected and would give every method the answer. All methods still share one frozen telemetry window.
 
+**Status on 28 Nov 2026: Gemini has not been run on the demo yet**, so there are no EvidenceTrail diagnosis scores for it. The cloud environment used for the port does not have the Gemini key yet. What was checked is everything before the Gemini step, on one code version (commit `f90b691`), with one run per fault (120 s settle, 120 s fault, 120 s window):
+
+| Check | Result |
+|---|---|
+| Right service ranked first by EvidenceTrail's topology suspects | **7 of 8** (missed `recommendationCacheFailure`: the leak took about 2.5 minutes to show and fell outside the window) |
+| Right service named by the dashboard-rule baseline (B1) | 4 of 8 |
+| Healthy system, 10 replayed 2-minute windows: windows with any false suspect | 1 of 10 (checkout p95 420 ms vs 98 ms baseline: a few slow orders at about 0.2 orders/s) |
+
+Read this as a development check, not a result. The per-operation, CPU/memory and caller-edge signals were added after earlier runs missed some of these same 8 faults, so these numbers overstate how the method would do on new faults. The scored comparison (all four methods, misses included) will come from `TARGET=oteldemo python -m eval.run_eval --set otel`.
+
 ## Quick start
 
 Requirements: Docker with Compose, Python 3.11+, and a Gemini API key from Google AI Studio.
